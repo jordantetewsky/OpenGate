@@ -341,6 +341,41 @@ that a late script no-op returns a consumed key to Resolve. Scope decision pendi
 no installed behavior/settings changed. Current disposable Undo baseline remains
 captured; no test hotkey or Undo has been executed by the agent.
 
+### Installed command dispatch and stale Timeline display — October 27, 18:43–18:47 UTC
+
+Jordan reports U/J and Workflow Integrations appear not to work. Logs distinguish
+several accepted native-preset Next/Previous dispatches and direct native workflow
+actions, with script completion reporting one changed item. J initially triggered
+OpenGate's conservative conflict rejection against
+FusionWidget.fuHotkey_FuFrame_Playback_Mode{ play = true, reverse = true}; Resolve's
+own workflow handler nevertheless subsequently ran Previous. This is inconsistent
+routing evidence, not proof of a correct context-aware shortcut implementation.
+Do not disable Fusion bindings or ignore all native conflicts to make the test pass.
+
+Read-only API inspection first found the same selected test instance at Boom/5.
+After further user invocations, the native submenu inventory at 18:46:42 and the
+supplied 14:46:46 screenshot check **1 — MixL**, while the painted timeline label
+still says **Hannah**. The highlighted Hannah submenu row is hover, not the checked
+channel. Subsequent API inspection of the same project/timeline/item returns
+name PandLsc15-007.WAV — MixL and mono channel 1. Source mapping remains channels
+3,4,5. No agent mapping write or Undo performed during diagnosis.
+
+This establishes stored/native-menu versus painted-label inconsistency for this
+candidate. Audible channel and waveform correctness remain unverified; script
+success is not full user-experience acceptance. Installed-path Undo/Redo remains
+untested. Do not conceal the mismatch by periodically showing controls, replaying
+native commands, or inventing a forced repaint fix. Exact invocation sequence is
+not a controlled single-step test: two Previous dispatches are recorded 241ms apart
+at 18:46:40 with separate completion records; do not infer duplicate dispatch from
+one physical press without matching input events. Preserve the evidence.
+
+Directions clarified: Next increases source channel numbers with wrap; Previous
+decreases with wrap. All Source: 1→2→3→4→5→1; Skip Excluded in this fixture:
+3→4→5→3. Previous reverses each sequence. This is independent of menu hover.
+Evidence: audio-undo-test/build/undo-test/live-dispatch-events.json and
+live-ui-mismatch-events.json; screenshot supplied by Jordan. Both the shortcut
+context problem and native presentation/update problem remain open.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
