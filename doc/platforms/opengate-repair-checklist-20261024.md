@@ -255,6 +255,30 @@ has real callers and no replaced parallel implementation. Existing fixture harne
 were reused. This checkpoint remains isolated because the API setter's native Undo
 failure is unresolved; passing tests/builds are NOT permission to ship broken Undo.
 
+### Installed-hotkey Undo experiment prepared — October 27
+
+Jordan requested a concrete candidate and bounded disposable-project test after
+being told the API-based implementation still has an Undo blocker. Prepared clean
+runtime **361d3df** on integration/audio-undo-test: audio implementation 7e701a9 plus
+the currently installed c12980f diagnostics, on the main documentation baseline.
+No uncertain floating Source blink work included. This is NOT a claimed Undo fix.
+
+[Exact installation/rollback and live test plan](audio-channel-hotkey-undo-test-20261027.md)
+requires a new disposable project, one actual assigned hotkey invocation, mapping/
+selection/other-instance checks and one native Undo; stop immediately if it fails.
+This tests an execution context not yet live-verified: actual installed Workflow
+Integration hotkey versus the earlier external connector setter. Do not assume
+that context changes native Undo behavior. Expanded acceptance follows only if it does.
+
+Universal helper/bootstrap and targeted combined fixtures pass: nine operations,
+Mac/Windows generated wrappers, native Edit, all four preset assignments, menu and
+workflow completion. Windows native build/live absent. Candidate installation
+staging contains helper/metadata and four exact-name scripts; hashes/signatures
+verified. Local mock install/rollback passed byte-identical restoration of all six
+managed paths, removal of new scripts, and untouched settings sentinel. Real
+installation stays c12980f. Candidate-specific approval and user saving/quitting
+Resolve remain required before any real installation. No working-project mutation.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
