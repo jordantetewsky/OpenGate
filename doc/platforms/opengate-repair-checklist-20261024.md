@@ -142,6 +142,44 @@ freshness/target binding, action dispatch with native undo, multi-selection,
 audible channel output and toolbar loss remain unresolved. Do not invoke the
 previous menu's cached action against this newly confirmed selection.
 
+### Active-timeline contract and native dispatch research — October 27
+
+Jordan explicitly requires only selected audio instances in the **current active
+timeline** to change. Other instances in that timeline, other timelines, and Media
+Pool source mappings must remain unchanged. Added production-operation regression
+coverage on feature/selected-audio-channel (0ccd60f): two timeline instances share a
+source, active timeline changes between invocations, and only the new selected
+instance changes; unrelated instances retain mapping. Seven operation tests pass.
+This does not resolve the external API setter's native Undo failure.
+
+Audio branch 96d4361 adds NativeAudioChannelChoice: one focused shared interpreter
+for freshly supplied native menu actions, reused by the production diagnostic
+observer. It validates contiguous channel numbering, exactly one current channel,
+enabled/checkable rows, direction and wrapping; it rejects ambiguous/no-current,
+single-channel and unsupported menus. QPointer invalidates a destroyed target;
+callers must still validate current context, not cache a live action for later use.
+Existing native-menu fixture extended (no duplicate harness) and passes; universal
+helper compilation passes. No action invocation or new state writer. Not installed
+or integrated into the current c12980f runtime; Windows compilation remains pending.
+
+Bounded offline Qt metadata inspection of Resolve 21.1.1's timeline controller,
+scene, view and list-context-menu mediator found no exposed channel method. This
+is not proof that an internal method does not exist. It rules out treating the
+previously guessed method names as established entry points. Local Qt source
+qgraphicsview.cpp/contextMenuEvent and qgraphicsscene.cpp/contextMenuEvent show
+that default context-menu routing uses position even when an event has a reason;
+therefore a synthetic keyboard-context event at an arbitrary center/pointer is NOT
+a proven selected-clip route. No such event or undocumented method was invoked.
+Evidence: audio-timeline-integration/build/native-audio-research/{read-meta.py,meta.json}.
+
+Toolbar investigation remains on its separate branch. Current c12980f installation
+contains observation only, not a repair for missing toolbar or stacked-timeline
+preference loss. Latest captured session through 17:24 UTC contains 176 Timeline
+transition records, without an identified recurring-loss transition. Do not force
+visibility or change fixed-height layout code based solely on this hypothesis.
+Next live evidence needed is the actual disappearance while this diagnostic is
+loaded; source inspection continues at the existing toolbar lease/restore boundary.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
