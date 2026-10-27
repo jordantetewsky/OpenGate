@@ -4,6 +4,25 @@
 
 ### 4b914e1 live test failed — native selection assumption disproved
 
+Bounded follow-up branch fix/native-audio-track-selection, d6ba6e5, extracts
+NativeTimelineSelection from the menu transaction. It follows visible QWidget
+children and actual QGraphicsProxyWidget ownership within the focused Timeline,
+deduplicates scenes, and requires one selected item across the contained scenes.
+It does not decode private handles or infer selection from pointer position.
+The transaction watches all inspected scenes and revalidates the complete selection
+before dispatch; menu placement uses the selected item's own view coordinates.
+Old outer-scene-only resolution and its single-scene observer were replaced.
+Traversal is bounded at 64 views/4096 items and fails closed at those limits.
+The existing production registry/menu fixture passes nested proxy selection with
+an empty outer selection, nested native commit, ambiguity across scenes and
+cancellation when selection changes in a different contained scene, alongside
+the prior direction/wrap/repetition cases. Real Resolve nested-scene selection
+remains unverified; this does not yet establish a repair. Not installed or merged.
+Universal arm64/x86_64 runtime compilation, both executable signature checks and
+I/O bootstrap lifecycle fixture pass for clean d6ba6e5. Windows compilation/live
+behavior remain unverified. A live test requires a separately approved candidate;
+the installed failed 4b914e1 remains unchanged during this local work.
+
 New session 9701fee8-7204-40da-bd2a-752c2d3fe4a1 (PID 67140, started
 23:13:01 UTC) loads 4b914e1. Jordan reports the channel command does not work.
 Both resolve-preset-input and resolve-workflow-shortcut reach the command registry.
