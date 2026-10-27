@@ -2,6 +2,26 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Installed native execution candidate — October 27, 23:12 UTC
+
+Jordan approved 4b914e1 specifically. Resolve was verified closed (not terminated
+by the agent), then the staged transactional installer completed with administrator
+authentication. All 20 installed payload hashes match. Of 198 snapshotted settings,
+native preferences and workflow files, 196 remain byte-identical; only the two
+intended All Source Channels workflow scripts changed. No unexpected changes.
+Both installed executable signatures verify. Receipt: native-audio-menu-transaction/
+build/native-menu-test/installation-receipt.json.
+
+Rollback to 29812b6: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+DA65E51F-C65C-4D6E-A51D-A7E309CF4EB0/Restore Previous OpenGate.command.
+This supersedes the staged/not-installed and installed-29812b6 status below.
+New-process loading, actual native audio output/repaint and Undo are not yet
+verified. No runtime merge or publication. Next: reopen the disposable project,
+select the designated mono polywav, invoke Next Audio Channel — All Source Channels
+once, and verify the result before attempting one native Undo. Skip Excluded
+Channels remains the older unaccepted API implementation; toolbar/stacked-tab and
+Stabilize availability bugs remain unresolved.
+
 ### Continued read-only investigation after staging 4b914e1
 
 Loaded session da708421 still identifies 29812b6. Deduplicated current-session
