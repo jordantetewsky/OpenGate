@@ -18,6 +18,10 @@ int main(int argc,char **argv) {
  auto destroyed=new QWidget;destroyed->setObjectName("frameEditToolbarTop");probe.observe(destroyed,QEvent::ParentChange);delete destroyed;app.processEvents();
  for(int i=0;i<300;++i)probe.observe(toolbar,QEvent::Resize);
  app.processEvents();Unbound::flushDiagnostics();f.seek(0);bytes=f.readAll();
- if(bytes.count("timeline.presentation.transition")!=512 || !bytes.contains("destroyed"))++failures;
+ if(bytes.count("timeline.presentation.transition")!=516 || !bytes.contains("destroyed"))++failures;
+ probe.observe(toolbar,QEvent::Hide);
+ QWidget tabs;tabs.setObjectName("timelineTabsHolder");probe.observe(&tabs,QEvent::Hide);
+ app.processEvents();Unbound::flushDiagnostics();f.seek(0);bytes=f.readAll();
+ if(bytes.count("timeline.presentation.transition")!=520 || !bytes.contains("timelineTabsHolder"))++failures;
  std::printf("timeline presentation probe failures=%d\n",failures);return failures?1:0;
 }

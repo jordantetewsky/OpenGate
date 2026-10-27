@@ -11,9 +11,16 @@ class TimelinePresentationProbe : public QObject {
 public:
     explicit TimelinePresentationProbe(QObject *owner):QObject(owner) {}
     void observe(QWidget *widget,QEvent::Type type) {
-        if(!widget || captures>=256 || !relevant(widget->objectName()))return;
+        if(!widget || !relevant(widget->objectName()))return;
         if(type!=QEvent::Show && type!=QEvent::Hide && type!=QEvent::ParentChange &&
            type!=QEvent::Resize && type!=QEvent::LayoutRequest)return;
+        // Resize traffic must not exhaust evidence for a Hide/Show/reparent
+        // hours later. Geometry detail is capped; structural events remain
+        // event-driven and use the existing rotating diagnostic log.
+        if(type==QEvent::Resize || type==QEvent::LayoutRequest) {
+            if(geometryCaptures>=256)return;
+            ++geometryCaptures;
+        }
         const auto before=snapshot(widget);
         const auto sequence=++captures;
         logEvent("timeline.presentation.transition",{{"sequence",sequence},{"event_type",int(type)},
@@ -25,9 +32,10 @@ public:
         });
     }
 private:
-    int captures=0;
+    int captures=0,geometryCaptures=0;
     static bool relevant(const QString &name) {
         return name=="frameEditToolbarTop" || name=="frameConformTimelines" ||
+            name=="timelineTabsHolder" || name=="frameEditTimelineAndAudioView" ||
             name=="unboundNativePanelPosition_frameEditToolbarTop" ||
             name=="unboundPanelOverflow_frameEditToolbarTop";
     }
