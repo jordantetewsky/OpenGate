@@ -21,6 +21,7 @@
 #include "editcontrolinspection.h"
 #include "pagecontext.h"
 #include "textediting.h"
+#include "timelinepresentationprobe.h"
 
 
 namespace Unbound {
@@ -31,6 +32,7 @@ public:
     explicit InteractionDiagnostics(QObject *parent) : QObject(parent)
     {
         viewerDiagnostics = new ViewerDiagnostics(this);
+        timelineProbe = new TimelinePresentationProbe(this);
         qApp->installEventFilter(this);
         connect(qApp, &QApplication::focusChanged, this, [](QWidget *before, QWidget *after) {
             if (!related(before) && !related(after)) return;
@@ -44,6 +46,7 @@ protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
         const auto type = event->type();
+        timelineProbe->observe(qobject_cast<QWidget *>(object),type);
         const bool navigationInput=type==QEvent::DragEnter || type==QEvent::Drop || type==QEvent::MouseButtonDblClick;
         if(navigationInput && !viewerDiagnostics->nativeLoadingTraceEnabled())return false;
         if (type != QEvent::ActionAdded && type != QEvent::Shortcut && type != QEvent::Show && type != QEvent::Polish &&
@@ -290,6 +293,7 @@ private:
         logEvent(QStringLiteral("activation.state"), {{"panels", panels}, {"focus", widgetState(QApplication::focusWidget(),false)},
             {"active_window", widgetState(QApplication::activeWindow(),false)}, {"native_key", diagnosticNativeKeyWindowNumber()}});
     }
+    TimelinePresentationProbe *timelineProbe=nullptr;
     ViewerDiagnostics *viewerDiagnostics = nullptr;
     QSet<QAction *> tracked;
     QSet<QAbstractButton *> buttons;
