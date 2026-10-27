@@ -2,6 +2,38 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Continued read-only investigation after staging 4b914e1
+
+Loaded session da708421 still identifies 29812b6. Deduplicated current-session
+logs contain 326 Timeline presentation transitions through the available capture
+(last session event 22:56:56 UTC). Three post-startup tab hides at 22:28:15,
+22:32:04 and 22:56:54 show timelineTabsHolder itself not explicitly hidden;
+its native frameHeaderContainer is hidden. Each is followed by a Show within
+194–239 ms. These transient recoveries do not reproduce or explain Jordan's
+persistent toolbar/stacked-tabs failure. No late toolbar Hide is present in this
+capture. Receipt: build/timeline-visibility-20261027/current-session-transitions.json.
+Do not add a force-show loop or reset stacked-timeline preferences based on this.
+
+Source ownership review: TimelineToolbarViewport leases only frameEditToolbarTop
+through NativePanelPosition and PanelOverflow; it does not own timelineTabsHolder
+or frameHeaderContainer. NativePanelPosition restores its captured visibility and
+layout slot. The toolbar height is captured at attachment; this remains a geometry
+investigation point, not an established cause. Next persistent recurrence must
+distinguish native header visibility, toolbar content/overflow/slot visibility,
+and the Timeline ancestor before any reset. No toolbar repair is claimed.
+
+Reveal-file API investigation (Resolve 21.1.1 supplied scripting declarations):
+Timeline.GetSelectedClips and MediaPool.GetSelectedClips expose separate selections;
+TimelineItem.GetMediaPoolItem provides the source without navigating to Media Pool.
+ClipProperties documents File Path as source path and Proxy Media Path separately.
+These APIs do not establish which selection context owns a command invocation.
+The implementation must obtain explicit context from existing command/focus routing,
+reject ambiguous context, then read a single selected item's source. Do not prefer
+whichever selection list is nonempty, replay Find, or silently substitute a proxy
+when the original is offline. Compound/multicam, active takes, synced audio and
+image sequences still need path-semantics investigation. No reveal command or OS
+adapter is implemented by this inspection; no project or file-browser action ran.
+
 ### Native audio execution implementation — isolated, not installed
 
 Branch feature/native-audio-menu-transaction (4b914e1, worktree
@@ -105,17 +137,20 @@ Rollback: /Library/Application Support/CineWaltz/OpenGate/Transactions/
 E7F299C1-06F5-43D5-A0F4-78AE55E9B620/Restore Previous OpenGate.command restores 361d3df.
 Receipt: audio-native-route-inspection/build/native-route-install/installation-receipt.json.
 Published 0.0.3 assets and runtime remain unchanged. This supersedes installed-361d3df
-statements below; new-process loading and live behavior are not yet verified.
+statements below. New-process loading is verified by session da708421; the native
+control capture above does not establish audio execution or complete live acceptance.
 
 Candidate contains the narrow Timeline/Fusion shortcut conflict correction, fresh
 native audio menu interpretation, Clip Attributes schema capture, workflow enabled/
 disabled and menu-preparation capture, clearer dispatch failure reasons, and late
 Timeline toolbar/tab transition capture. It does not fix native audio Undo/repaint,
 Stabilize availability lifecycle, or missing toolbar/tabs. No runtime merge to main.
-Next: normal launch, verify loaded build, then one Stabilize hotkey on an appropriate
-disposable video selection before visiting Workflow Integrations; inspect the
-designated Timeline 117 audio clip's native Clip Attributes without applying changes.
-No layout reset or stacked-timeline toggle is required for the test.
+The normal launch and Timeline Clip Attributes inspection are complete. The cold
+Stabilize test was not obtained before visiting native UI; do not ask Jordan to
+restart merely to repeat it. Its action was observed enabled in this new session,
+which does not close the earlier disabled-action failure. Next audio test is the
+separately approved 4b914e1 gate above. No layout reset or stacked-timeline toggle
+is required.
 
 This section supersedes historical installed/pending statements below, without
 removing their evidence. The whole product contract remains in scope. Maintain
