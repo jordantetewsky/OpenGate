@@ -125,6 +125,23 @@ changes are recorded, but no recurring-loss transition has been identified yet.
 No repair or full assembled-flow acceptance is claimed. Evidence is retained at
 `audio-timeline-integration/build/macos/combined-diagnostic-install/live/observed-events.json`.
 
+### Menu-closed selection check — October 27
+
+After Jordan single-clicked the test clip, read-only API inspection reports Edit,
+same project 56384cec-acdb-4e98-b9d4-d399f6499fd6, active timeline
+da138038-1986-4b85-a57e-2b7aeba55186, and exactly one selected audio item:
+9d868f68-6497-4b27-9f7d-895479aa1342, PandLsc15-007.WAV — Hannah, audio track 1.
+Mapping is mono channel 3, five embedded channels, mute=false, no linked source.
+No setter or other project mutation was called.
+
+The active timeline differs from the previous empty-selection read
+(80ce26d6-4824-4b64-8744-09af6c27b8b3). Therefore the earlier observation does NOT
+establish a context-menu/API selection mismatch. Single selected-clip resolution
+passes for this reported context. Do not ask Jordan to repeat it. Native-menu
+freshness/target binding, action dispatch with native undo, multi-selection,
+audible channel output and toolbar loss remain unresolved. Do not invoke the
+previous menu's cached action against this newly confirmed selection.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
