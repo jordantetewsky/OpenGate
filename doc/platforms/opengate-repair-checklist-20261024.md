@@ -6,6 +6,71 @@ This section supersedes historical installed/pending statements below, without
 removing their evidence. The whole product contract remains in scope. Maintain
 this checklist throughout the work; a progress message is not a stopping point.
 
+### Selected-instance comparison after restart — October 27
+
+Read-only inspection after Jordan reselected the disposable test clip confirms
+project bf026c95-86a5-47c8-86e3-6447130c4a8a, Timeline 117
+(85f18ec9-7b1e-4ef9-843a-b113ca8c6154), and selected item
+f789cab1-30ca-4ea4-a503-db6d9fbe42a5. Its stored mapping is mono source channel 1
+(MixL); source configuration remains channels 3, 4, 5. Comparing all 716 audio
+instances with the pre-command baseline finds exactly one mapping difference:
+this designated item. No added/removed instances or Media Pool mapping changes.
+This is mapping-isolation evidence for the observed invocations, not audible,
+paint, repeated-wrap, or Undo acceptance. Receipts in audio-undo-test's ignored
+build/undo-test/live-after-restart.json and live-isolation-comparison.json.
+
+Native Shift-Command-C opens the selected Timeline item's Clip Attributes without
+Media Pool navigation. Its Audio table exposes one row/six cells through macOS
+accessibility. Source-channel cell advertises AXPress but neither that action nor
+an inspected-arrow click exposed a readable channel editor in the AX tree. Canceled
+without applying changes. Do not implement coordinate-based production automation
+or assume the API setter supplies native undo/repaint from this inspection.
+
+Separate fix/native-timeline-shortcut-context branch extracts native preset owner
+context classification from PanelCommandCatalog and tests a narrow exception for
+the observed Fusion reverse-playback conflict when native Timeline has focus.
+Unknown owners, text fields and genuine Edit conflicts must remain protected.
+This is independent of the mapping/repaint/Undo failure; no replacement runtime
+has been installed. Runtime 361d3df remains the installed diagnostic candidate.
+
+### Offline command repair checkpoint — October 27, while Jordan edits
+
+Jordan is working in Resolve; no further live input, installation, or project
+changes are authorized implicitly by this offline continuation. The next native
+inspection must wait for an agreed break and candidate-specific installation.
+
+- Shortcut branch: 1ee407a extracts existing native owner classification from
+  PanelCommandCatalog; a523d2c recognizes only the observed Fusion reverse-playback
+  owner as inactive while the native m_TiTimelineView QGraphicsView has focus.
+  Text editing, unknown Fusion owners, other focus and real Edit conflicts remain
+  protected. Shared code has one existing input filter and preset reader. Mac
+  native-preset fixture passes; Windows compilation/live behavior is unverified.
+- Native-route branch: 2c415e8 adds NativeClipAttributesProbe, a read-only bounded
+  schema observer (16 captures, at most 192 controls, 16 rows/8 columns per model,
+  64 combo entries). It forwards existing Show events, coalesces per window, checks
+  lifetime and visibility next turn, and never sets a model value or invokes a
+  native action. Production coordinator growth is four wiring lines. Fixture
+  checks real production probe output, coalescing, destruction, hidden windows,
+  and unchanged model/selection. Passing does not establish native schema support.
+- Offline Resolve Qt metadata identifies UiClipAttributesViewImp and
+  UiClipAttributesController. No private slot or opaque native handle was invoked;
+  names alone do not establish a usable native channel operation.
+- Combined source: integration/audio-native-route-inspection, based on installed
+  361d3df, retains all four assignable commands and Timeline observer; includes
+  fresh native-menu choice validation plus both changes above. Merge conflicts
+  were resolved retaining both observers and both fixture sections. Universal
+  x86_64/arm64 helper compilation and signature verification pass; combined native
+  preset and audio-probe fixtures pass. No runtime merge to main, installation,
+  live acceptance, or publication. This is an inspection candidate, not an Undo
+  repair. The API mapping setter is unchanged and remains unaccepted.
+
+Next precise evidence needed: native Clip Attributes widget/model inventory from
+the designated Timeline test clip, then prove an actual native channel action
+with timeline repaint, audible output and one Undo before expanding acceptance.
+Do not manufacture a repaint, invoke private methods inferred from their names,
+or treat successful API readback as completion. Toolbar/stacked-Timeline repair
+and the rest of the checklist remain open.
+
 ### Recurring Timeline toolbar loss — October 27, current investigation
 
 Jordan reports the Timeline panel repeatedly loses its native toolbar. The toolbar
