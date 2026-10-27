@@ -180,6 +180,31 @@ visibility or change fixed-height layout code based solely on this hypothesis.
 Next live evidence needed is the actual disappearance while this diagnostic is
 loaded; source inspection continues at the existing toolbar lease/restore boundary.
 
+### Native Clip Attributes route investigation — October 27
+
+Jordan requests sustained implementation toward usable hotkeys, not further
+report-only checkpoints. Investigating native Clip Attributes as an alternative
+entry to an undoable selected-instance channel change; this route is NOT proven
+or implemented. Do not assume its accept handler has the same scope/undo semantics
+as the previously tested Audio Channel submenu. In particular, independent cycling
+of mixed-channel multiselection remains required and must not be silently replaced
+by one common channel applied to every item.
+
+Read-only Accessibility inspection of Resolve's main Clip menu did not expose a
+Clip Attributes item. At the same check, current timeline was
+31016639-c606-466d-8f40-c50af2cb2a55 with no selection. No shortcut, menu action,
+channel setter or project navigation was issued. Requested that Jordan open the
+known test clip's Clip Attributes Audio tab so its actual controls can be inspected
+without another diagnostic installation. Window inventory afterward contained only
+the main and OpenGate workspace windows, not that dialog. Do not invent widget IDs
+or trigger an action against the newly active working timeline.
+
+Toolbar investigation: current Workspace.json's frameEditToolbarTop records contain
+floating=false and interface_scale=1, with no native_hidden field. This does not
+support blaming a persisted explicit-hidden toolbar flag for the present report.
+NativeSurfaceDoors restore, the toolbar lease and captured fixed height remain
+separate possible boundaries; no cause or repair claimed. No profile mutation.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
