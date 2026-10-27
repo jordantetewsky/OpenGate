@@ -4,6 +4,28 @@
 
 ### Installed diagnostic checkpoint — October 27, 22:19 UTC
 
+**Live native-control evidence at 22:34 UTC:** Jordan opened Clip Attributes from
+the Timeline, explicitly not Media Pool. Loaded session da708421 reports 29812b6.
+The native dialog is UiClipAttributesDialogImp / UiClipAttributesDialog. Its
+m_TracksConfigWidget is a six-column QTreeWidget with one row (Audio 1, Mono).
+The source dropdown is BmdDavUI::UiStyledComboBox, current index 3, with entries
+<none>, 1 - MixL, 2 - MixR, 3 - Hannah, 4 - Sam, 5 - Boom. The contemporaneous
+native Audio Channel submenu checks 3 - Hannah. General dialog capture is truncated
+at 192 controls; do not treat it as a complete inventory or proof of dialog commit.
+Evidence saved in native-audio-channel-probe/build/native-channel-evidence/
+timeline-attributes.json. No automated channel write or dialog acceptance occurred.
+
+Separate diagnostic branch 8cea225 adds a focused NativeAudioChannelEditor resolver,
+used by the production Clip Attributes observer. It validates the source-channel
+table cell rather than selecting the first combo (which controls track format).
+Fixture passes mono identification, non-mono/multiple-output/unconnected/disabled/
+malformed rejection and unchanged selection. Native table itemWidget association
+still requires live verification; the generic inventory did not record that edge.
+This is not native dispatch or Undo acceptance and is not installed. Verified
+21.1.1 Resolve scripting stubs expose the mapping setter but no Timeline undo/redo,
+Clip Attributes invocation, or command-execution entry matching this investigation.
+Native dialog entry/commit and selection identity remain unresolved integration work.
+
 Jordan explicitly approved candidate 29812b6 and requested installation. Process
 check confirmed Resolve closed; it was not terminated by the agent. Installed clean
 29812b66561c79c100c9e20c57bbf8ec14aba7b2 from integration/audio-native-route-inspection
