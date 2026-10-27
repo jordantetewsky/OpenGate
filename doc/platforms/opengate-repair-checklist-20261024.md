@@ -2,6 +2,32 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### 4b914e1 live test failed — native selection assumption disproved
+
+New session 9701fee8-7204-40da-bd2a-752c2d3fe4a1 (PID 67140, started
+23:13:01 UTC) loads 4b914e1. Jordan reports the channel command does not work.
+Both resolve-preset-input and resolve-workflow-shortcut reach the command registry.
+At each observed attempt the focused UiTiSequenceView / UiTiSequenceScene reports
+zero QGraphicsScene selectedItems, so the transaction rejects before sending any
+native menu event. This is a failed selection adapter, not a lost assignment or
+evidence that Jordan selected incorrectly. Do not request re-selection as a repair.
+
+Read-only scripting inspection independently confirms the designated Timeline 117
+item f789cab1-30ca-4ea4-a503-db6d9fbe42a5 selected alone, audio track 1, mono source
+channel 3 (Hannah), five embedded channels. Standard Qt scene selection is therefore
+not equivalent to Resolve Timeline selection at the inspected outer scene. Saved
+trace: native-audio-menu-transaction/build/native-menu-test/live-selection-failure.json.
+No native audio change or Undo acceptance occurred; no Undo is required for these
+rejected attempts. Keep this experimental runtime unmerged.
+
+Offline Qt metadata identifies separate UiTiTracksView / UiTiTracksScene classes
+and native controller SelectedItemsChanged signals with Resolve-specific handles.
+This suggests a nested-scene/custom-model boundary, but does not prove where the
+selected clip is represented or authorize dereferencing private handles. The next
+implementation must establish that association rather than scanning arbitrary
+items, guessing a screen position, or dropping the single-selection guard. Existing
+mono Clip Attributes control evidence remains available as a separate native route.
+
 ### Installed native execution candidate — October 27, 23:12 UTC
 
 Jordan approved 4b914e1 specifically. Resolve was verified closed (not terminated
