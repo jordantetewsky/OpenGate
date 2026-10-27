@@ -4,6 +4,20 @@ October 26, 2026. Jordan accepted the tested behavior and authorized merging to
 main and building a package. This is a local package checkpoint, not publication
 authorization or completion of every product requirement.
 
+## Later release status — reconciled October 27
+
+This package checkpoint was subsequently merged and published as
+[v0.0.3-prototype.1](https://github.com/jordantetewsky/OpenGate/releases/tag/v0.0.3-prototype.1).
+Runtime source is `903859173218cd0d037af555febb9d956382e4f3`; main README checkpoint
+is `518fcd0`. Both Mac universal PKG (signed, notarized, stapled) and Windows x64
+EXE (unsigned) are published. Reported release receipts: 54 Mac hidden suites,
+9 Mac displayed suites, 50 Windows fixture runs. Wolfgang reports Windows Studio
+startup, docking and workspace recall working, with intermediate recall presentation
+and divider repaint concerns. Mac Free startup fails in his report; cause unproven.
+These later results supersede the historical pending publication/platform statements
+below without establishing blanket live acceptance. See the authoritative repair
+checklist for current installation observations and remaining requirements.
+
 ## Changes
 
 - Retains the accepted ordinary-launch native navigation fixes: Media Pool

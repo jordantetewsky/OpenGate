@@ -1,5 +1,152 @@
 # OpenGate repair checklist
 
+## Current priorities and progress — October 27, 2026
+
+This section supersedes historical installed/pending statements below, without
+removing their evidence. The whole product contract remains in scope. Maintain
+this checklist throughout the work; a progress message is not a stopping point.
+
+### Ordered work queue
+
+1. **Previous Audio Channel / Next Audio Channel** — native API investigated read-only; not implemented yet. These exact user-facing names must be assignable through
+   the existing command system. Previous cycles 4 → 3 → 2 → 1 → 4 for a four-channel
+   source; Next cycles 1 → 2 → 3 → 4 → 1. Primary use: a selected audio clip backed
+   by multichannel media such as a polywav. Change the source-channel selection,
+   not the selected timeline track, clip, mixer bus, volume or mute state.
+   Discover native capabilities and actual selection/mapping semantics first.
+   Do not silently change every timeline instance through a shared Media Pool
+   attribute. Establish per-instance versus source-global effects before mutation.
+   Record precise questions for linked selections, stereo/adaptive/multiple output
+   mappings and selection context if evidence cannot settle them. No/multiple
+   selection, offline/unsupported media and one-channel sources require safe,
+   explicit behavior. Verify both wrap directions, repeated invocation, actual
+   resulting channel/audio, unintended-instance isolation and native undo behavior.
+   Do not declare completion from a displayed channel label or fixture alone.
+2. **Reveal selected clip in Finder / File Explorer** — newly requested, not
+   implemented. One assignable command resolves one selected audio or video clip
+   from Timeline or Media Pool and reveals the underlying file. The user must not
+   have to invoke Find in Media Pool first. Preserve selection, panel placement
+   and hidden Media Pool state; do not replay navigation as a visibility workaround.
+   Resolve ambiguous/multiple selections safely. Investigate offline media,
+   compound/multicam/generated clips and proxy/original path semantics; record
+   limitations rather than selecting an arbitrary file. Shared selection and
+   command semantics; OS file reveal belongs in platform adapters.
+3. **macOS Resolve Free startup** — Wolfgang reports 0.0.3 prototype.1 installs
+   but provides no OpenGate UI menu or panel buttons. I/O-plugin eligibility is
+   his hypothesis, not an established cause. Trace bootstrap/discovery boundaries
+   and distinguish unsupported startup from initialized-but-hidden controls.
+4. **Coherent workspace recall** — Wolfgang sees intermediate panel enumeration
+   before the final workspace appears on Windows Studio. Track as a presentation
+   defect under the existing coherent-open/restore contract. Preserve final layout,
+   ownership and native initialization; no speculative keep-showing timers.
+5. **Divider drag repaint** — Wolfgang reports costly live repaint on Windows
+   and suggests his deferred-repaint approach. Investigate bounded presentation
+   behavior, native rendering correctness and final repaint. This is a specific
+   reported interaction issue, not authorization for broad speed optimization.
+6. **Panel Manager tooltips** — clarify options Wolfgang found unclear without
+   inventing new modes or exposing implementation details.
+7. **Product attribution / independent repository** — Wolfgang requests OpenGate
+   identity in the installer license presentation, suggests “Inspired by” if
+   acknowledged, and recommends leaving the fork relationship. Preserve his
+   correspondence. Review inherited notices and actual authorization before any
+   license changes. Plan repository migration preserving history/releases/issues/
+   links; no migration, deletion or publication is authorized merely by this report.
+8. Continue the remaining numbered native-entry contract and this entire checklist,
+   including assignable hold-to-ignore docking/snapping, Reverse Match Frame,
+   native rendering/page-state/return/persistence and other unclosed requirements.
+
+### Latest reconciled evidence
+
+- Accepted ordinary-launch native double-click, Match Frame and Find load/select
+  and retained reveal fixes were merged. Jordan later accepted tested Mixer,
+  default proportions and nested-panel header behavior as a checkpoint. These are
+  bounded live results, not blanket product completion.
+- Main at this documentation update is `518fcd0`; release runtime is `9038591`.
+  Release `v0.0.3-prototype.1` is published with Mac universal PKG and Windows x64
+  EXE. Mac is signed/notarized/stapled; Windows unsigned. 54 Mac hidden suites,
+  9 Mac displayed suites and 50 Windows fixture runs passed. Compilation,
+  fixtures, installation and live acceptance remain separate evidence categories.
+  See [release](https://github.com/jordantetewsky/OpenGate/releases/tag/v0.0.3-prototype.1)
+  and [checkpoint](prototype003-v1-checkpoint.md).
+- Wolfgang's report, supplied by Jordan on October 26: Windows Studio installer,
+  startup/menu/features, intuitive inline docking and saved-workspace recall work.
+  Record this as external live evidence for those tested behaviors. It does not
+  close every Windows contract item. Mac Free startup failed as described above.
+- Floating Source blink remains open/deferred polish. Its ineffective trial stayed
+  isolated and unmerged. Difficult docking target discovery remains flagged;
+  Wolfgang's positive Windows result does not invalidate Jordan's earlier report.
+  Earlier Mixer native-rendering crash is not conclusively eliminated.
+- Jordan requested tutorial preparation. Most recent recorded uninstall removed
+  installed payloads and set aside the active OpenGate profile, preserving all 59
+  hashed native preference files including keyboard.preset.xml. Recovery:
+  `/Users/jordantetewsky/Desktop/OpenGate tutorial recovery 2026-10-26 080415`.
+  Do not assume this is still current: inspect installation/process/profile state
+  read-only. Do not reinstall or restore his profile during investigation.
+- Updated optional Jordan Tetewsky Preset is shipped. Fresh profiles enter Resolve
+  Layout; existing profiles preserve their last view. The custom user preset was
+  set aside for the tutorial, not removed from its recovery backup.
+
+### October 27 takeover observations (read-only)
+
+- Verified main HEAD `518fcd0`, with only the expected checklist edit and untracked
+  handoff at takeover. Both handoff additions are preserved. `origin` is Wolfgang's
+  repository; `personal` is Jordan's. Do not push development to `origin`.
+- Tutorial uninstall state is no longer current: the I/O bundle, Current metadata
+  and active Unbound profile exist. Installed runtime metadata identifies clean
+  `903859173218cd0d037af555febb9d956382e4f3`; this metadata read is not a complete
+  payload hash audit or proof of the loaded helper. The recovery folder still exists.
+  Resolve's read-only API reports Studio 21.1.1.10, Edit, an open project/timeline.
+  No installation, settings restore, hotkey edit or project mutation performed.
+- Connector API documentation explicitly provides Timeline.GetSelectedClips and
+  TimelineItem.GetSourceAudioChannelMapping/SetSourceAudioChannelMapping. The
+  Audio Mapping guide says the timeline setter accepts exactly one track_mapping
+  entry; channel_idx is 1-based, zero means unconnected, output count follows type.
+  Embedded and linked source metadata are read-only to this setter. Media Pool
+  SetAudioMapping is a different operation and can redefine source track structure;
+  it will not be used for these commands. Runtime getter returns the actual selected
+  audio item's stereo [1,2] mapping. Setter, audible output, other-instance isolation
+  and undo are not tested. No documented timeline undo API was found.
+- Product question pending: leave stereo/adaptive mappings unchanged initially,
+  or route all their outputs to one channel. Mono wrap semantics are already clear.
+  Linked selection, linked source audio, unavailable media and mapping validation
+  remain explicit investigation/test items, not inferred support.
+- Command architecture: PanelCommandCatalog owns identity/preset assignment;
+  PanelCommands owns dispatch/input guards; NativeEditCommands owns Edit operation
+  entry points; WorkflowCommandBridge transports registry requests; generated
+  workflow scripts perform selected-clip API operations; WorkflowCommandResults
+  reads completion diagnostics. PanelControls wires these, not operation logic.
+  Planned bounded extraction: reusable native workflow-action dispatch from
+  NativeEditCommands, preserving Stabilize behavior and removing its inline copy.
+  Audio mapping will have one focused shared operation with a direction argument;
+  reveal/path resolution and native OS reveal remain separate responsibilities.
+
+### Working and integration discipline
+
+- Before implementation, map each task to the relevant contract, production entry
+  point and evidence. Keep a status of uninvestigated / implemented / compiled /
+  fixture-verified / installed / live-accepted / merged / published as applicable.
+  Record exact build, session and user observation; do not erase unresolved quirks.
+- Before production edits, state each affected module's responsibility. Shared
+  command registration/dispatch remains shared; channel selection and mapping
+  belong in a focused audio-channel component; selected-media resolution should
+  reuse native selection infrastructure; OS reveal belongs in platform adapters.
+  These are responsibility boundaries, not preselected API or file-name designs.
+- Inspect existing command catalog, bridge, native edit operations and wrappers.
+  Extract a touched independent responsibility from oversized modules in a bounded,
+  behavior-preserving change. Move actual callers and remove replaced paths. No
+  duplicate shortcut listener, state owner, visibility controller or patch pile.
+- Review actual diffs for ownership, dependencies, duplicate logic and file growth.
+  Test meaningful assembled behaviors and both platform callers; disclose Windows
+  verification gaps. Refactoring is part of the work when warranted, not deferred
+  automatically and not an unrelated architecture rewrite.
+- Keep clean, reviewed, accepted work eligible for main in coherent checkpoints;
+  keep uncertain experiments isolated. Jordan wants good work merged while quirks
+  remain explicitly tracked. Historical merge/push permission is not blanket
+  permission to install/publish every future candidate. Document scope and remaining
+  failures at each integration, and obtain candidate-specific installation approval.
+- Never terminate Resolve, reset a layout to pass a test, alter hotkeys, discard
+  another agent's work or restore tutorial settings without authorization.
+
 # Product definitions
 
 Use three product terms: **Panel, Container, and Layout**. These definitions reflect
