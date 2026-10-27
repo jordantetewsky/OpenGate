@@ -298,6 +298,22 @@ remain unchanged. This supersedes previous installed-c12980f statements only;
 Next: user reopens Resolve normally, then use the documented new disposable-project
 fixture and actual assigned-hotkey Undo test. Do not test Undo in the working edit.
 
+### Installed Undo test baseline captured — October 27
+
+Jordan confirms a disposable project/timeline. Loaded 361d3df verified in process
+53459, session d1b0403c-bba4-4d38-9155-26b585031ffb. Read-only baseline identifies
+project `timeline  117 testing` (bf026c95-86a5-47c8-86e3-6447130c4a8a), active
+`Timeline 117` (85f18ec9-7b1e-4ef9-843a-b113ca8c6154), selected audio instance
+f789cab1-30ca-4ea4-a503-db6d9fbe42a5 (PandLsc15-007.WAV — Hannah), mono channel 3/5.
+Source ad688cb6-731b-4207-834e-28c3a1e7976e configures mono channels 3,4,5.
+The disposable project contains copied timelines: baseline captures 716 audio
+instances across 125 timelines for isolation comparison. No writes performed.
+Receipt: audio-undo-test/build/undo-test/live-baseline.json. Native keyboard preset
+backed up before live assignment; new commands currently have no saved assignments.
+Next user step: assign Next Audio Channel — All Source Channels through native
+Keyboard Customization, return to intended selected clip, invoke once. Inspect
+readback/isolation before asking for one native Undo. No live command result yet.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
