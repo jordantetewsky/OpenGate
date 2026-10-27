@@ -49,6 +49,25 @@ No Stabilize invocation, selection mutation, forced enabling, or Inspector openi
 was performed during this read-only investigation. Track this regression alongside
 the audio command; do not claim accepted Stabilize behavior is currently preserved.
 
+**Recovery reported by Jordan:** clicking the native Workflow Integrations command
+made Stabilize work again; this is an unacceptable prerequisite, not user error.
+Logs corroborate a script result at 19:23:48.737 UTC (no selected video), followed
+by an accepted hotkey at 19:23:50.575, native workflow invocation at .605, and
+successful timeline-item stabilization completion at .906. Assignment survived.
+Opening/preparing the menu versus executing its action has not yet been isolated
+as the cause of recovery. Investigate stale native action availability and menu
+initialization; do not force-enable the QAction or replay the operation.
+
+The existing WorkflowCommandMenu observer connects QAction::changed but its
+deduplication signature omitted enabled/visible state, concealing these transitions.
+Branch diagnose/workflow-action-availability adds those fields to the existing
+observer/signature with no new listener, state writer, controller, or dispatch path.
+Acceptance for the eventual repair must include first hotkey after ordinary launch
+without visiting Workflow Integrations, continued operation across page/project and
+selection changes, disabled/busy cases, and exactly one selected-clip operation.
+The shared route also serves the four audio commands, so test both callers. Current
+recovery does not close the startup/availability bug or prove why the state changed.
+
 Jordan is working in Resolve; no further live input, installation, or project
 changes are authorized implicitly by this offline continuation. The next native
 inspection must wait for an agreed break and candidate-specific installation.
