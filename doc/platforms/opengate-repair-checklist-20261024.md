@@ -2,6 +2,33 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Installed diagnostic checkpoint — October 27, 22:19 UTC
+
+Jordan explicitly approved candidate 29812b6 and requested installation. Process
+check confirmed Resolve closed; it was not terminated by the agent. Installed clean
+29812b66561c79c100c9e20c57bbf8ec14aba7b2 from integration/audio-native-route-inspection
+using the staged transactional installer after administrator authentication.
+All 18 payload files match; both executable signatures verify. All 198 snapshotted
+OpenGate/native preference and workflow-script files are byte-identical after
+installation. Only helper bundle and Current metadata were installation targets.
+Staged install/rollback fixture passed before installation.
+
+Rollback: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+E7F299C1-06F5-43D5-A0F4-78AE55E9B620/Restore Previous OpenGate.command restores 361d3df.
+Receipt: audio-native-route-inspection/build/native-route-install/installation-receipt.json.
+Published 0.0.3 assets and runtime remain unchanged. This supersedes installed-361d3df
+statements below; new-process loading and live behavior are not yet verified.
+
+Candidate contains the narrow Timeline/Fusion shortcut conflict correction, fresh
+native audio menu interpretation, Clip Attributes schema capture, workflow enabled/
+disabled and menu-preparation capture, clearer dispatch failure reasons, and late
+Timeline toolbar/tab transition capture. It does not fix native audio Undo/repaint,
+Stabilize availability lifecycle, or missing toolbar/tabs. No runtime merge to main.
+Next: normal launch, verify loaded build, then one Stabilize hotkey on an appropriate
+disposable video selection before visiting Workflow Integrations; inspect the
+designated Timeline 117 audio clip's native Clip Attributes without applying changes.
+No layout reset or stacked-timeline toggle is required for the test.
+
 This section supersedes historical installed/pending statements below, without
 removing their evidence. The whole product contract remains in scope. Maintain
 this checklist throughout the work; a progress message is not a stopping point.
