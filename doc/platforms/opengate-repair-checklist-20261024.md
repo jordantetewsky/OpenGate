@@ -132,6 +132,15 @@ hidden=false; toolbar records floating=false/scale=1 with no explicit hidden fla
 This does not identify the native setting or presentation state. No reset, toggle,
 layout write or project change was performed to collect evidence.
 
+Jordan supplied visual evidence: Desktop/Screenshot 2026-10-27 at 5.38.42 PM.png
+(actual filename uses a narrow no-break space before PM). The image shows Timeline
+tracks/ruler present while the native editing toolbar and stacked timeline tabs
+are absent. This establishes the visible failure, not its cause. Jordan is exporting;
+do not interrupt export or perform live input. After export, an agreed testing break
+can be used for the specifically identified combined diagnostic candidate 29812b6;
+installation still requires approval and Jordan saving/quitting Resolve. No automatic
+layout reset or toggling Display Stacked Timelines as part of installation/testing.
+
 Installed TimelinePresentationProbe exhausted its 256-event lifetime limit much
 earlier in the session and missed the late transition. Previous log scans also
 omitted rotations named events.jsonl.1 etc.; this capture includes them. Do not claim
