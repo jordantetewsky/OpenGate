@@ -269,6 +269,28 @@ undo as though it were timeline undo, or silently accept undoing unrelated edits
 The API route remains isolated with its passing local tests and explicit live
 limitation; those tests do not establish undo behavior.
 
+### Native undo comparison and deferred channel colors — October 27
+
+Jordan changed the test clip through Resolve's native Audio Channel UI and reports
+that Undo works. Read-only API inspection afterward finds the same selected clip
+at channel 4 (Sam); the supplied Clip Attributes screenshot also shows mono,
+Source Channel 4 — Sam, Audio 1. This establishes a behavioral difference from
+our tested external source-API setter. Investigate the native operation/transaction
+route; do not claim a replacement implemented from UI labels or method names.
+No new audio candidate is installed or accepted. Audible output is still a
+separate unconfirmed check.
+
+**Deferred requirement: assign colors to audio source channels.** Jordan wants
+channel colors, illustrated with Clip Attributes' source-channel selection.
+Record for roadmap discussion; do not expand the immediate cycling/undo work.
+Open product choices: source-channel identity shared across timeline instances
+versus per-instance clip color; where colors appear (native timeline, channel
+menu, future Selection panel); project persistence, source renames/relinking and
+collaborator behavior. Investigate native capabilities before promising coloring
+native controls or replacing original content. Reuse existing clip-color research
+where applicable, but source-channel color is not automatically native clip color.
+No implementation, UI format, scope semantics or release commitment yet.
+
 ### Working and integration discipline
 
 - Before implementation, map each task to the relevant contract, production entry
