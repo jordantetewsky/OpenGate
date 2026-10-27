@@ -291,6 +291,38 @@ native controls or replacing original content. Reuse existing clip-color researc
 where applicable, but source-channel color is not automatically native clip color.
 No implementation, UI format, scope semantics or release commitment yet.
 
+### Native Audio Channel diagnostic preparation — October 27
+
+Jordan is exporting; no Resolve queries, project/page manipulation, clip mutation,
+installation or live test is to run during the export. Work continues locally.
+The channel-command API candidate remains isolated on feature/selected-audio-channel.
+
+Separate branch `diagnose/native-audio-channel`, worktree `native-audio-channel-probe`,
+starts from accepted main plus documentation (5fccdd5), excluding the API candidate.
+NativeAudioChannelProbe records Audio Channel QMenu actions, scalar data types/values,
+checked/enabled state, ownership and bounded focus-ancestor method signatures.
+InteractionDiagnostics forwards its existing Show observations; no extra application
+input listener, action invocation, menu preparation/opening, selection write or
+visibility controller is introduced. Custom native handle payloads are not decoded
+or dereferenced. At most 32 inventories and 64 trigger observations per process.
+The callback observes a Qt signal only; it does not claim actual mapping or undo.
+
+Universal Mac helper compilation passed. Isolated diagnostic fixture passed with
+zero failures: no invocation/visibility/geometry/ownership changes, once-only trigger
+observation after repeated inspection, bounded captures. Existing hidden interaction audit
+regression also passes (hidden/dynamic/page observations). Unrelated-menu and
+OpenGate-owned-menu exclusion checks pass. Windows uses the same InteractionDiagnostics
+caller but compilation/runtime are not verified. Diagnostic not installed, not merged
+and not live-accepted. No new command is exposed by this diagnostic build.
+
+Read-only static Qt string-table inspection found no channel setter in UiTiSequenceView;
+UiConformerPanelImp exposes HandleAudioSelection/RefreshAudioMenu but their purpose
+is unverified and they have not been invoked. Method names are not implementation
+proof. Broader offline scanning was stopped to avoid unnecessary export contention.
+Next evidence: actual native Audio Channel menu inventory on an approved diagnostic
+build, followed by a bounded native operation test only after action/context semantics
+are established. No fake undo history or Cmd-Z interception is planned.
+
 ### Working and integration discipline
 
 - Before implementation, map each task to the relevant contract, production entry
