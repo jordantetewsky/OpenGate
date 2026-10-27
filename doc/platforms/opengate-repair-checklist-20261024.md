@@ -8,7 +8,7 @@ this checklist throughout the work; a progress message is not a stopping point.
 
 ### Ordered work queue
 
-1. **Previous Audio Channel / Next Audio Channel** — native API investigated read-only; not implemented yet. These exact user-facing names must be assignable through
+1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
    the existing command system. Previous cycles 4 → 3 → 2 → 1 → 4 for a four-channel
    source; Next cycles 1 → 2 → 3 → 4 → 1. Primary use: a selected audio clip backed
    by multichannel media such as a polywav. Change the source-channel selection,
@@ -119,6 +119,138 @@ this checklist throughout the work; a progress message is not a stopping point.
   NativeEditCommands, preserving Stabilize behavior and removing its inline copy.
   Audio mapping will have one focused shared operation with a direction argument;
   reveal/path resolution and native OS reveal remain separate responsibilities.
+
+### Agreed command flow and next implementation checkpoint
+
+Jordan clarified the target with the October 27 12:04:49 screenshot: the selected
+Timeline audio clip's native **Audio Channel** submenu (MixL, MixR, Hannah, Sam,
+Boom in the example). Cycle these source channels, preserving each clip instance.
+Multiple selected audio items advance independently from their current channel
+with their own wrap limits; selected video is unchanged. This supersedes the
+initial single-selection-only interpretation. Single-channel and unsupported or
+offline items are skipped with explicit reasons. Stereo/adaptive semantics remain
+an investigation gate: never silently collapse outputs to mono.
+
+All new OpenGate commands must use the existing assignment/dispatch system, with
+stable IDs, exact names and the same native keyboard customization entry path.
+Previous/Next are separate entries calling one audio operation with direction.
+Catalog identity, native shortcut integration, workflow dispatch, audio operation
+and completion reporting have separate jobs. PanelControls only wires components.
+No second shortcut listener, visibility controller or audio implementation.
+
+- Dispatcher extraction is implemented on `feature/selected-audio-channel`:
+  NativeWorkflowOperation now owns the existing validated workflow-action invocation;
+  NativeEditCommands' Stabilize caller delegates to it and its inline path is removed.
+  Mac hidden native-edit-command fixture compiled and passed (zero failures).
+  Initial fresh-worktree header setup and sandbox window-service failures preceded
+  that passing run; they are not production failures. Windows execution is pending.
+  Not installed, live-tested, merged or published.
+- Next: shared audio selection/mapping operation, previous/next catalog entries,
+  generated workflow targets and meaningful wrap/repeated/multiselection/failure
+  tests; preserve Stabilize, Fixed Playhead and native keyboard behavior.
+- Live mutation testing is NOT authorized yet: the disposable project proposal
+  remains unanswered. No working timeline or selection is to be changed to test.
+  Audible output, per-instance isolation and native undo remain live gates.
+- Deferred follow-up: an OpenGate-created Qt **Selection** panel (working name),
+  dockable/floatable/tabbable through existing panel mechanisms, showing selected
+  video/audio counts and operation results. Hidden panels should do no rendering
+  or panel-only refresh work. This is an explicit proposed addition to the usual
+  native-content panel definition, not permission to replace native Resolve panels.
+- Deferred discussion: ShuttleGlide-style optional command/result animation and
+  possible future input integration. Feedback should follow actual operation
+  results, not merely key presses. Neither animation nor Selection blocks the two
+  commands; detailed presentation choices remain unaccepted.
+
+### Audio candidate implementation and evidence — October 27
+
+Worktree `selected-audio-channel`, branch `feature/selected-audio-channel`, based
+on documentation checkpoint `7783084`; dispatch extraction checkpoint `5223f60`.
+The two command entries now share `src/core/operations/audio_channel.py`, with
+fresh native selection and mapping reads on each invocation. Eligible mono clips
+cycle independently across embedded source channels, preserving mute and track
+format. No Media Pool setter, selection writer, panel door or native key replay
+is used. Duplicate/missing selected-item identities reject before any mutation.
+Video selection is unchanged; unavailable original files, single-channel media,
+unconnected channels, linked-source audio and non-mono mappings are skipped.
+A successful setter is checked by mapping readback; that is NOT audible proof.
+Partial setter failures are counted; successful earlier changes are not silently
+rolled back. Native undo grouping remains unknown and must be live-tested.
+
+Production responsibilities reviewed:
+- NativeWorkflowOperation owns validated action lookup/invocation; the replaced
+  inline Stabilize path was removed, and the real caller uses the extraction.
+- NativeEditCommands registers and routes Edit operations; no audio mapping lives
+  there. PanelCommandCatalog and the existing preset/input ownership are unchanged.
+- Shared audio_channel.py owns the selected-instance audio operation only.
+- workflow_operation_wrapper.py owns direct-operation execution guards and atomic
+  result transport for both Stabilize and audio; the old inline wrapper was removed.
+- PanelCommandMenu presents registered non-panel operations using catalog labels,
+  so adding an operation no longer requires another hand-written menu entry.
+- WorkflowCommandResults consumes bounded diagnostics only; it cannot dispatch.
+  Audio result counts/reasons are currently diagnostic, not a new visible panel,
+  toast, or animation. User-facing result presentation remains unfinished.
+- PanelControls, selection ownership and OS adapters were not changed. No new
+  persistent state, shortcut listeners or visibility controllers were introduced.
+  Windows and Mac generators use the same operation and wrapper implementation.
+
+Verification executed locally:
+- Six production-operation tests pass: both wraps/repeated fresh reads; independent
+  multiselection/video/unselected isolation; skipped mappings/offline files/mute;
+  duplicate identity rejection; setter refusal/readback mismatch; empty/page guards.
+- Actual generated Mac and Windows wrapper tests pass, including repeated audio
+  invocation and independent wrap, no recursive requests, and preserved Stabilize.
+- Mac hidden native-edit-command, native-preset-bindings, workflow-command and
+  panel-command-menu fixtures pass (zero failures), including audio assignment,
+  removal of old bindings, conflicts, exact menu labels and once-only dispatch.
+- Full universal Mac helper compilation/link/signing passed. This is a development
+  build, not an installer, installation, Windows build, or live acceptance result.
+- The first Mac wrapper test caught an extracted-module import-path failure;
+  resolved through explicit file-based module loading, and its rerun passed.
+- Shared operation tests are registered in the Mac wrapper suite and Windows
+  release test entry. Windows script tests ran on Mac; Windows C++ compilation,
+  native execution and live acceptance remain unverified for this candidate.
+
+Next precise gate: obtain permission for a disposable live project and verify
+native menu/API equivalence, actual distinguishable channel audio, other-instance
+and Media Pool isolation, repeated/multiple selection and undo. No project switch,
+live mutation, installation or publication has occurred. The new audio behavior
+stays isolated until verified and accepted. The broader ordered queue is retained.
+
+### Authorized live test and toolbar observation — October 27
+
+Jordan approved disposable live testing, then identified the already-open
+`DEMO OPENGATE` project as temporary. Added a separate `OpenGate Audio Channel
+Verification 20261027` timeline with two instances of generated four-channel
+330/550/770/990 Hz audio. Existing `OpenGate_Demo` timeline was not edited.
+The initial dictionary-form ImportMedia call returned None; a path-list import
+succeeded. The test source's Media Pool mapping was configured mono during fixture
+setup only; production channel cycling never uses that setter.
+
+No-selection production operation passed in real Resolve 21.1.1.10. A baseline
+WAV render job was added, but StartRendering returned false; no output/audio proof
+was obtained. Render setup moved Resolve to Deliver; the agent returned it to Edit.
+Do not describe this failed render attempt as successful signal verification.
+
+Jordan reported the toolbar disappearing, then reported it returned. Installed
+runtime logs identify `9038591`, session `ff9d3953-eace-45e7-a9ad-9824a36c8416`.
+Edit→Deliver occurred at 16:39:21 UTC and return at 16:39:40; header controls logged
+zero width during Deliver and positive width after return. Workspace snapshot says
+header visible=true. Which toolbar disappeared and exact recovery trigger remain
+unconfirmed; temporal proximity does not prove cause. Preserve this as an unresolved
+page-return presentation observation, with recovered visibility, not a proven fix.
+Logs/settings snapshot: `build/audio-live-20261027/toolbar-incident/` in the feature
+worktree. No layout reset, installation or toolbar-state mutation was performed.
+
+Jordan pasted a known five-channel polywav and selected its mono Hannah/channel-3
+instance. The actual production operation was loaded from source through the
+Resolve connector, then Next changed it to channel 4. Readback confirms exactly
+one timeline item changed across the project's audio-item snapshots, selection
+identity stayed the same and Media Pool mapping stayed byte-identical. Receipt:
+`build/audio-live-20261027/polywav-next.json`. This establishes the tested setter's
+instance scope, not audible output, undo, installed shortcut execution or overall
+acceptance. Jordan is checking playback and one native Undo before further writes.
+New audio command binaries/wrappers remain uninstalled; live source-operation
+execution is distinct from the assignment fixtures and installed user experience.
 
 ### Working and integration discipline
 
