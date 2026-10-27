@@ -6,6 +6,39 @@ This section supersedes historical installed/pending statements below, without
 removing their evidence. The whole product contract remains in scope. Maintain
 this checklist throughout the work; a progress message is not a stopping point.
 
+### Recurring Timeline toolbar loss — October 27, current investigation
+
+Jordan reports the Timeline panel repeatedly loses its native toolbar. The toolbar
+is part of the Timeline panel, not an independently optional panel. The reset used
+to recover it then requires re-enabling **Display Stacked Timelines**. This clarifies
+the earlier recovered-toolbar observation: recovery did not fix the recurring bug.
+Do not require Jordan to distinguish widget visibility from checked-state mechanics.
+The specific reset entry point and causal state writer are not yet established.
+
+Investigate both incomplete Timeline presentation and loss of native preferences
+through recovery. Preserve the complete toolbar/timeline-tabs contract (items 9–10),
+stacked-timeline choice, native rendering and current arrangement across page return,
+project/timeline changes and managed/native transitions. No periodic force-show,
+replayed toggle, automatic reset or separate visibility controller is an accepted fix.
+The audio diagnostic installation proposal is on hold while this report is assessed;
+audio undo work and the broader queue remain open. No new installation performed.
+
+Read-only source findings: TimelineToolbarViewport leases the native toolbar's
+layout position and reparents it into PanelOverflow; it captures height once on
+attachment. NativePanelPosition owns restoration of the original slot/visibility.
+PanelControls still contains legacy attached-toolbar reveal routing, including an
+unreachable branch after requestUndock's toolbar early return. These are investigation
+boundaries, not proof of cause. Existing timeline-overflow fixture covers a fixed-height
+synthetic toolbar and dock restoration, not Resolve's changing native timeline modes.
+Do not claim that fixture verifies this reported experience.
+
+Logs and profile files preserved read-only in main-release's ignored
+`build/timeline-visibility-20261027/`; latest captured event is October 27 16:57:06 UTC,
+runtime 9038591. Current report is user evidence; those older events do not establish
+the exact failure transition. No live project mutation, settings change or production
+repair made during this investigation. Next: trace the toolbar ownership/geometry
+transition and the reset path before choosing a bounded production correction.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
