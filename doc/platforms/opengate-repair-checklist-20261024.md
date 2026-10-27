@@ -75,6 +75,29 @@ the temporary hold on combined diagnostic preparation, not the installation gate
   repeated wrap and instance isolation; Timeline acceptance requires complete native
   controls and preserved stacked-timeline choice through normal transitions.
 
+### Approved combined diagnostic installation — October 27, 17:11 UTC
+
+Jordan explicitly approved c12980f and quit Resolve. Process check confirmed closed.
+Installed clean diagnostic runtime c12980ff8d2c16e5ad1063e5bc4a7756d52ad0f9 using
+the prepared transactional installer after macOS administrator authentication.
+All four bundle-file hashes match the candidate; both executable signatures verify;
+Current runtime manifest matches the bundle. All 62 snapshotted OpenGate/native
+Resolve preference files are unchanged, including the keyboard preset. No workflow
+command scripts, layout reset, profile restore or project mutation was performed.
+
+Fresh rollback transaction:
+`/Library/Application Support/CineWaltz/OpenGate/Transactions/E5A4C689-E029-4C9A-8E95-D3F033FB6E0E`
+contains `Restore Previous OpenGate.command` and previous bundle/Current metadata.
+Receipt: audio-timeline-integration/build/macos/combined-diagnostic-install/installation-receipt.json.
+This supersedes earlier installed-9038591 statements; published release remains
+9038591 and is unchanged. New process loading and live diagnostic usefulness are
+not yet verified. The audio commands and toolbar repair remain incomplete.
+
+Next precise user action: reopen Resolve normally, select the authorized test
+polywav at the end of the timeline, and open its Audio Channel submenu. Merely
+opening the menu should provide the first native action inventory; do not require
+an audio change/Undo or layout reset for this initial evidence capture.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
