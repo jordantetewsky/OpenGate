@@ -2,6 +2,62 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Native audio execution implementation — isolated, not installed
+
+Branch feature/native-audio-menu-transaction (4b914e1, worktree
+native-audio-menu-transaction) replaces the two All Source Channels production
+callers' API execution path with NativeAudioChannelTransaction. The focused shared
+Qt component addresses one native-selected QGraphicsItem in the focused Timeline,
+delivers a keyboard-reason context-menu event directly to that item, recognizes its
+fresh Audio Channel submenu, and activates the next/previous native menu row through
+QMenu keyboard handling. This supports native menu exec()-return handlers as well
+as action-signal handlers. It never calls the mapping setter or force-enables an
+action; it does not move the cursor or select another item. Actual Resolve support
+for this QGraphicsScene selection/context-event route is still unverified. It must
+fail closed when the native selection representation or menu is unsupported.
+
+This is explicitly an intermediate single-item All Source Channels implementation.
+It can briefly present the native menu; final presentation is not accepted yet.
+Multiple native selections, dialogs/popups, unavailable focus/scene/items and
+unsupported menus are refused. A changed selection or intervening input cancels
+pending work; native menu choices are not cached across requests. A two-second
+deadline bounds a failed attempt. Reporting distinguishes a delivered menu key
+from verified mapping, audio, selection preservation and Undo. Mono/stereo/adaptive,
+linked-selection and offline/native-menu semantics still require actual Resolve
+verification; synthetic menu recognition does not establish those behaviors.
+
+All four catalog labels remain. All-source workflow scripts now post through the
+existing command bridge, removing their API setter invocation. Skip Excluded
+Channels still uses the unaccepted experimental API route and is not an Undo fix;
+native exclusion handling and independent multi-clip cycling remain required.
+No new shortcut listener, mapping state owner or OS-specific selection code was
+added. The transaction's temporary event observer handles only its pending native
+operation; existing catalog, bridge, menus and platform callers remain shared.
+
+Verification: production registry-to-selected-item-to-menu fixture passes both
+directions/wrap, eight separate exec()-return commits, no other-item changes,
+selection retention, no/multiple selection, single-channel/unsupported rejection,
+and cancellation on selection change. Existing native Edit, preset-conflict and
+four-command menu fixtures pass. Generated Mac and Windows wrappers pass with 31
+bridge requests and three remaining API scripts. The native transaction code has
+compiled universal x86_64/arm64 with bootstrap/signature checks; final preflight
+diagnostic revision is being rebuilt. Windows native build/live acceptance, actual
+Resolve dispatch/Undo/audible result and complete user flow remain unverified.
+
+Separate refactor/audio-channel-planning, f32821f, extracts selection/policy into
+audio_channel_plan.py and keeps the experimental API executor in audio_channel.py.
+Production executor and generated wrappers use that extracted logic; the old inline
+planning path was removed. A read-only serializable native-edit plan includes project/
+Timeline/item identities and per-item before/after channels; planning performs zero
+writes and grants no authority to execute against a later selection. Eleven operation
+tests plus both platform wrapper tests pass. This refactor is not installed or merged
+as runtime, and does not establish native transaction integration by itself.
+
+Next live gate, after exact-candidate approval: one All Source Channels invocation
+on the designated disposable Timeline 117 mono polywav, confirm actual channel and
+paint, then one native Undo. Stop if no supported native selection/menu or if Undo
+does not restore that channel. Preserve 29812b6 as the installed rollback baseline.
+
 ### Installed diagnostic checkpoint — October 27, 22:19 UTC
 
 **Live native-control evidence at 22:34 UTC:** Jordan opened Clip Attributes from
