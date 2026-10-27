@@ -40,8 +40,8 @@ selection retention, no/multiple selection, single-channel/unsupported rejection
 and cancellation on selection change. Existing native Edit, preset-conflict and
 four-command menu fixtures pass. Generated Mac and Windows wrappers pass with 31
 bridge requests and three remaining API scripts. The native transaction code has
-compiled universal x86_64/arm64 with bootstrap/signature checks; final preflight
-diagnostic revision is being rebuilt. Windows native build/live acceptance, actual
+compiled universal x86_64/arm64 with bootstrap/signature checks, including final
+4b914e1. Its exact-source native transaction fixture passes. Windows native build/live acceptance, actual
 Resolve dispatch/Undo/audible result and complete user flow remain unverified.
 
 Separate refactor/audio-channel-planning, f32821f, extracts selection/policy into
@@ -57,6 +57,16 @@ Next live gate, after exact-candidate approval: one All Source Channels invocati
 on the designated disposable Timeline 117 mono polywav, confirm actual channel and
 paint, then one native Undo. Stop if no supported native selection/menu or if Undo
 does not restore that channel. Preserve 29812b6 as the installed rollback baseline.
+
+Staged candidate: native-audio-menu-transaction/build/native-menu-test, clean
+4b914e1e2f63e714c779768d3411752c938df2d2. Twenty hashed files across four transaction
+targets: helper bundle, Current metadata, and only the two All Source Channels
+workflow scripts. Existing Skip Excluded/Stabilize scripts and settings are not
+installation targets. Both staged executable signatures verify. The staged installer
+and rollback pass a filesystem rehearsal with exact baseline restoration and an
+unchanged settings sentinel. Not installed, live-accepted, merged as runtime, or
+published. Installation requires approval specific to this new execution candidate;
+the earlier 29812b6 approval does not cover it. Do not test it on working clips.
 
 ### Installed diagnostic checkpoint — October 27, 22:19 UTC
 
