@@ -35,6 +35,20 @@ has been installed. Runtime 361d3df remains the installed diagnostic candidate.
 
 ### Offline command repair checkpoint — October 27, while Jordan edits
 
+**New live failure: Stabilize does not fire (19:21–19:23 UTC).** Installed 361d3df
+accepts Jordan's shortcut as edit.inspector.stabilize from Timeline and main-window
+contexts, then rejects native workflow dispatch. Logs report exactly one matching
+action; Inspector diagnostic inventory independently shows workspaceWIPlugins_0,
+OpenGate - Edit - Stabilize, disabled. This is not evidence of a lost assignment
+or ambiguous action. Installed Stabilize script exists with the expected route
+marker and remains the October 26 file; the same enabled-action guard existed in
+published 9038591. No proof yet of why Resolve disabled it, or whether the state is
+stale. ResolveDebug also records a native stabilization attempt at 19:22:08 UTC
+with reported frame size 0 x 0; do not infer a media fault from that log alone.
+No Stabilize invocation, selection mutation, forced enabling, or Inspector opening
+was performed during this read-only investigation. Track this regression alongside
+the audio command; do not claim accepted Stabilize behavior is currently preserved.
+
 Jordan is working in Resolve; no further live input, installation, or project
 changes are authorized implicitly by this offline continuation. The next native
 inspection must wait for an agreed break and candidate-specific installation.
