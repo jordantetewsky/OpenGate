@@ -252,6 +252,23 @@ acceptance. Jordan is checking playback and one native Undo before further write
 New audio command binaries/wrappers remain uninstalled; live source-operation
 execution is distinct from the assignment fixtures and installed user experience.
 
+### Audio undo failure — candidate acceptance blocked
+
+Jordan reports that native Undo after the source-API channel change undid the
+preceding paste instead of restoring channel 3. Installed logs record editUndo
+at 16:42:31 UTC and editRedo at 16:42:33. Subsequent read-only inspection finds
+the restored pasted clip still mapped to channel 4 (Sam), with no selection.
+This is evidence that this tested API invocation did not add the expected native
+undo entry. Do not install/promote the candidate as a complete native command.
+No more channel mutations are being made pending comparison with a direct native
+Audio Channel menu change followed by Undo. Audible result remains unconfirmed.
+
+Investigate the native menu route and actual undo scope before choosing a repair.
+Do not manufacture a separate undo stack, intercept Cmd-Z, use Fusion composition
+undo as though it were timeline undo, or silently accept undoing unrelated edits.
+The API route remains isolated with its passing local tests and explicit live
+limitation; those tests do not establish undo behavior.
+
 ### Working and integration discipline
 
 - Before implementation, map each task to the relevant contract, production entry
