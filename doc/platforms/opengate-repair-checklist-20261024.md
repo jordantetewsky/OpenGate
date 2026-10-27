@@ -279,6 +279,25 @@ managed paths, removal of new scripts, and untouched settings sentinel. Real
 installation stays c12980f. Candidate-specific approval and user saving/quitting
 Resolve remain required before any real installation. No working-project mutation.
 
+### Four-command Undo candidate installed — October 27, 18:39 UTC
+
+Jordan explicitly approved installation of 361d3df. Confirmed Resolve closed,
+installed via administrator-authenticated transaction, verified all 22 staged
+payload files and both runtime signatures. All 62 snapshotted OpenGate/native
+Resolve settings files are byte-identical afterward. Four exact-name workflow
+scripts are installed; no keyboard assignment, layout/profile reset or project
+mutation performed. Loaded runtime and actual command/Undo behavior remain untested.
+
+Rollback to previous c12980f diagnostic installation:
+`/Library/Application Support/CineWaltz/OpenGate/Transactions/65C16BE0-A9D7-416D-AED2-40AE753316E2/Restore Previous OpenGate.command`.
+The transaction covers helper, Current metadata and all four new scripts. Receipt:
+`audio-undo-test/build/undo-test/installation-receipt.json`. Published release assets
+remain unchanged. This supersedes previous installed-c12980f statements only;
+361d3df is an experimental installed candidate, not accepted or merged runtime.
+
+Next: user reopens Resolve normally, then use the documented new disposable-project
+fixture and actual assigned-hotkey Undo test. Do not test Undo in the working edit.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
