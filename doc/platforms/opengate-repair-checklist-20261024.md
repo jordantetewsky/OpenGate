@@ -205,6 +205,56 @@ support blaming a persisted explicit-hidden toolbar flag for the present report.
 NativeSurfaceDoors restore, the toolbar lease and captured fixed height remain
 separate possible boundaries; no cause or repair claimed. No profile mutation.
 
+### Four agreed channel commands and source-configuration evidence — October 27
+
+Jordan supersedes the initial two bare command names with these four exact names:
+- Previous Audio Channel — Skip Excluded Channels
+- Next Audio Channel — Skip Excluded Channels
+- Previous Audio Channel — All Source Channels
+- Next Audio Channel — All Source Channels
+
+Both pairs modify only selected audio instances in the current active timeline.
+“All Source Channels” broadens the eligible channel range, never the set of clips
+modified. No Media Pool mapping writes, global source changes, other-timeline
+changes, or changes to unselected instances are permitted.
+
+Read-only live evidence: the selected test instance has mono channel 3 of 5;
+its MediaPoolItem.GetAudioMapping reports three mono configured tracks mapped to
+channels 3,4,5. Channels 1/2 still exist in the five-channel source. Media Pool Clip
+Attributes exposes three output rows; timeline instance Clip Attributes exposes
+one output row. This supports deriving exclusions from configured source mappings
+for this mono example, rather than inferring exclusions from the instance's single
+current channel or labels such as MixL/MixR. Nothing was changed in either dialog.
+A later deeper accessibility inspection found the dialog closed; it did not inspect
+or invoke the channel cell editor. Native Clip Attributes dispatch/undo remains
+unverified, and multiselection must not be silently collapsed to a common channel.
+
+Implemented on feature/selected-audio-channel: both pairs use one focused operation
+with direction and explicit range. Skip Excluded reads fresh Media Pool configuration
+and cycles its unique mapped mono source channel numbers in source order; All Source
+cycles 1..embedded channel count. If the current channel is excluded, advance to
+the next/previous eligible number with wrapping. A sole eligible current channel
+is a no-op with reason; an excluded current channel may move into that sole eligible
+channel. Muted mapped tracks remain eligible (mute is not an exclusion). Missing,
+linked-source or non-mono source configurations are skipped, never silently treated
+as all-source. Broader stereo/adaptive semantics remain open.
+
+Verification: nine production-operation tests pass; generated Mac and Windows
+wrappers pass (34 commands, five direct operations including Stabilize); Mac native
+Edit routing, native preset assignment/remapping/conflicts, command-menu exact labels
+and once-only dispatch, and workflow result checks pass. All four audio command
+variants are covered by routing, menu and preset checks. Universal Mac helper build
+passed with the then-uncommitted source; not an installed candidate or Windows C++
+verification. Existing c12980f diagnostic installation remains unchanged.
+
+Organization review: no PanelControls edits or second controller/state owner.
+Audio mapping/policy stays in audio_channel.py (129 lines, net +27); native Edit
+routing stays in nativeeditcommands.h (97 lines, net +3). Shared workflow dispatcher
+remains 40 lines, wrapper 31 lines. The prior Stabilize dispatcher extraction still
+has real callers and no replaced parallel implementation. Existing fixture harnesses
+were reused. This checkpoint remains isolated because the API setter's native Undo
+failure is unresolved; passing tests/builds are NOT permission to ship broken Undo.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
