@@ -98,6 +98,33 @@ polywav at the end of the timeline, and open its Audio Channel submenu. Merely
 opening the menu should provide the first native action inventory; do not require
 an audio change/Undo or layout reset for this initial evidence capture.
 
+### First combined diagnostic live capture — October 27, 17:13 UTC
+
+Loaded c12980f confirmed in process 50953, session
+8cb36661-764e-4271-9c00-251ecbd6380a. Jordan opened the test clip's Audio Channel
+submenu. Four inventories show five enabled/checkable native QActions: MixL,
+MixR, Hannah, Sam, Boom; only Hannah/channel 3 checked. Action object names and
+QVariant data are empty. The submenu and its parent are unnamed QMenus. Focus
+ancestry includes UiTiSequenceView/m_TiTimelineView; inspected public meta-methods
+expose customContextMenuRequested(QPoint), not a proven channel operation or menu
+preparation method. No native action was invoked by OpenGate.
+
+This confirms observable real channel actions, not safe fresh-menu construction,
+automated native undo, instance isolation, audible output or working hotkeys.
+Never cache an action from one right-click and assume it targets later selection.
+A subsequent read-only scripting query returned no selected clips in current
+project 56384cec-acdb-4e98-b9d4-d399f6499fd6, timeline
+80ce26d6-4824-4b64-8744-09af6c27b8b3. The observations are not simultaneous:
+context-menu target versus selection, or a changed selection, remain possibilities.
+Requested one menu-closed single-click selection check; no mutations authorized
+from this empty-selection result. Previous native Undo confirmation need not repeat.
+
+Timeline observer captured 172 transition records during launch; toolbar reached
+visible 50px content with a 61px overflow slot. Intermediate native/leased hierarchy
+changes are recorded, but no recurring-loss transition has been identified yet.
+No repair or full assembled-flow acceptance is claimed. Evidence is retained at
+`audio-timeline-integration/build/macos/combined-diagnostic-install/live/observed-events.json`.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
