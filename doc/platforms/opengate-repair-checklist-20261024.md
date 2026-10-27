@@ -314,6 +314,33 @@ Next user step: assign Next Audio Channel — All Source Channels through native
 Keyboard Customization, return to intended selected clip, invoke once. Inspect
 readback/isolation before asking for one native Undo. No live command result yet.
 
+### Context-sensitive shortcut ownership requirement — October 27
+
+Jordan asks that timeline-specific commands leave their keys usable for native
+commands in other contexts, distinguishing clip operations from show/hide/maximize.
+Product choice pending: Audio Channel/Stabilize require Timeline keyboard focus,
+or also work from Inspector/viewer focus while a valid timeline selection remains.
+Do not silently change accepted Stabilize access from Inspector fields without
+resolving that choice. Command target scope (selected active-timeline instance) is
+separate from the keyboard context in which its shortcut should claim a key.
+
+Actual installed 361d3df behavior: native preset matching is Edit-page gated;
+NativeEditCommands availability checks the page, not focused panel or eligible
+selection. Audio/Stabilize validate selected audio/video inside their scripts,
+after shortcut interception. Thus an ineligible operation may already have claimed
+the key before returning no-selected-clips. Text fields block audio shortcuts;
+modified Stabilize/Fixed Playhead are explicitly allowed in text fields. Dialogs
+and tracking menus are guarded. Native conflict matching conservatively rejects
+other owners except the known FairlightTimeline exclusion; it does not implement
+general focus-context reuse of the same key. No full context-aware behavior claim.
+
+Repair should reuse command catalog/availability and existing input routing, with
+one explicit context owner and validation before claiming a key; preserve native
+commands and ordinary typing. Do not add a separate keyboard listener or assume
+that a late script no-op returns a consumed key to Resolve. Scope decision pending;
+no installed behavior/settings changed. Current disposable Undo baseline remains
+captured; no test hotkey or Undo has been executed by the agent.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
