@@ -68,6 +68,23 @@ selection changes, disabled/busy cases, and exactly one selected-clip operation.
 The shared route also serves the four audio commands, so test both callers. Current
 recovery does not close the startup/availability bug or prove why the state changed.
 
+**Command-tree clarity requirement:** Jordan objects to every assignable command
+cluttering Workflow Integrations. Investigate separation of native shortcut
+registration from reliable execution and visible menu presentation. Preserve native
+Keyboard Customization, existing assignments and single dispatch. Do not claim
+entries are unavoidable or hide/reparent them without proving those contracts.
+
+Offline continuation adds bounded before-menu/next-event-turn snapshots to the
+existing WorkflowCommandMenu observer (e064ec0, fixture passed), alongside enabled/
+visible transitions (07e71a0). No signal is emitted into Resolve, menu opened, or
+action enabled by the observer. NativeWorkflowOperation now distinguishes missing,
+ambiguous and disabled actions; native-edit-command fixture passes with unchanged
+refusal behavior. Combined source 29812b6 on integration/audio-native-route-inspection
+includes these changes and the late Timeline capture correction. Universal Mac
+helper compilation passed. This remains an isolated inspection candidate, not a
+native audio Undo/repaint fix, Stabilize lifecycle repair or Timeline repair.
+Installed runtime and published release are unchanged.
+
 Jordan is working in Resolve; no further live input, installation, or project
 changes are authorized implicitly by this offline continuation. The next native
 inspection must wait for an agreed break and candidate-specific installation.
@@ -105,6 +122,25 @@ or treat successful API readback as completion. Toolbar/stacked-Timeline repair
 and the rest of the checklist remain open.
 
 ### Recurring Timeline toolbar loss — October 27, current investigation
+
+**Recurrence reported around 17:38 local time:** Jordan again reports both the
+Timeline toolbar and stacked tabs missing. Read-only evidence saved under
+main-release/build/timeline-visibility-20261027/recurrence-173828: current and rotated
+logs, active-session receipt, OpenGate JSON profiles and native config.user.xml.
+Running receipt remains 361d3df/session c156d677. Saved workspace marks Timeline
+hidden=false; toolbar records floating=false/scale=1 with no explicit hidden flag.
+This does not identify the native setting or presentation state. No reset, toggle,
+layout write or project change was performed to collect evidence.
+
+Installed TimelinePresentationProbe exhausted its 256-event lifetime limit much
+earlier in the session and missed the late transition. Previous log scans also
+omitted rotations named events.jsonl.1 etc.; this capture includes them. Do not claim
+the old probe captured this failure. Separate diagnostic commit 2e4e4a8 caps geometry
+events independently and preserves event-driven Show/Hide/ParentChange capture
+through long sessions using the existing rotating log. It includes timelineTabsHolder
+and frameEditTimelineAndAudioView. The production-path fixture passes late toolbar/
+tab Hide capture after 300 resize events and retains no-mutation/lifetime checks.
+This fixes missing evidence, not the toolbar/stacked-timeline presentation bug.
 
 Jordan reports the Timeline panel repeatedly loses its native toolbar. The toolbar
 is part of the Timeline panel, not an independently optional panel. The reset used
