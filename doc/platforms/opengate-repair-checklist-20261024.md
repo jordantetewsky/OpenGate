@@ -39,6 +39,42 @@ the exact failure transition. No live project mutation, settings change or produ
 repair made during this investigation. Next: trace the toolbar ownership/geometry
 transition and the reset path before choosing a bounded production correction.
 
+### Separate branches and combined diagnostic candidate — October 27
+
+Jordan requests concurrent audio-command and Timeline repair work on separate
+branches, combined into one installation for live testing when ready. Refactor at
+responsibility boundaries if needed; do not inflate coordinators. This supersedes
+the temporary hold on combined diagnostic preparation, not the installation gate.
+
+- Audio diagnostic: diagnose/native-audio-channel, 547a2ee. The failed external-API
+  audio implementation remains isolated on feature/selected-audio-channel; no native
+  undo workaround has been accepted or included in this diagnostic candidate.
+- Timeline diagnostic: diagnose/timeline-toolbar, 135dae8. Focused 51-line
+  TimelinePresentationProbe records bounded before-handler/next-turn ownership,
+  visibility and geometry evidence. It does not show/hide/reparent, change a setting,
+  poll, or install an input filter. InteractionDiagnostics forwards existing events.
+- Integration: integration/audio-timeline-diagnostics, clean c12980f, worktree
+  audio-timeline-integration. Includes both diagnostics on current main runtime.
+  Wiring conflicts were resolved by retaining each focused observer; the coordinator
+  diff is 12 lines. No duplicate state owner or presentation implementation added.
+- Verification: both focused production-observer fixtures pass; combined hidden
+  interaction audit passes (hidden/dynamic/Fusion). Sandbox window-service failure
+  on the first audit was rerun with permission and passed. Universal arm64/x86_64
+  helper compiled; signature verification and I/O bootstrap fixture passed. Windows
+  shares the observer caller but has not been compiled or live-tested here.
+- Prepared ignored build/macos/combined-diagnostic-install: candidate hashes,
+  installed-bundle/Current metadata snapshot, and established transactional install
+  script with Resolve-running refusal and fresh checkpoint/rollback. Existing
+  installation/settings/hotkeys are unchanged. Not installed, live-accepted, merged
+  to main as runtime, or published; this is a diagnostic candidate, not a repair.
+- Next gate: candidate-specific installation approval and user saving/quitting
+  Resolve. Then capture the native audio submenu and a naturally occurring Timeline
+  presentation failure. Do not reset the layout to manufacture recovery or mutate
+  any working clip except the specifically authorized test clip after identity
+  verification. Final audio acceptance still requires native undo, audible mapping,
+  repeated wrap and instance isolation; Timeline acceptance requires complete native
+  controls and preserved stacked-timeline choice through normal transitions.
+
 ### Ordered work queue
 
 1. **Previous Audio Channel / Next Audio Channel** — implemented on an isolated branch; local checks pass, live acceptance pending. These exact user-facing names must be assignable through
