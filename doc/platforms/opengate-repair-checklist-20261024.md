@@ -2,6 +2,71 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Four-command native candidate 33a3cf6 — built/staged, awaiting approval
+
+Jordan requires continued execution toward one live-test candidate for all four
+commands, rather than stopping at each component or proposing another all-source-
+only install. Branch fix/native-audio-track-selection now has clean 33a3cf6;
+installed/loaded runtime remains failed candidate 4b914e1. No installation or runtime
+merge occurred during this follow-up. This supersedes the d6ba6e5 staging proposal.
+
+All four catalog commands now share NativeAudioChannelTransaction with direction
+and scope parameters. It captures the contained-scene selection, requests a fresh
+read-only source plan, retains selection guards throughout planning, then validates
+the fresh native menu's checked channel/channel count against the plan before
+activating the planned row through native QMenu keyboard handling. All Source and
+Skip Excluded use their current mapping on every invocation; exclusions are read
+from the source configuration and never changed. No mapping setter is called.
+
+Boundaries: audio_channel_plan.py owns source/instance eligibility and target
+planning; audio_channel_native_wrapper.py transports plans/registry requests;
+AudioChannelPlanRequest owns correlated file IO and invokes the existing matching
+workflow action; NativeTimelineSelection resolves the contained Qt scene;
+NativeAudioChannelTransaction owns the native operation and selection/input
+cancellation. NativeEditCommands wires all four entries to that transaction.
+The replaced API executor audio_channel.py and both production API execution paths
+were removed. The behavior-preserving planning extraction is separately committed
+as aac3f1b before native integration. No extra shortcut listener or visibility writer.
+
+Workflow menu invocation first enters the existing registry; Qt then invokes the
+matching wrapper in planning mode. The second phase performs reads only. Only the
+native selected-item menu can commit a change. Correlation tokens, two-second
+deadline, mapping/menu comparison and selection-change rejection prevent reuse of
+an old plan. Canceled planning tickets suppress a late script from replaying a
+command. Remaining transport quirk: a canceled ticket can consume a later direct
+workflow-menu invocation; a fresh registered hotkey request replaces the ticket.
+This needs lifecycle refinement and live characterization; do not conceal it.
+Planning still depends on Resolve's workflow action being enabled. The earlier
+disabled-action/ordinary-launch failure therefore remains relevant and unclosed.
+
+Current supported test scope is one selected native mono audio item with an
+available original file. No/multiple selection, linked AV selection and unsupported
+mapping cases fail closed. Independent multi-clip native cycling remains required;
+the planner's independent multi-item results are not an implemented batch executor.
+No claim of complete four-command acceptance or a fixed overall product.
+
+Verification for 33a3cf6: exact-source native registry/planning/menu fixture passes
+all four commands and mode switches, both directions/wrap/repetition, nested scene
+selection, other-item isolation, selection retention, cross-scene ambiguity and
+cancellation. Nine read-only operation tests pass. Generated Mac/Windows wrapper
+tests pass with 33 registry targets plus Stabilize; all four audio plans perform
+zero media writes and canceled planning does not enqueue a retry. Existing native
+Edit and native-preset/context regression fixtures pass. Universal arm64/x86_64
+runtime, bootstrap lifecycle and both executable signature checks pass. Windows
+native compilation/live acceptance, real Resolve contained-scene selection, actual
+audible result, repaint, instance isolation and native Undo remain unverified.
+
+Staged at native-audio-track-selection/build/native-menu-test: 22 hashed payload
+files, helper/Current metadata plus four audio scripts (six transaction targets).
+Install/rollback filesystem rehearsal restores the current baseline exactly and
+preserves the settings sentinel. Candidate 33a3cf6 approval has been requested;
+do not install until approval and a fresh closed-Resolve check. Preserve rollback
+to current 4b914e1 and the earlier rollback to 29812b6. Published assets unchanged.
+First live gate remains one native change on the designated disposable mono item,
+then one Undo; expand to the four-command matrix only if that succeeds. If native
+contained scenes still expose no selected item, stop that route and record the
+remaining selection-adapter failure rather than guessing clip coordinates.
+
 ### 4b914e1 live test failed — native selection assumption disproved
 
 Bounded follow-up branch fix/native-audio-track-selection, d6ba6e5, extracts
