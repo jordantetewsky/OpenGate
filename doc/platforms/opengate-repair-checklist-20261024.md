@@ -2,6 +2,50 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### 33a3cf6 live failure and native scene-dispatch correction
+
+Jordan reports no command effect while the designated clip remains selected.
+Loaded session d0377546-8a96-45a1-997d-d4b2a0e4af5f, PID 69102, started
+October 28 00:11:59 UTC, identifies 33a3cf6. Native preset invocations are accepted;
+nine contained scenes are inspected and the selected item resolves in
+UiTiAudioTracksScene. This confirms the contained-scene selection correction in
+real Resolve. Both observed Next command scopes invoke enabled workflow planner
+actions. Attempts then time out or cancel on intervening input/deactivation.
+No native-choice completion is recorded. Do not blame selection or assignment.
+Receipt: native-audio-track-selection/build/native-menu-test/live-33a3cf6-failure.json.
+The plan job and result directories are empty after inspection, consistent with
+plan consumption; old tracing does not independently establish the timeout phase.
+
+Source review identifies a concrete dispatch defect: the operation sends the
+context event directly to the selected QGraphicsItem, bypassing the owning scene's
+handler. Qt's QGraphicsView::contextMenuEvent source instead sets the originating
+viewport, scene/screen positions, modifiers/reason and sends the event to its scene.
+Correction fd8cbfa uses that scene-delivery boundary and includes the viewport.
+It also records plan receipt/context delivery and distinguishes plan/menu timeouts.
+Same transaction responsibility; no new controller, native slot invocation, state
+writer, cursor movement, API setter or fallback. All four commands retain the
+shared planner/native transaction and their existing assignments.
+
+The original fixture implemented menus on items and did not catch the scene-owned
+case. Corrected fixture handles context at the actual Qt scene event boundary and
+passes all four commands/mode switches, wraps, nested selection, ambiguity and
+cancellation with the originating viewport supplied. An attempted test-only scene
+subclass crashed during paint dispatch into its context handler; it was removed
+in favor of an event-filter handler on a real QGraphicsScene. Resolve was untouched.
+This fixture failure and correction are not a Resolve crash or runtime acceptance.
+Actual native scene handler/menu execution, audible result and Undo remain unverified.
+Installed 33a3cf6 stays unchanged; no new installation approval has been given.
+
+fd8cbfa universal arm64/x86_64 runtime compilation, both executable signature
+checks and bootstrap lifecycle fixture pass. Staged separately at
+native-audio-track-selection/build/native-scene-test, preserving the 33a3cf6
+installation receipt/payload. Twenty-two hashed files across six transaction
+targets; four audio scripts retain the same content as installed 33a3cf6.
+Transactional rehearsal passes exact baseline restoration/settings preservation.
+Rollback baseline is installed 33a3cf6. Not installed, live-accepted, merged or
+published. Exact-candidate approval and Resolve closed are the next installation
+gate; native execution/audio/Undo remain the next actual acceptance gate.
+
 ### Installed four-command candidate — October 28, 00:11 UTC (October 27 local)
 
 Jordan explicitly requested installation of 33a3cf6. Resolve was verified closed;
