@@ -2,6 +2,42 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### fd8cbfa crashed Resolve; menu-presentation approach rejected
+
+Jordan reports pressing U crashes the project. Session 132bead0-6ad5-48ce-ac22-
+9c84708d3538 loads fd8cbfa (PID 69915). Its trace maps U to edit.audio.next-channel
+(Skip Excluded Channels), resolves the selected native audio-tracks item and invokes
+the read-only planner. ResolveDebug's fatal Signal 11 stack identifies
+NativeAudioChannelTransaction's queued callback calling QMenu::setActiveAction,
+then Qt internalDelayedPopup. This is an OpenGate-triggered Resolve process crash,
+not an assignment or user-selection error. No native channel-choice completion or
+Undo acceptance is established. Preserve crash evidence under native-audio-track-
+selection/build/native-scene-test/crash-evidence and live-crash-events.json.
+
+**Explicit clarified acceptance requirement:** all four commands must happen with
+no menu or dialog presented, no other panel opened and Timeline focus retained,
+like Stabilize. A briefly presented/hidden popup is not acceptable. Retire the
+menu-opening transaction approach from the production proposal; do not patch it
+by concealing windows or keeping hidden popup controllers. Preserve the experiment
+and crash receipts in isolation; do not merge it. Investigate an actual native
+action/operation with demonstrated instance scope, repaint and native Undo.
+
+Direction semantics remain numerical, independent of hotkey letters: All Source
+Next 3→4, Previous 3→2; wrap at source ends. Skip Excluded uses the eligible list:
+for configured 3/4/5, Next 3→4 and Previous 3→5. U currently invokes Next Skip
+Excluded in the captured trace; no reversal or channel-change result is proved.
+
+Recovery to previously approved 33a3cf6 was prepared after an initial process check
+found Resolve closed. The first administrator command stopped at a quoting error;
+the corrected rollback script then refused because Resolve had reopened. No files
+were restored. fd8cbfa therefore remains installed until Resolve is closed and the
+checkpoint can be restored. Recovery receipt explicitly records restored=false;
+all 198 snapshotted settings/workflow files remain unchanged. Jordan was asked to
+save/quit when convenient and avoid audio commands meanwhile. Never terminate it.
+33a3cf6 is only a recovery baseline for existing functions; its audio commands failed
+live and are not accepted. Do not call the four-command task fixed or ready for
+ordinary use. Continue independent offline investigation while recovery is pending.
+
 ### Installed scene-dispatch correction — October 28, 00:25 UTC
 
 Jordan requested installation of fd8cbfa. Resolve was verified closed without
