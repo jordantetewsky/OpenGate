@@ -2,6 +2,24 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Read-only preparation probe installed — October 28, 02:26 UTC
+
+Jordan explicitly approved installation of 6ee0a2d. Resolve was verified closed
+without agent termination. Transactional installation completed with administrator
+authentication; all 18 installed payload hashes match and both executable signatures
+verify. All 198 snapshotted settings/native-preference/workflow files are unchanged.
+Receipt: audio-menu-preparation-probe/build/preparation-probe-install/installation-receipt.json.
+Rollback to 33a3cf6: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+97A9CCE6-5BF9-42FD-96D2-90A5DDADFB79/Restore Previous OpenGate.command.
+This supersedes not-installed/awaiting-approval statements below. New-process probe
+loading and actual native preparation/lifetime evidence remain pending. All four
+audio execution paths are intentionally blocked in this diagnostic candidate;
+assignment labels/settings remain. Do not request another audio hotkey operation.
+Next precise observation: normal launch, select designated disposable mono clip,
+manually open Audio Channel submenu once and cancel without choosing a channel.
+This diagnostic gesture does not relax the no-visible-UI command requirement.
+No runtime merge, release publication or audio acceptance is claimed.
+
 ### Read-only preparation probe 6ee0a2d — built and staged, not installed
 
 Jordan explicitly asked for active implementation/probing of a Fixed Playhead-like
