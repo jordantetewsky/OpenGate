@@ -2,6 +2,23 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Installed scene-dispatch correction — October 28, 00:25 UTC
+
+Jordan requested installation of fd8cbfa. Resolve was verified closed without
+termination by the agent. Transactional installation completed with administrator
+authentication. All 22 payload hashes match; both executable signatures verify.
+All 198 snapshotted settings/native-preference/workflow files are byte-identical.
+Receipt: native-audio-track-selection/build/native-scene-test/installation-receipt.json.
+Rollback to 33a3cf6: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+C26AABFE-548F-43A1-B3F2-C9812A29C7F8/Restore Previous OpenGate.command.
+Earlier checkpoints remain preserved. This supersedes installed-33a3cf6 and
+unapproved/not-installed fd8cbfa statements below. New-process loading and actual
+native scene menu/channel/audio/repaint/Undo remain unverified. No runtime merge
+or publication. Next: normal launch, designated disposable selected mono polywav,
+one Next Audio Channel — All Source Channels invocation, inspect result/phase
+trace, then native Undo only if an actual channel change occurred. Preserve all
+other explicit limitations and open checklist requirements.
+
 ### 33a3cf6 live failure and native scene-dispatch correction
 
 Jordan reports no command effect while the designated clip remains selected.
