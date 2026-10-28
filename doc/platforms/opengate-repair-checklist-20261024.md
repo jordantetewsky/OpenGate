@@ -4,6 +4,18 @@
 
 ### Four-command native candidate 33a3cf6 — built/staged, awaiting approval
 
+Independent follow-up while approval is pending: the installed CodecPlugin SDK
+README describes supported Resolve Studio versions. This supports investigating
+Free plugin discovery first, but does not establish Wolfgang's failure cause.
+The published Mac bootstrap's pluginInit calls the shared initializer, which
+schedules startup immediately after a valid host handshake; msgPluginStart also
+schedules the same idempotent path. Thus a missing msgPluginStart alone cannot
+explain failure if pluginInit completed successfully. Separate never-discovered/
+rejected handshake from bootstrap load failure and initialized-but-hidden UI using
+actual Free logs before designing a fallback. No Free acceptance or fallback added.
+Current 4b914e1 session's captured tab hide at 23:14:57 recovers in 291 ms; no
+persistent toolbar-loss cause is established by it. Existing toolbar bug stays open.
+
 Jordan requires continued execution toward one live-test candidate for all four
 commands, rather than stopping at each component or proposing another all-source-
 only install. Branch fix/native-audio-track-selection now has clean 33a3cf6;
