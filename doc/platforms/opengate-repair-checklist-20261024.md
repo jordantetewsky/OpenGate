@@ -2,6 +2,34 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Recovery completed — October 28, 00:38 UTC
+
+After Resolve closed, the approved checkpoint restored 33a3cf6 and removed the
+crashing fd8cbfa runtime. All 22 restored payload hashes match the preserved
+33a3cf6 stage; both executable signatures verify. Recovery receipt now records
+restored=true at native-audio-track-selection/build/native-scene-test/recovery-receipt.json.
+This supersedes the pending/refused recovery below. Resolve was never terminated
+by the agent. Earlier checkpoints and crash evidence remain preserved.
+
+Of 198 files in the earlier recovery baseline, keyboard/settings/workflow hashes
+match except two Resolve-owned files (.wipluginslist.conf and UI.preset) changed
+during the interval containing the reopened session and shutdown. The recovery
+transaction does not target those files; their precise write timing was not
+captured. Preserve them rather than restoring old user state or claiming every
+native preference stayed byte-identical through that session.
+
+Offline no-UI investigation: supplied 21.1.1 declarations expose the mapping
+setter but no Timeline transaction/Undo API; Fusion composition Undo is a different
+scope and must not be substituted. Static Qt metadata for UiTiAudioTracksScene and
+UiTiTracksScene identifies no channel-apply slot. Exported symbols inspected do
+not expose a usable native channel operation. Earlier menu inventories show
+unnamed channel actions with no scalar data, unlike a stable global command ID.
+This does not prove a no-UI operation is impossible, but none has been established.
+No further popup automation candidate or hidden-dialog workaround is authorized
+by the clarified experience. Audio commands remain unaccepted; next required work
+is establishing native action preparation/execution without presentation and with
+demonstrated Undo before proposing another live audio candidate.
+
 ### fd8cbfa crashed Resolve; menu-presentation approach rejected
 
 Jordan reports pressing U crashes the project. Session 132bead0-6ad5-48ce-ac22-
