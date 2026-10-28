@@ -4,6 +4,11 @@
 
 ### One-shot native-action experiment 684bc2f — staged, not installed
 
+Jordan explicitly approved installation. Process check still finds Resolve PID
+77381 running, so no files were changed and installation waits for Jordan to save
+and quit normally. The active permit file is absent; the experiment remains unarmed.
+Approval need not be requested again once Resolve is closed.
+
 Jordan reports that the repeated probes/builds feel like a spiral and requests a
 clear completion path. No working four-command feature has been delivered. Keep
 that fact explicit; scaffolding, compilation and fixtures are not user acceptance.
@@ -55,7 +60,7 @@ coordinators gained only event/callback wiring and both platform callers were ch
 Staged: audio-direct-action-test/build/direct-action-install, 22 hashed payload
 files across helper/Current metadata/four audio scripts (six transaction targets).
 Rollback baseline 4773945. Existing settings and native keyboard presets are not
-targets. Candidate 684bc2f has not been approved/installed, merged or published.
+targets. Candidate 684bc2f is approved but not installed, merged or published.
 
 Bounded completion gates: (1) prove this real native action gives the requested
 mapping, actual audio/repaint, intended-instance isolation and one valid native
