@@ -2,6 +2,34 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Native preparation capture received — October 28, 02:27 UTC
+
+Loaded probe 6ee0a2d session b30a364f-cd21-4b3f-8365-01890462fd6e,
+PID 72213, started 02:27:07 UTC. Jordan manually opened/canceled Audio Channel.
+Capture: audio-menu-preparation-probe/build/preparation-probe-install/live-capture.json.
+Two QMenus are observed: channel child ID 1 owned by context root ID 2; root has
+no QObject parent or associated widget. Both emit aboutToShow/aboutToHide; no
+destruction is recorded through the inspected capture. This establishes observed
+survival after hiding, not safe reuse for a different selected clip. Their visible
+flags at these preparation/hide phases do not prove how they were presented.
+
+Selected scene UiTiAudioTracksScene is parented to AudioTracksView. Outer scene
+UiTiSequenceScene exposes OnClipMenuAboutToShow(), OnTimelineMenuAboutToShow() and
+UpdateClipMenuStates(). Those are now confirmed available native methods, not
+verified audio-action preparation entry points. No such method was invoked.
+The source's generic QObject method inventory does not reveal signal receivers
+or captured action context; no fresh-action or Undo claim is justified from names.
+Observed submenu checks 4 - Sam among MixL/MixR/Hannah/Sam/Boom. Record that as the
+current menu baseline only; the probe did not choose it and its origin is not
+established by this capture. No audio action trigger was observed in this test.
+
+Next investigation: establish which native menu preparation callback is actually
+connected and whether it rebuilds/rebinds the audio actions to current selection.
+Qt's public QObject::dumpObjectInfo can report connections to debug output without
+invoking them; functor connections may remain opaque. Inspect this route and debug
+output capture before adding further runtime experiments. Do not cache the surviving
+context actions or invoke OnClipMenuAboutToShow based only on its name.
+
 ### Read-only preparation probe installed — October 28, 02:26 UTC
 
 Jordan explicitly approved installation of 6ee0a2d. Resolve was verified closed
