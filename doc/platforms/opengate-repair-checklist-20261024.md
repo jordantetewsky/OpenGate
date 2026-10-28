@@ -2,6 +2,38 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Connection-trace follow-up 4773945 — built/staged, not installed
+
+The 6ee0a2d capture establishes declared methods and ownership, not actual signal
+receivers. Follow-up 4773945 extends the same focused probe using Qt's public
+QObject::dumpObjectInfo diagnostic on observed menus/actions and the selected/outer
+scenes. It never invokes preparation or channel actions. At most 16 objects are
+dumped; anonymous functor receivers may remain opaque. No private Qt connection
+structures, native handles, message-handler replacement or hidden popup is used.
+Structured diagnostic IDs bracket corresponding Qt debug output. The existing
+observer also records menu titles/action structure and examines Clip-labelled menu
+candidates once per process, so OnClipMenuAboutToShow is not treated as an audio
+entry point based on its name. Candidate identity/ownership still need real evidence.
+
+Hidden fixture passes discovery of Clip-menu connections/structure, passive audio
+menu lifetime capture, unchanged UI/ownership, zero action/preparation
+invocations by the observer and all four audio paths blocked. The test confirms Qt
+prints connection details, including the explicit limitation for functor callbacks.
+Universal Mac build, bootstrap lifecycle, executable signatures and exact install/
+rollback rehearsal pass. Windows native compilation/live capture is unverified.
+Current installed build remains 6ee0a2d; no new software has been installed.
+
+Staged at audio-menu-preparation-probe/build/connection-probe-install: 18 hashed
+files, helper/Current metadata only, rollback to installed 6ee0a2d. Existing scripts,
+settings and hotkey assignments are not installation targets. A staged observation
+launcher refuses while Resolve runs and captures its console to a new local file;
+default Qt debug output is enabled only in that launched process's environment.
+No persisted logging/preferences change or process termination. Installation of
+4773945 and this observation launch need exact-candidate approval and Resolve closed.
+Then the same single manual audio-submenu opening/cancel will collect receiver
+information the first probe could not record. No audio hotkey/operation test is
+requested, and no silent audio operation or native Undo acceptance is claimed.
+
 ### Native preparation capture received — October 28, 02:27 UTC
 
 Loaded probe 6ee0a2d session b30a364f-cd21-4b3f-8365-01890462fd6e,
