@@ -2,6 +2,48 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Read-only preparation probe 6ee0a2d — built and staged, not installed
+
+Jordan explicitly asked for active implementation/probing of a Fixed Playhead-like
+silent preparation route. Isolated diagnose/audio-menu-preparation-probe, worktree
+audio-menu-preparation-probe, starts from recovery baseline 33a3cf6. Commit bd30296
+explicitly blocks all four audio execution entry points in this diagnostic build
+and removes their transaction object/caller; assignments and labels remain. It is
+not a command repair and must not be mistaken for lost assignments. Existing
+Stabilize/Fixed Playhead paths are unchanged. No popup automation is used by it.
+
+Focused NativeMenuPreparationProbe owns read-only menu lifecycle/preparation
+evidence: parent ownership, associated widgets, declared relevant Qt methods,
+first observation, about-to-show/hide and destruction. It never emits preparation
+signals, invokes native methods/actions, displays menus or changes focus/selection.
+NativeAudioChannelProbe supplies matching audio menus plus the selected audio and
+outer Timeline scenes' owner chains. InteractionDiagnostics forwards ActionAdded
+and existing Show events; no second application listener/polling controller.
+The helper shares one bounded owner-description routine rather than duplicating
+per-scene scans. Inventories are capped at 64 menus and 128 lifecycle transitions;
+IDs are local observation IDs, not native pointer/handle payloads. Method presence
+alone is not proof of callable semantics. Earliest record is first observation,
+not a claim to have intercepted construction itself. Commits e2ae4b8 and 6ee0a2d.
+
+Exact-source hidden preparation fixture passes: zero native action/preparation
+invocations by the observer; visibility, geometry, owner and active window remain
+unchanged; root/child observed once; externally stimulated lifecycle is recorded;
+all four diagnostic audio paths refuse execution. Existing audio/Clip Attributes
+observer regression passes. Universal arm64/x86_64 build, bootstrap lifecycle and
+both executable signatures pass. Windows compilation/live behavior and all native
+preparation semantics remain unverified. No complete command experience is claimed.
+
+Staged at audio-menu-preparation-probe/build/preparation-probe-install: 18 hashed
+files, helper bundle and Current metadata only. Workflow scripts, settings and
+native preferences are not targets. Install/rollback rehearsal restores current
+33a3cf6 exactly and preserves the settings sentinel. Not installed/merged/published.
+The actual installation remains verified recovery 33a3cf6. Installation requires
+approval for 6ee0a2d and Resolve closed. Proposed precise live observation: Jordan
+manually opens the selected disposable clip's Audio Channel submenu once, then
+cancels without choosing a channel. This collects native ownership/method/lifetime
+evidence missing from older captures; it is investigation, not acceptance of visible
+menus during command execution. No audio hotkey test is requested for this probe.
+
 ### Clarification: silent native menu preparation is a valid research direction
 
 Jordan correctly compares Audio Channel to the accepted Fixed Playhead mechanism.
