@@ -2,6 +2,27 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Installed four-command candidate — October 28, 00:11 UTC (October 27 local)
+
+Jordan explicitly requested installation of 33a3cf6. Resolve was verified closed;
+the agent did not terminate it. Transactional installation completed with macOS
+administrator authentication. All 22 payload hashes match and both executable
+signatures verify. Of 198 snapshotted settings/native-preference/workflow files,
+194 remain byte-identical; exactly the four intended audio workflow scripts changed.
+No unexpected changes. Receipt: native-audio-track-selection/build/native-menu-test/
+installation-receipt.json.
+
+Rollback to 4b914e1: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+A3AFA23C-C0D7-46DA-BC0C-D421F0EBA917/Restore Previous OpenGate.command.
+Earlier rollback checkpoints are retained. This supersedes awaiting-approval and
+installed-4b914e1 statements below. New-process loading and live four-command
+acceptance remain unverified; no runtime merge/publication. Next: reopen the
+disposable project, select the designated mono polywav and invoke Next Audio
+Channel — All Source Channels once. Confirm actual change before one native Undo;
+if rejected, capture the exact scene/planner reason instead of repeated blind input.
+Only after that gate passes expand to all four directions/scopes and wraparound.
+The explicit limitations and other open tasks below remain in force.
+
 ### Four-command native candidate 33a3cf6 — built/staged, awaiting approval
 
 Independent follow-up while approval is pending: the installed CodecPlugin SDK
