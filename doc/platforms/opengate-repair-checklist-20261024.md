@@ -2,6 +2,71 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### One-shot native-action experiment 684bc2f — staged, not installed
+
+Jordan reports that the repeated probes/builds feel like a spiral and requests a
+clear completion path. No working four-command feature has been delivered. Keep
+that fact explicit; scaffolding, compilation and fixtures are not user acceptance.
+Installed 4773945 remains read-only; no new native action has been performed.
+
+Local experiment/audio-direct-action-test is clean at 684bc2f. Its scoped test
+invokes only QAction::trigger on an existing native channel action after both
+manually opened menus have closed. It contains no popup creation/navigation,
+setActiveAction, API mapping setter, automatic Undo or focus restoration. This is
+deliberately a diagnostic gate, not the final no-manual-preparation command flow.
+The native callback's actual effect, instance scope, repaint/audio and Undo are
+unverified. Native cleanup on menu hide remains relevant to whether this can work.
+
+Responsibilities: NativeAudioActionExperiment owns the observed context and one
+native invocation; NativeAudioActionPermit owns identity/expiry validation and
+atomic one-use consumption. Existing AudioChannelPlanRequest owns read-only API
+planning transport. InteractionDiagnostics forwards events through its existing
+observer. NativeEditCommands, PanelControls and both OS services only wire the
+optional experiment. Without the explicit process permit path, it is not armed.
+Focused Timeline-view lookup was extracted separately in f710cea, moving existing
+callers and removing duplicate lookup loops. No second application input filter.
+
+Actual user context-event coordinates must hit the one selected item. The context
+is invalidated by selection changes, deactivation or intervening input, and both
+native menu hide signals are required. A fresh API plan must match the allowed
+disposable project, Timeline and item plus current menu channel/count and requested
+direction/scope. A consumed marker prevents another invocation across process
+restarts. The action-attempt receipt is flushed before triggering. No permit is
+active in the staged package; its template is expired and references only the
+previously designated Timeline 117 disposable item.
+
+f76c4b2 versions planning transport as v3. Malformed, inactive, expired, mismatched
+or late tickets cannot become new registry commands. The experiment retains a
+consumed planning ticket to prevent late-script replay. Four updated read-only
+audio wrappers must be installed with this helper. This diagnostic transport still
+does not establish a final ordinary workflow-menu lifecycle or startup-availability
+repair; those remain open. No change to existing Stabilize or Fixed Playhead logic.
+
+Verification: hidden production-registry/planner/native-QAction fixture passes all
+four direction/scope cases and refuses wrong project/Timeline/item/clicked target,
+changed selection, deactivation, unclosed menus and repeated invocation. It asserts
+no menu visibility/focus/selection changes in the fixture. Nine read-only planning
+tests and Mac/Windows v3 wrapper/no-replay tests pass. Universal Mac compilation,
+bootstrap lifecycle, both signatures and exact install/rollback rehearsal pass.
+Windows native compilation/live operation and actual Resolve audio/Undo remain
+unverified. Actual diff review leaves native execution/permit IO in focused modules;
+coordinators gained only event/callback wiring and both platform callers were checked.
+
+Staged: audio-direct-action-test/build/direct-action-install, 22 hashed payload
+files across helper/Current metadata/four audio scripts (six transaction targets).
+Rollback baseline 4773945. Existing settings and native keyboard presets are not
+targets. Candidate 684bc2f has not been approved/installed, merged or published.
+
+Bounded completion gates: (1) prove this real native action gives the requested
+mapping, actual audio/repaint, intended-instance isolation and one valid native
+Undo in the designated disposable project; no Undo if the mapping did not change.
+(2) establish fresh native action preparation for an arbitrary newly selected clip
+without manual menu setup or UI/focus changes. (3) only then complete the full
+four-command matrix, repeat/wrap, excluded-channel mode switches, selection/error
+cases, native keyboard behavior and platform evidence before accepted integration.
+If a gate cannot be established, report the precise native/API limitation and stop
+repeating unsupported popup experiments. A passing one-shot test cannot close gate 2.
+
 ### Connection probe installed and captured — October 28, 11:31 UTC
 
 Jordan approved 4773945 installation and observation launch. Resolve was verified
