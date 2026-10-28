@@ -2,6 +2,20 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Clarification: silent native menu preparation is a valid research direction
+
+Jordan correctly compares Audio Channel to the accepted Fixed Playhead mechanism.
+Source verification: Fixed Playhead invokes the native toolbar button's
+MenuAboutToShow preparation signal, resolves its actual Fixed Playhead action and
+triggers it once; it never calls popup/exec/show or changes focus. Internal menu
+construction/preparation is distinct from displaying then concealing a popup.
+The no-visible-UI contract does not rule out this preparation/action pattern.
+Investigate a fresh selected-clip audio equivalent with verified action ownership,
+selection/instance scope and Undo. No such equivalent is established yet. The
+crashing popup-navigation implementation neither satisfies that pattern nor proves
+it impossible. Do not use stale cached clip-context actions as a substitute for
+fresh preparation, or infer a callable native operation from method names alone.
+
 ### Recovery completed — October 28, 00:38 UTC
 
 After Resolve closed, the approved checkpoint restored 33a3cf6 and removed the
