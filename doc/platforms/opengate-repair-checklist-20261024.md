@@ -2,6 +2,46 @@
 
 ## Current priorities and progress — October 27, 2026
 
+### Connection probe installed and captured — October 28, 11:31 UTC
+
+Jordan approved 4773945 installation and observation launch. Resolve was verified
+closed; transactional installation completed with administrator authentication.
+All 18 payload hashes and both executable signatures verify. All 198 snapshotted
+settings/native-preference/workflow files are unchanged. Receipt: audio-menu-
+preparation-probe/build/connection-probe-install/installation-receipt.json.
+Rollback to 6ee0a2d: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+5D47AB63-769A-43A8-89AC-B7C90A8F6978/Restore Previous OpenGate.command.
+Earlier checkpoints remain. Installed/loaded session 632aceb9-fc88-4bf5-b66a-
+ef72e78d5a7d, PID 77381, started 11:31:37 UTC, identifies 4773945. This supersedes
+not-installed statements below. Audio execution remains blocked. No runtime merge
+or publication; actual audio operation/Undo acceptance remains absent.
+
+Jordan performed the manual submenu open/cancel. Structured capture is in that
+stage's live-capture.json. Qt connection output was captured by Resolve's own
+ResolveDebug.txt handler, not the redirected console; preserved as live-connections.txt.
+The audio context root's aboutToHide connects to
+UiTiAudioTracksScene::OnContextMenuAboutToHide(). Channel actions have QMenu's
+_q_actionTriggered plus two opaque functors; at least one functor is our existing
+audio observer. Incoming QAction-to-QAction links also appear, so aliasing remains
+possible. Do not identify opaque functors as the engine operation from counts alone.
+Generic OpenGate PanelMenus also connects aboutToShow to menus; these observers
+must be accounted for before claiming a native preparation callback. The trace
+does not establish OnClipMenuAboutToShow as an audio preparer. Its presence in
+metadata alone remains insufficient. The native Clip menu structure has an Audio
+Operations submenu, but no direct channel action in the captured top level.
+
+The next useful experiment is direct QAction invocation after native menu closure,
+scoped to one manually prepared disposable clip and exactly one permitted operation.
+Local work is isolated in experiment/audio-direct-action-test, worktree
+audio-direct-action-test. This is a diagnostic component gate for no-UI execution
+and actual Undo, not the complete command flow. It deliberately still requires
+manual context preparation for the experiment; that prerequisite is unacceptable
+for the final product and silent fresh preparation remains unresolved. No new
+installation or native operation is approved or performed yet. The currently active
+project is a working project, so no action test may run there. All native effects
+require a separately approved candidate and an exact disposable project/Timeline/
+item permit, with source context matched to the actual right-clicked selected item.
+
 ### Connection-trace follow-up 4773945 — built/staged, not installed
 
 The 6ee0a2d capture establishes declared methods and ownership, not actual signal
