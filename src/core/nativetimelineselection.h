@@ -15,11 +15,12 @@ struct NativeTimelineSelection {
     QGraphicsItem *item=nullptr;
     QList<QPointer<QGraphicsScene>> scenes;
     QString reason;
-    static QGraphicsView *focusedView() {
-        for(auto widget=QApplication::focusWidget();widget;widget=widget->parentWidget())
+    static QGraphicsView *viewFor(QWidget *receiver) {
+        for(auto widget=receiver;widget;widget=widget->parentWidget())
             if(widget->objectName()=="m_TiTimelineView")return qobject_cast<QGraphicsView *>(widget);
         return nullptr;
     }
+    static QGraphicsView *focusedView() { return viewFor(QApplication::focusWidget()); }
     static NativeTimelineSelection inspect(QGraphicsView *root) {
         NativeTimelineSelection result;
         QList<QGraphicsView *> pending{root};QSet<QGraphicsView *> visited;

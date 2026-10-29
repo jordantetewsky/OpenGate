@@ -35,25 +35,36 @@ public:
         if(pending && (type==QEvent::KeyPress || type==QEvent::MouseButtonPress || type==QEvent::ApplicationDeactivate))
             cancel("intervening-input");
         if(type==QEvent::ContextMenu || type==QEvent::GraphicsSceneContextMenu) {
+            // The application filter runs before Resolve handles the event.
+            // An activation click need not have restored keyboard focus yet.
+            // Prefer the actual Timeline receiver; do not choose another view
+            // merely because a different Timeline happens to retain focus.
+            auto root=NativeTimelineSelection::viewFor(qobject_cast<QWidget *>(receiver));
+            if(!root)root=NativeTimelineSelection::focusedView();
+            if(!root && timeline) {
+                const auto previous=NativeTimelineSelection::inspect(timeline);
+                if(previous.scenes.contains(qobject_cast<QGraphicsScene *>(receiver)))root=timeline;
+            }
             clearContext("new-context-gesture");
-            auto root=NativeTimelineSelection::focusedView();
             const auto selected=NativeTimelineSelection::inspect(root);
-            if(!selected.reason.isEmpty() || !selected.view)return;
+            if(!root || !selected.reason.isEmpty() || !selected.view) {
+                contextRejected(!root?QStringLiteral("timeline-receiver-unavailable"):selected.reason);return;
+            }
             QPoint global;
             if(type==QEvent::GraphicsSceneContextMenu) {
-                if(!selected.scenes.contains(qobject_cast<QGraphicsScene *>(receiver)))return;
+                if(!selected.scenes.contains(qobject_cast<QGraphicsScene *>(receiver))){contextRejected("scene-receiver-mismatch");return;}
                 global=static_cast<QGraphicsSceneContextMenuEvent *>(event)->screenPos();
             } else {
                 auto widget=qobject_cast<QWidget *>(receiver);
                 const bool rootOwned=widget && (root==widget || root->isAncestorOf(widget));
                 const bool trackOwned=widget && (selected.view==widget || selected.view->isAncestorOf(widget));
-                if(!rootOwned && !trackOwned)return;
+                if(!rootOwned && !trackOwned){contextRejected("widget-receiver-mismatch");return;}
                 global=static_cast<QContextMenuEvent *>(event)->globalPos();
             }
             const auto point=selected.view->viewport()->mapFromGlobal(global);
-            if(!selected.view->viewport()->rect().contains(point))return;
+            if(!selected.view->viewport()->rect().contains(point)){contextRejected("context-outside-selected-view");return;}
             auto hit=selected.scene->itemAt(selected.view->mapToScene(point),selected.view->viewportTransform());
-            if(!hit || (hit!=selected.item && !selected.item->isAncestorOf(hit)))return;
+            if(!hit || (hit!=selected.item && !selected.item->isAncestorOf(hit))){contextRejected("context-hit-is-not-selected-item");return;}
             timeline=root;scene=selected.scene;item=selected.item;gestureAt=QDateTime::currentMSecsSinceEpoch();
             for(auto observed:selected.scenes)watches.append(connect(observed,&QGraphicsScene::selectionChanged,this,[this]{
                 if(!sameSelection())clearContext("selection-changed");
@@ -140,6 +151,7 @@ private:
         return current.reason.isEmpty() && current.scene==scene && current.item==item;
     }
     bool reject(const QString &reason){logEvent("audio.action-experiment.rejected",{{"reason",reason}});return false;}
+    void contextRejected(const QString &reason){logEvent("audio.action-experiment.context-rejected",{{"reason",reason},{"native_operation_invoked",false}});}
     void cancel(const QString &reason){if(pending){pending=false;deadline.stop();planning.cancel();reject(reason);}}
     void clearContext(const QString &reason="context-discarded"){
         if(menu)logEvent("audio.action-experiment.context-cleared",{{"reason",reason}});

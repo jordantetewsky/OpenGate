@@ -23,6 +23,12 @@ user experience. Production-module ownership remains explicit, using the existin
 read-only selection and diagnostic transaction owners without a second input,
 visibility, selection or layout controller.
 
+This branch checkpoints the incomplete audio diagnostic source plus the local
+receiver-context correction. The unfocused-context regression fails before and
+passes after the correction; the native Edit regression and both Mac architecture
+syntax checks pass. The correction is not installed or live accepted, and does
+not establish fresh silent menu preparation or a working audio/Undo workflow.
+
 This branch also checkpoints the incomplete audio diagnostic source. The source
 is copied as a fresh snapshot, without the private development commit history.
 Command logic is retained; optional example-layout labels and discretionary

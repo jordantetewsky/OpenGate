@@ -58,8 +58,12 @@ int main(int argc,char **argv) {
         });
         Unbound::NativeEditCommands commands(&page,[&]{return &page;});commands.audioExperiment=[&](int direction,bool skip){return experiment.invoke(direction,skip);};
         Unbound::PanelCommands registry(&page);registry.context=[] {return true;};commands.addTo(&registry);
-        auto prepare=[&](QGraphicsItem *clicked) {
+        auto prepare=[&](QGraphicsItem *clicked,bool timelineFocused=true) {
             QApplication::setActiveWindow(&page);view.setFocus();app.processEvents();
+            if(!timelineFocused) {
+                view.clearFocus();
+                check(!Unbound::NativeTimelineSelection::focusedView(),"context event can arrive before Timeline gains focus");
+            }
             const auto local=view.mapFromScene(clicked->mapToScene(clicked->boundingRect().center()));
             QContextMenuEvent event(QContextMenuEvent::Mouse,local,view.viewport()->mapToGlobal(local));experiment.observe(view.viewport(),&event);
             QEvent show(QEvent::Show);experiment.observe(&root,&show);experiment.observe(channels,&show);
@@ -77,7 +81,8 @@ int main(int argc,char **argv) {
         check(nativeCalls==0 && !QFile::exists(permitPath+".used"),"a different Timeline cannot invoke the native action");
         savePermit("wrong-clip");check(registry.invoke(test.id,"fixture"),"registered test reaches the guarded operation");pump();
         check(nativeCalls==0 && !QFile::exists(permitPath+".used"),"mismatched disposable identity performs no native action");
-        savePermit();prepare(&item);close();auto focus=QApplication::focusWidget();const auto selected=scene.selectedItems();
+        savePermit();prepare(&item,false);close();view.setFocus();
+        auto focus=QApplication::focusWidget();const auto selected=scene.selectedItems();
         const int plansBefore=plans;
         check(registry.invoke(test.id,"fixture"),"one-shot registered request accepted");pump();
         QFile completed(directory.path()+"/audio-channel-plan-job.json");completed.open(QIODevice::ReadOnly);
