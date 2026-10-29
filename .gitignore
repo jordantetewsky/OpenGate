@@ -1,0 +1,11 @@
+/build/
+/release/
+/CMakeUserPresets.json
+*.user
+*.suo
+/Unbound.json
+/settings.json
+/unbound-settings-test-*/
+/tools/gammaray/
+/notes/
+.DS_Store

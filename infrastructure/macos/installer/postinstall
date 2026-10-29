@@ -1,0 +1,34 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+set -eu
+scripts="$(cd "$(dirname "$0")" && pwd)"
+source "$scripts/transaction.sh"
+transaction=$(/bin/cat "$product/install.lock/transaction")
+[[ "$transaction" == "$product/Transactions/"* && -f "$transaction/paths.txt" ]] || exit 1
+recover() { log 'postinstall failed; restoring previous installation'; restore_checkpoint; /bin/rm -f "$product/install.lock/transaction"; /bin/rmdir "$product/install.lock"; exit 1; }
+trap recover ERR
+log 'verifying installed payload'
+while IFS=$'\t' read -r hash path; do
+ target=$(physical "$path")
+ [[ -f "$target" ]] || recover
+ actual=$(/usr/bin/shasum -a 256 "$target"); actual=${actual%% *}
+ [[ "$actual" == "$hash" ]] || recover
+done < "$scripts/hashes.tsv"
+while IFS= read -r retired; do
+ validate_path "$retired"
+ /bin/rm -rf "$(physical "$retired")"
+done < "$transaction/retired-paths.txt"
+if [[ -z "${OPENGATE_TEST_ROOT:-}" ]]; then
+ user=$(/usr/bin/stat -f '%Su' /dev/console)
+ [[ "$user" != root && "$user" != loginwindow ]]
+ home=$(/usr/bin/dscl . -read "/Users/$user" NFSHomeDirectory | /usr/bin/cut -d ' ' -f 2-)
+ resources="$product/Current"
+ /bin/bash "$resources/seed-profile.sh" "$home" "$user" "$resources"
+fi
+log 'installed version=@VERSION@ build=@BUILD@; existing settings preserved'
+printf '%s\n' "$transaction" > "$product/last-completed-transaction.txt"
+/bin/rm "$product/install.lock/transaction"
+/bin/rmdir "$product/install.lock"
+trap - ERR
+echo 'OpenGate installed. Open Resolve. Fresh profiles start in Resolve Layout; existing profiles retain their arrangement.'
+echo "Recovery and diagnostic record: $transaction"

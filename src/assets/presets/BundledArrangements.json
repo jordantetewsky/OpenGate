@@ -1,0 +1,388 @@
+{
+  "version": 1,
+  "default": "opengate.resolve-layout.edit",
+  "arrangements": [
+    {
+      "id": "opengate.resolve-layout.edit",
+      "name": "Resolve Layout",
+      "page": "edit",
+      "read_only": true,
+      "workspace": {
+        "version": 1,
+        "page": "edit",
+        "layout_mode": "managed",
+        "header": {
+          "visible": true
+        },
+        "footer": {
+          "hidden": false
+        },
+        "native_arrangement": {
+          "version": 1,
+          "kind": "managed",
+          "page": "edit",
+          "tree": {
+            "orientation": "horizontal",
+            "children": [
+              {
+                "orientation": "tabs",
+                "selected": 0,
+                "children": [
+                  {
+                    "panel": "frameEditPageMediaPool"
+                  },
+                  {
+                    "panel": "frameEditPageEditIndex"
+                  }
+                ]
+              },
+              {
+                "orientation": "vertical",
+                "children": [
+                  {
+                    "orientation": "horizontal",
+                    "children": [
+                      {
+                        "panel": "widgetEditSourcePlayer"
+                      },
+                      {
+                        "panel": "widgetEditTimelinePlayer"
+                      }
+                    ],
+                    "sizes": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "orientation": "horizontal",
+                    "children": [
+                      {
+                        "panel": "frameConformTimelines"
+                      },
+                      {
+                        "panel": "frameEditAudioMeter"
+                      }
+                    ],
+                    "sizes": [
+                      4,
+                      1
+                    ]
+                  }
+                ],
+                "sizes": [
+                  3,
+                  2
+                ]
+              },
+              {
+                "panel": "widgetEditInspector"
+              }
+            ],
+            "sizes": [
+              2,
+              6,
+              2
+            ]
+          },
+          "panels": {
+            "frameEditPageMediaPool": {
+              "hidden": false
+            },
+            "frameEditPageEditIndex": {
+              "hidden": false
+            },
+            "widgetEditSourcePlayer": {
+              "hidden": false
+            },
+            "widgetEditTimelinePlayer": {
+              "hidden": false
+            },
+            "frameConformTimelines": {
+              "hidden": false
+            },
+            "widgetEditInspector": {
+              "hidden": false
+            },
+            "frameEditAudioMeter": {
+              "hidden": false
+            }
+          }
+        },
+        "groups": [],
+        "panels": {
+          "frameEditPageMediaPool": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "frameEditPageEditIndex": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "widgetEditSourcePlayer": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "widgetEditTimelinePlayer": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "frameConformTimelines": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "widgetEditInspector": {
+            "floating": true,
+            "hidden": false,
+            "pinned": false,
+            "interface_scale": 1
+          },
+          "frameEditAudioMeter": {
+            "floating": true,
+            "hidden": false,
+            "pinned": true,
+            "interface_scale": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "opengate.preset.example.edit",
+      "name": "Example Preset",
+      "page": "edit",
+      "workspace": {
+        "background_policy": "automatic",
+        "footer": {
+          "attachment": "surfaces",
+          "floating": false,
+          "hidden": false,
+          "model": "reserved-native-bands-v2"
+        },
+        "groups": [],
+        "header": {
+          "model": "pinned-top-v1",
+          "visible": true
+        },
+        "hide_background": false,
+        "keep_on_screen": true,
+        "layout_mode": "managed",
+        "native_arrangement": {
+          "kind": "managed",
+          "page": "edit",
+          "panels": {
+            "frameConformTimelines": {
+              "hidden": false
+            },
+            "frameEditAudioMeter": {
+              "hidden": true
+            },
+            "frameEditPageEditIndex": {
+              "hidden": true
+            },
+            "frameEditPageMediaPool": {
+              "hidden": false
+            },
+            "widgetEditInspector": {
+              "hidden": true
+            },
+            "widgetEditSourcePlayer": {
+              "hidden": false
+            },
+            "widgetEditTimelinePlayer": {
+              "hidden": false
+            }
+          },
+          "tree": {
+            "children": [
+              {
+                "panel": "frameEditPageEditIndex"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "panel": "frameEditPageMediaPool"
+                              },
+                              {
+                                "panel": "widgetEditSourcePlayer"
+                              }
+                            ],
+                            "orientation": "vertical",
+                            "sizes": [
+                              641,
+                              338
+                            ]
+                          },
+                          {
+                            "panel": "frameConformTimelines"
+                          }
+                        ],
+                        "orientation": "horizontal",
+                        "sizes": [
+                          300,
+                          806
+                        ]
+                      },
+                      {
+                        "panel": "widgetEditInspector"
+                      }
+                    ],
+                    "orientation": "horizontal",
+                    "sizes": [
+                      560,
+                      240
+                    ]
+                  },
+                  {
+                    "children": [
+                      {
+                        "panel": "widgetEditTimelinePlayer"
+                      },
+                      {
+                        "panel": "frameEditAudioMeter"
+                      }
+                    ],
+                    "orientation": "horizontal",
+                    "sizes": [
+                      847,
+                      240
+                    ]
+                  }
+                ],
+                "orientation": "horizontal",
+                "sizes": [
+                  1112,
+                  610
+                ]
+              }
+            ],
+            "orientation": "horizontal",
+            "sizes": [
+              466,
+              1256
+            ]
+          },
+          "version": 1
+        },
+        "native_workspace_mode": "native",
+        "page": "edit",
+        "panel_hierarchy": true,
+        "panels": {
+          "frameConformTimelines": {
+            "floating": true,
+            "height": 381,
+            "hidden": false,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 1728,
+            "x": -353,
+            "y": 413
+          },
+          "frameEditAudioMeter": {
+            "floating": true,
+            "height": 892,
+            "hidden": true,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 320,
+            "x": 1626,
+            "y": 295
+          },
+          "frameEditPageEditIndex": {
+            "floating": true,
+            "height": 761,
+            "hidden": true,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 447,
+            "x": 646,
+            "y": 194
+          },
+          "frameEditPageEffectsLibrary": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "frameEditPageKeyframeEditor": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "frameEditPageMediaPool": {
+            "floating": true,
+            "height": 1016,
+            "hidden": false,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 447,
+            "x": -326,
+            "y": 244
+          },
+          "frameEditPageMetadata": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "frameEditPageSoundLibrary": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "frameEditToolbarTop": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "unboundWorkspaceToolbar": {
+            "floating": false,
+            "interface_scale": 1
+          },
+          "widgetEditInspector": {
+            "floating": true,
+            "height": 634,
+            "hidden": true,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 420,
+            "x": 654,
+            "y": 219
+          },
+          "widgetEditSourcePlayer": {
+            "floating": true,
+            "height": 426,
+            "hidden": false,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 793,
+            "x": 29,
+            "y": 1069
+          },
+          "widgetEditTimelinePlayer": {
+            "floating": true,
+            "height": 634,
+            "hidden": false,
+            "interface_scale": 1,
+            "pinned": false,
+            "width": 1307,
+            "x": 216,
+            "y": 258
+          }
+        },
+        "pin_controls": false,
+        "snap_windows": true,
+        "version": 1,
+        "window_chrome": 0
+      }
+    }
+  ]
+}

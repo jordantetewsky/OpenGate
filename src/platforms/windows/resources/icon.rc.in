@@ -1,0 +1,2 @@
+// Launcher icon; all DPI variants are bundled into a single resource.
+1 ICON "@UNBOUND_ROOT@/src/platforms/windows/resources/unbound.ico"

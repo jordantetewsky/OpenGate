@@ -23,7 +23,21 @@ user experience. Production-module ownership remains explicit, using the existin
 read-only selection and diagnostic transaction owners without a second input,
 visibility, selection or layout controller.
 
-Only sanitized documentation is included in this branch. Source checkpoint
-publication remains separate while its files are reviewed. Raw logs, machine
-paths, identities, settings, project data, media, permits and binaries are not
-included. No release tags, packages or main-branch updates are part of this work.
+This branch also checkpoints the incomplete audio diagnostic source. The source
+is copied as a fresh snapshot, without the private development commit history.
+Command logic is retained; optional example-layout labels and discretionary
+identity text are anonymized. Required legal attribution remains in LICENSE.
+
+Publication edits retain module responsibilities: the launcher presents startup
+and identity text. Windows resources supply application metadata. ProductIdentity
+supplies product/about text. BundledArrangements supplies example layout data.
+The package payload module selects and describes packaged content. The package
+builder writes installer presentation. The build-manifest module records build
+provenance. Support-export and installer notes provide recovery guidance.
+Anonymization changes descriptive labels, not those responsibilities; it is not
+a new installed build or a claim of feature acceptance.
+
+Raw logs, machine-specific paths, private identities, settings, project data,
+media, active permits and binaries are not included. Generic platform paths and
+synthetic redaction-test inputs in source are not private machine records. No
+release tags, packages or main-branch updates are part of this work.

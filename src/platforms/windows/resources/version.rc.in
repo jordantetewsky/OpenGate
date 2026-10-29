@@ -1,0 +1,28 @@
+#include <windows.h>
+1 VERSIONINFO
+FILEVERSION @UNBOUND_MAJOR@,@UNBOUND_MINOR@,@UNBOUND_PATCH@,@UNBOUND_BUILD@
+PRODUCTVERSION @UNBOUND_MAJOR@,@UNBOUND_MINOR@,@UNBOUND_PATCH@,@UNBOUND_BUILD@
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE @UNBOUND_FILE_TYPE@
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "040904B0"
+  BEGIN
+   VALUE "CompanyName", "CineWaltz\0"
+   VALUE "FileDescription", "OpenGate - Managed workspace for DaVinci Resolve\0"
+   VALUE "FileVersion", "@UNBOUND_VERSION@\0"
+   VALUE "ProductName", "OpenGate\0"
+   VALUE "ProductVersion", "@UNBOUND_VERSION@\0"
+   VALUE "LegalCopyright", "Copyright (c) 2026 Wolfgang Woehl\0"
+   VALUE "Comments", "Build @UNBOUND_BUILD_ID@\0"
+   VALUE "OriginalFilename", "@UNBOUND_FILENAME@\0"
+  END
+ END
+ BLOCK "VarFileInfo"
+ BEGIN
+  VALUE "Translation", 0x0409, 1200
+ END
+END

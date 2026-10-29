@@ -1,0 +1,546 @@
+{
+  "schema": 1,
+  "base": "8828868",
+  "features": [
+    {
+      "branch": "experiment/macos-custom-clip-colors",
+      "commit": "67cdac4b3ad1d7c324ae5d68ec81d5612a303b62",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "experiment/macos-panel-scaling",
+      "commit": "c9aea56a9f151e02debd6129bf1680951a854eee",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-command-registration",
+      "commit": "de3df2bdf0b700f59c920b3d4a9c985ec3de9230",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-group-signal-lifetimes",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "03c8596d2c955fe107fe2b3adadcccf07e9550af"
+    },
+    {
+      "branch": "feature/macos-interaction-tracing",
+      "commit": "14dd3b9d5fa9dffe91b2856935e5d4ff9c00b8f9",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-layout-surfaces",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "7895e9fb3bc7494f89287d8490f9cc8afcc83e6e"
+    },
+    {
+      "branch": "feature/macos-native-first-startup",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "4587bc9f99991bbc3a381f15c2fdbfc67c9974ad"
+    },
+    {
+      "branch": "feature/macos-native-panel-drag",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "b238da352a214004b74c8118cce6d77b5b20a36c"
+    },
+    {
+      "branch": "feature/macos-native-workspace-space",
+      "commit": "13ce0d744d35771acf4abb8a530452fb57bd0a15",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-nested-panel-doors",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "326b573e435ee18beb42aec4435bbeda8f4ddc17"
+    },
+    {
+      "branch": "feature/macos-panel-containment",
+      "commit": "2e8b146d4697defdd0c6d767d51421780ef96c89",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-panel-discovery",
+      "commit": "4177f172c0e93541ec97af8e9c552b730c2995aa",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-panel-overflow",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "d2a1334fc6f8c61786f2a2cf1f7d651f0981adfd"
+    },
+    {
+      "branch": "feature/macos-panel-placement",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "268bc64cbbfc6917d43dcb1a0dfdc101ddaf1194"
+    },
+    {
+      "branch": "feature/macos-responsive-command-discovery",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "0e701b12b5af3a26e612116c62b08ffbdb5fce23"
+    },
+    {
+      "branch": "feature/macos-viewer-commands",
+      "commit": "7817e4f022dcb99bcad5983cb138a6bf80cd3406",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-native-arrangement-surfaces",
+      "commit": "f9f4129400e8bc046e7a3f74358f61345a01c138",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-native-panel-positions",
+      "commit": "f9308711ad9e779107bfc1b87c39b006a3ec39d7",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-inspector-native-transfers",
+      "commit": "68b7f5f41fe6e3c4a5c95254b9fc6f35f3a50947",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-native-drop-recovery",
+      "commit": "ab8789403f04aae6d0d8ae89d9a1dac25129d3d9",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-timeline-undock-control",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "79b47a8edcb1352ba69b323949fe86a76c61175b"
+    },
+    {
+      "branch": "fix/macos-group-window-stacking",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "7395f08f1cbfeb50f74c63eaaf3a1ae8ecca30c2"
+    },
+    {
+      "branch": "fix/macos-idempotent-window-chrome",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "9b6fc9b769ab29147f977cec76c9eabafa885767"
+    },
+    {
+      "branch": "feature/macos-opengate-branding",
+      "commit": "cb85a223b84e31c64c10791fbc466e4a2ee6955d",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-reopen-workspace-contract",
+      "commit": "4d55e8cdb3364107cdf922c543cd713a46f5b195",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-pin-and-footer-persistence",
+      "commit": "cba88d9a1f1c346d9d8f46ef0308f82e90e7422b",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "refactor/macos-panel-control-modules",
+      "commit": "a9fe3d7bf6b851628a1be144a65dd0997b3f947b",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "test/macos-footer-reopen",
+      "commit": "dc1dc527ed4f8961c3df2489bb7adc6dabcc39af",
+      "scope": "verification",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-expansion-readiness-rollback",
+      "commit": "00dec6f7106f7acd3d50d96d64fc56094091eeb6",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "experiment/macos-clip-color-metadata",
+      "commit": "fc043ad3fa75e42724b4d25ba87d137c52625571",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-footer-timeline-attachment",
+      "commit": "1469ca24cf93b071679fbc9007607dc13663abc6",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "refactor/macos-workspace-restoration",
+      "commit": "f8f8a1c3d12160413e82171cbb5fc9370eec23b1",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "refactor/macos-panel-manager-view",
+      "commit": "06d6fc7eca92ac1f4e9b5425e4f0d2b102ce695b",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "diagnose/macos-drag-geometry",
+      "commit": "4e2c5dc2ab1a61211ccbeca408c18aaf183ff9ae",
+      "scope": "diagnostics",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-independent-panel-metrics",
+      "commit": "7081d1dce6028f76eec7fb501bddfc472b5eda05",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-unified-native-workspace",
+      "commit": "e7031d20b59646be9513b2e0cb3d93148db52420",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-edit-ui-commands",
+      "commit": "bf829580fb9d09e6df933c8ef730f8f51c7d2b31",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-opengate-ui-panel-menu",
+      "commit": "0a36406e5702f3c230524d77ded3edbe74801f70",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-source-content-readiness",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "9e21f3da54e7229e25ed370e3c45df1336a6e1c5"
+    },
+    {
+      "branch": "feature/macos-edit-page-lifecycle",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "fc5040872d2c383c8a0a861c391463a469b5683d"
+    },
+    {
+      "branch": "feature/macos-native-workflow-commands",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "c588968b6cc838b495aea5110d70391bdd345e80"
+    },
+    {
+      "branch": "fix/macos-native-shortcut-authority",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "d684fa4c35ba13e415ed2d01a52ff28e0307cd4e"
+    },
+    {
+      "branch": "fix/macos-edit-target-discovery",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "061a454b4fc9733e2462c1e7ac3e2fc48ecd4db8"
+    },
+    {
+      "branch": "fix/macos-workflow-menu-presentation",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "966d8a6a79d375c21ca9c279da0cbb5876a54b89"
+    },
+    {
+      "branch": "fix/macos-shortcut-editor-recovery",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "db5bde913fe768f8bc43cc2204f2a55e4aeb9862"
+    },
+    {
+      "branch": "fix/macos-attached-toolbar-reveal",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "33290ef212e86cabbe3ede8075aba6c101cd39ca"
+    },
+    {
+      "branch": "fix/macos-modular-layout-recovery",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "f4ac5dc9d094394519bfcde0181f04128da0b598"
+    },
+    {
+      "branch": "feature/macos-native-emulator-preset",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "b6ab382dac700fa1fd923e652a3f2af14d08bffd"
+    },
+    {
+      "branch": "fix/macos-native-toggle-scope",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "850efcc57caf6a57db6267ce76a4c8b6e2bd73ba"
+    },
+    {
+      "branch": "feature/macos-workspace-header-callers",
+      "scope": "implementation",
+      "acceptance": "pending",
+      "commit": "70e3634f006265f8c76da8c04501663e1dd3bd41"
+    },
+    {
+      "branch": "fix/macos-hidden-group-door-reveal",
+      "commit": "e1d8defe02303a540ecdf482b45557fe06a05582",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-native-tab-visibility",
+      "commit": "cb3c794991598e6c31c4925688c981af44e33b31",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-compact-workspace-header",
+      "commit": "9eb3ec18f54ba0fd84f21dff7942debf44a63b39",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-toolbar-doors-and-labels",
+      "commit": "94d5f023797b5916bd04b4648d0f34e5f2606915",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-page-transition-crash-evidence",
+      "commit": "33e788dd85335a88a8a8bc3c8ece7373bcef99c1",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-sidebar-overflow",
+      "commit": "b1faa7a17178c2a3054a321c0e3720572e2b8f3a",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-panel-header-cleanup",
+      "commit": "1a827aa70bf79cbda6f26fdb15e722f707785578",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-workspace-footer",
+      "commit": "ae47749734582b54bd1fa13700d8d7c12f405773",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-shortcut-execution",
+      "commit": "b3e2acc76d53cf88313103c85c593426a1e41618",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "perf/macos-viewer-expansion-latency",
+      "commit": "6a4c2bfa76a63bb817be1bff33c048eaca9c2ec8",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "feature/macos-pinned-workspace-header",
+      "commit": "7e0946fb9c18011e76c4e36524f0824c2336bf92",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-native-footer-style",
+      "commit": "337ef35615f7c4e559ced40b0b1bcfe1340db969",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "research/macos-platform-compatibility",
+      "commit": "4b2385a69757eed3f72d98f4d737e601e4fb5527",
+      "scope": "verification",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "experiment/macos-timeline-tab-viewport",
+      "commit": "0ff42cde47dccbe830d507b2f43ff28dd8c5e30a",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "experiment/macos-timeline-scale-range",
+      "commit": "ff035eca527bde2d7d8436575df495a0cdd860df",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-flat-panels-menu",
+      "commit": "dc7ea5a185cba7468d4aea3e443a0aac1fb905d3",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-complete-native-footer",
+      "commit": "beba1a88d7fce70a6181c22827aa19e56a36a3a8",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-interaction-audit",
+      "commit": "7b8ece3892b1080de4526e0e52f7dabbd24ba56d",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-timeline-overflow",
+      "commit": "ac7f7ff1969d130a748ce8c40285bbc71e43c582",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "test/macos-command-provider-isolation",
+      "commit": "53d0088877eb4e38f23c5b1302cda9b34d536ce8",
+      "scope": "verification",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-page-workspace-state",
+      "commit": "26d81420f1fe632890acf5db11a6793554f811f2",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-page-aware-arrangements",
+      "commit": "48c26ec1bbb5854fe27aea2a8fe8d1b68ae12399",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-automatic-workspace-mode",
+      "commit": "257e15d947b8696063e6fb7bc2cf52ac98d130ef",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "research/macos-page-panel-inventory",
+      "commit": "20f35a0538cc372291c926cb8ab014d6570ac063",
+      "scope": "research",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-tab-viewport-scale",
+      "commit": "81b2298c36d8b8d3403607c82695053e1ba9be2c",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-preserve-invalid-workspace",
+      "commit": "780848f084858002ea9c16dfb6af4b093b08fa44",
+      "scope": "implementation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "build/macos-resolve-host-provenance",
+      "commit": "8bd4b6fa172b17df3c5882ee0588de24583a8d5b",
+      "scope": "verification",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "perf/macos-defer-expansion-persistence",
+      "commit": "dbcb2536604d76d33c6d32031858e6a2b78c9224",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "perf/macos-targeted-input-diagnostics",
+      "commit": "536ff1403661a6c00c17c3c4772fc07b3650718b",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-workspace-band-transfers",
+      "commit": "399dbf969f34453ad05bf40be32e86abe8f1dd33",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-native-band-release",
+      "commit": "65c7973a9c3ea3774f5bc930b3fc3f11f108f367",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-automatic-background-flow",
+      "commit": "12ecf47c53caeec07d8fb4075a6b9827d44ec178",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/macos-native-return-result",
+      "commit": "baf8478f44c5e710693792013848597ba0f1d81c",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "perf/macos-native-expansion-checkpoint",
+      "commit": "e1c6196d700416d5bc9acbcc552c42d0875820bf",
+      "scope": "native-flow-speed",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/native-workspace-entry-transaction",
+      "commit": "53e23ee7722e691fae73ca759d561910ed8fdb72",
+      "scope": "workspace-entry-transactions",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/panel-caller-state-sync",
+      "commit": "3bde0f70b8b6ae3a3035d8dcbe24d53444212285",
+      "scope": "panel-caller-state-sync",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/keyframes-panel-parity",
+      "commit": "aa25e9143afaaa5d05db904bea5fb846810de311",
+      "scope": "keyframes-panel-parity",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/managed-placement-control",
+      "commit": "ca29d68033c3e117613a8cd1c47bb825a6b41005",
+      "scope": "panel-placement-and-mode-presentation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "fix/native-return-caller-presentation",
+      "commit": "324375a8ffa24dd181f76d7fd3cb70044100c5bf",
+      "scope": "panel-placement-and-mode-presentation",
+      "acceptance": "pending"
+    },
+    {
+      "branch": "test/panel-caller-observation-contract",
+      "commit": "a4acd734c6082ddd6d4e2c19717db8cda9ce1e5c",
+      "scope": "native-caller-observation-regression",
+      "acceptance": "pending"
+    }
+  ]
+}

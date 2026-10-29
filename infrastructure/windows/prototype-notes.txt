@@ -1,0 +1,36 @@
+OpenGate 0.0.3 prototype.1 — Windows x64 test candidate
+
+Not live-tested inside DaVinci Resolve on Windows or macOS for this candidate.
+Windows uses the shared OpenGate managed workspace with Windows native window
+adapters. Synthetic fixtures do not establish live Resolve, GPU rendering or
+physical/remapped keyboard acceptance. Send diagnostic evidence for missing
+panels, title controls, ownership/painting errors or inconsistent actions.
+
+Requires Resolve Studio 21.1 and Windows x64; free-edition startup is unverified. Save and quit Resolve before installing,
+upgrading, downgrading or uninstalling. Open Resolve normally: its native IO plugin starts OpenGate automatically.
+Start > OpenGate remains a recovery launcher if automatic loading fails.
+The installer requests standard administrator approval for Resolve's Workflow
+Integration menu/shortcut scripts in ProgramData. Runtime settings and logs stay
+in each user's profile. The helper remains loaded until Resolve exits. Uninstall and reopen Resolve to
+return to native Resolve. The installer does not modify Resolve, projects or media.
+
+Managed settings and user workspaces are retained in %LOCALAPPDATA%\Unbound
+(managedWorkspace.json and Arrangements.json). Legacy Unbound.json remains
+untouched. Installation and uninstallation do not clear these files or shortcuts.
+Keep a copy of this folder before trying an older build; older versions may not
+understand newer settings. No fresh-user reset is part of installation.
+
+This Windows installer is unsigned and may trigger Windows SmartScreen prompts.
+Installer diagnostics are written by Inno Setup to the user's temporary directory
+as Setup Log files. Keep the exact build and describe the steps when reporting.
+Prototype releases may be withdrawn and replaced after testing.
+
+OpenGate by CineWaltz, based on Unbound (MIT). See LICENSE.
+
+After reproducing a problem, open Start > OpenGate > Export OpenGate Support Logs.
+Send the Desktop ZIP to the support team with the approximate time, page, panel and steps.
+OpenGate events use the same component/session/sequence format as Mac, including
+input clicks, observed button/action signals, focus/page changes and panel state.
+Logs: %LOCALAPPDATA%\OpenGate\Logs. Exports include build provenance and checksums.
+No project, media, Resolve preferences or typed editor contents are collected.
+Nothing is uploaded automatically; export leaves settings and Resolve running.
