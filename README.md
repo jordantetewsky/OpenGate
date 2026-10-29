@@ -1,5 +1,10 @@
 # OpenGate
 
+> **Development branch — incomplete features, not a release.** Start with the
+> [current task list, findings and bug reports](doc/platforms/opengate-current-work.md)
+> and [work-in-progress status](WORK_IN_PROGRESS.md). Audio-channel commands are
+> not working end to end; the unified native UI is not implemented.
+
 OpenGate by CineWaltz gives DaVinci Resolve movable panels, split/tab groups and
 saved workspaces while preserving Resolve's real native content.
 

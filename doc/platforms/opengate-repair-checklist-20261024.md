@@ -1,6 +1,148 @@
 # OpenGate repair checklist
 
+## Development status — October 29, 2026
+
+**Work in progress: the audio-channel commands are not working end to end.**
+The latest live attempt failed before a native action ran; channel mapping stayed
+unchanged and no Undo was requested. A local receiver-context correction passes
+focused tests but is not installed or accepted. Silent native preparation,
+correct audio/repaint, native Undo and the full four-command matrix remain open.
+The one-native-UI direction below is a recorded implementation target, not a
+completed redesign. This branch is a development checkpoint, not a release.
+
+[Current branch status and source branches](../../WORK_IN_PROGRESS.md) separates
+local implementation, verification, installation and actual user acceptance.
+Historical dated entries below retain their evidence and are superseded by newer
+entries where they describe the same state.
+
+## Native workspace clarification and investigation — October 28, 2026
+
+Jordan requests investigation of one native Resolve UI enhanced by OpenGate,
+with equivalent functions in native-origin and saved/default arrangements. The
+user should not manage internal Native/managed states or perform recovery steps
+to regain functionality. Selecting the default from the workspace/layout list
+should return the familiar arrangement. Include automatic vacancy reclaim,
+core-window edge placement/docking, minimum-width overrides with reachable
+controls and correct painting, and the resolved header without Panels/Inspector
+overlap. Preserve the complete existing Panel/Container/Layout task list.
+
+Read-only findings and measured limits are recorded in
+[native workspace investigation](opengate-native-workspace-investigation-20261028.md).
+This investigation is on isolated `investigate/native-workspace-parity`, based
+on installed source 4773945; no runtime, settings or installation changed.
+The current runtime silently enters managed state after a persistent Native
+gesture, but a managed flag does not imply a full-root replacement. The latest
+faster-feeling arrangement still uses grouping. Relay's recent jumps read back
+correctly; its log lacks request durations, so no Relay speedup is established.
+
+- [x] Preserve current-session evidence and inspect root ownership, input routing,
+  native toggle coordination, save/menu work, edge targeting and width policies.
+- [x] Identify measurement gaps: main-window responsiveness coverage, Relay
+  request boundaries, unequal workloads and missing resource profile.
+- [ ] Implement one native Resolve workspace enhanced by OpenGate, with no
+  user-facing mode switch required to access the full feature set. Preserve
+  dragging, floating, grouping, tabs, shortcuts, maximize, hide/recall, independent
+  bands, and saved/unsaved per-page persistence in every supported arrangement.
+- [ ] Make default-layout selection in the workspace/layout list sufficient to
+  restore the familiar view; no separate activation or recovery sequence.
+- [ ] Reclaim vacated space automatically in native-origin arrangements as well
+  as saved/default arrangements, without resetting unrelated panel positions.
+- [ ] Measure matching operations before predicting a design speedup; current
+  median menu/state refresh is 27.722 ms per recorded save (265 samples), not a
+  promised reduction or demonstrated cause of Relay delay.
+- [ ] Reduce demonstrated redundant menu/state/layout coordination while reusing
+  existing owners and preserving native actions. Compare matched Relay and UI
+  timings before/after; report measured improvements separately from hypotheses.
+- [ ] Supply core-window content-edge docking through the existing target/layout
+  mechanisms; native empty-space targeting is currently explicitly excluded.
+- [ ] Provide sizing/minimum-width parity across native-origin, embedded and
+  floating panels, with per-panel native painting/reflow/overflow validation.
+- [ ] Reuse the resolved header consistently with reserved space, and reconcile
+  one-UI presentation with reliable underlying native recovery and the numbered
+  assembled acceptance flow. No redesign implementation or acceptance claimed.
+
 ## Current priorities and progress — October 27, 2026
+
+### Native-action attempt failed before invocation — October 29
+
+Jordan reports nothing happens. Loaded 684bc2f received both workflow and preset
+command requests, including Next Audio Channel — All Source Channels. Each was
+rejected with fresh-manually-bound-context-required. There are zero bound-context
+records, zero native-action invocations, and no consumed permit. Read-only lookup
+by the original item identity confirms the mapping remains mono channel 3/Hannah
+and its Media Pool configuration is unchanged. The selected-item list was empty
+at a later readback; that is not evidence the original selection was wrong.
+Do not repeat the command or request Undo. The unused permit has been archived,
+leaving the running experiment disabled. Evidence: audio-direct-action-test/
+build/direct-action-install/{live-audio-evidence,live-noop-mapping,attempt-summary}-20261029.json.
+
+Isolated fix/audio-context-receiver reproduces one concrete weakness: capture
+depends on Timeline keyboard focus before the native context event handler runs.
+The live first click had no focused widget. The new unfocused-receiver regression
+fails on 684bc2f for all four variants, then passes after resolving the Timeline
+from the actual QWidget receiver. Existing focus resolution reuses this shared
+lookup; selected-item/hit/identity/expiry/one-use checks remain. Capture rejection
+reasons now identify remaining early returns. This does not prove focus loss was
+the sole live cause: the old capture has no per-stage context-event rejection
+records, and later attempts also failed. The fixture cannot prove native menu
+target binding, real QAction effect, audio/repaint, Undo or silent preparation.
+
+Verification: hidden native-audio-action fixture fails before/passes after; hidden
+native-edit-command regression passes; arm64/x86_64 production translation-unit
+syntax checks pass. Initial sandbox fixture launch could not create a test window;
+the permitted hidden run supplies the behavioral result. Mac and Windows callers
+were reviewed; Windows compilation/live behavior remain unverified. Actual diff
+review finds one reused read-only resolver, no parallel input/selection/visibility
+owner, no new state writer, and no coordinator growth. Local source correction is
+not installed, merged or released. Gate 1 remains open, and deterministic silent
+preparation for arbitrary selection (gate 2) is still unestablished.
+
+### Approved native-action test installed — October 29, 11:09 UTC
+
+Test-session update: Jordan quit and the prepared launch-test.sh opened PID 96847,
+session 291c6567-04ac-49cb-9315-0e23dead1355 at 11:14:49 UTC. Loaded 684bc2f and
+the exact OPENGATE_AUDIO_ACTION_PERMIT process path are verified. Jordan opened
+the designated disposable project/Timeline/item; read-only inspection confirms
+sole selected audio instance, mono source channel 3 (Hannah), five embedded
+channels, with Media Pool configured source channels 3/4/5. Saved a fresh baseline
+of 716 audio instances across 125 timelines and 46 source mappings without changing
+the active context: audio-direct-action-test/build/direct-action-install/live-baseline-20261029.json.
+Created one expiring, single-use permit for those exact identities; expiry is
+recorded in test-ready-20261029.json. No native channel action has run yet.
+User test: open/cancel the selected clip's Audio Channel submenu, then invoke
+OpenGate UI > Commands > Next Audio Channel — All Source Channels once. Expected
+3/Hannah to 4/Sam; inspect the actual result before requesting Undo. Do not repeat
+or issue Undo on an unchanged mapping. This remains the diagnostic component gate,
+not proof of silent preparation or a finished four-command workflow.
+
+Resumed the already-approved 684bc2f installation after a fresh process check
+confirmed Resolve closed. Transactional installation completed with macOS
+administrator authentication. All 22 staged/installed payload hashes and both
+executable signatures verify. All 232 freshly snapshotted protected settings,
+native preferences and unrelated workflow files are unchanged; only the four
+intended audio scripts/helper/Current metadata were installation targets.
+Receipt: audio-direct-action-test/build/direct-action-install/installation-receipt-20261029.json.
+Rollback to 4773945: /Library/Application Support/CineWaltz/OpenGate/Transactions/
+574A6A1E-45DE-436C-BECB-41145DD8209D/Restore Previous OpenGate.command.
+
+Jordan reopened Resolve. Loaded 684bc2f is confirmed in PID 96724, session
+3d2f40b5-70a8-402e-ae8b-9ad90b5d0d85, started 11:10:03 UTC. Read-only API
+inspection confirms the exact designated disposable project `timeline  117 testing`
+(bf026c95-86a5-47c8-86e3-6447130c4a8a), `Timeline 117`
+(85f18ec9-7b1e-4ef9-843a-b113ca8c6154), and sole selected item
+f789cab1-30ca-4ea4-a503-db6d9fbe42a5, PandLsc15-007.WAV - Hannah.
+Process environment inspection confirms OPENGATE_AUDIO_ACTION_PERMIT is absent.
+The active permit file is also absent. This ordinary-launch session therefore
+cannot execute the experiment; no native channel operation or Undo was run.
+
+Next external action: Jordan saves/quits normally so the existing launch-test.sh
+can start a process with its narrowly scoped permit path. Then verify the same
+target, create the one-use expiring permit, manually open/cancel Audio Channel,
+and invoke Next Audio Channel — All Source Channels once. Inspect actual mapping,
+instance isolation and audio/repaint before asking for exactly one native Undo;
+no Undo if mapping did not change. Manual preparation remains diagnostic only.
+The finished silent command lifecycle, four-command matrix and Windows evidence
+remain open. No runtime merge, publication or product acceptance is claimed.
 
 ### One-shot native-action experiment 684bc2f — staged, not installed
 
