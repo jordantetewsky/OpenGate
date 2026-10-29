@@ -23,7 +23,15 @@ user experience. Production-module ownership remains explicit, using the existin
 read-only selection and diagnostic transaction owners without a second input,
 visibility, selection or layout controller.
 
-Only sanitized documentation is included in this branch. Source checkpoint
-publication remains separate while its files are reviewed. Raw logs, machine
-paths, identities, settings, project data, media, permits and binaries are not
-included. No release tags, packages or main-branch updates are part of this work.
+## Sanitized development branches
+
+- [Audio diagnostic source](https://github.com/jordantetewsky/OpenGate/tree/wip/audio-direct-action-test): incomplete native command experiment; latest live capture failed before invocation.
+- [Receiver-context correction](https://github.com/jordantetewsky/OpenGate/tree/wip/audio-context-receiver): local regression correction, uninstalled and not live accepted.
+- [Unified-workspace investigation](https://github.com/jordantetewsky/OpenGate/tree/wip/native-workspace-parity): requirements and findings only; redesign not implemented.
+
+Only sanitized documentation is included in this status branch. The source
+branches use fresh snapshots without the private development history. Raw logs,
+machine-specific paths, private identities, settings, project data, media, active
+permits and build binaries are excluded. Required license/copyright attribution
+is preserved in the source snapshots. No release tags, packages or main-branch
+updates are part of this work.
