@@ -1,5 +1,10 @@
 # Incomplete development work — not a release
 
+This branch specifically records the native-workspace unification investigation.
+It contains sanitized requirements and findings only. The redesign, edge docking,
+minimum-width parity, vacancy reclaim and consistent header clearance remain
+unimplemented or unaccepted. No source change or measured Relay speedup is claimed.
+
 The [current work index](doc/platforms/opengate-current-work.md) links the full
 sanitized task list, unified-workspace requirements, current command work,
 technical findings and bug reports.
