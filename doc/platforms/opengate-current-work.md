@@ -42,6 +42,16 @@ documents the actual root-layout, input, sizing and docking boundaries. There is
 no second Resolve editing engine. There is additional ownership/layout/input
 coordination, and removing the mode label alone would not remove that work.
 
+## October 30 Timeline and focused-command scope
+
+The [agreed Timeline implementation plan](opengate-timeline-content-plan-20261030.md)
+adds a draggable internal track-header boundary with pinned blue/red buttons and
+reachable control overflow, real Timeline content scaling with a compact toolbar,
+focused-panel scale shortcuts and contextual operation mappings, and the new
+page-switch reproduction for disappearing Timeline tools. It records isolated
+branches, production responsibilities, existing paths to replace and assembled
+acceptance gates. Requirements/branch setup only; production work remains open.
+
 ## Commands currently in progress
 
 | Command | Required behavior | What exists / current gap |

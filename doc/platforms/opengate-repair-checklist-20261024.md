@@ -1,5 +1,29 @@
 # OpenGate repair checklist
 
+## Timeline clarification and branch plan — October 30, 2026
+
+See the [agreed Timeline/content/focused-command plan](opengate-timeline-content-plan-20261030.md)
+for the full contract, module boundaries and verification matrix. This refines
+older scaling/shortcut requirements without closing the existing bug reports.
+
+- [ ] Drag Timeline's internal track-header boundary narrower/wider; keep blue/red
+  buttons pinned and every other control fitted or horizontally scrollable, with
+  no overlaps, inaccessible clipping or track misalignment.
+- [ ] Scale actual Timeline content while retaining a compact toolbar; the current
+  toolbar/widget-only scale does not satisfy the requirement.
+- [ ] Map scale keys once for the focused panel and retain each panel's own scale;
+  prioritize text editing and preserve native keyboard assignment authority.
+- [ ] Make Timeline operation shortcuts panel-aware (Stabilize, Fixed Playhead,
+  future audio channels), permit disjoint-context reuse and preserve correct
+  viewer-toggle behavior; audio execution/Undo remain separately open.
+- [ ] Reproduce and repair toolbar loss on page departure/return without resetting
+  Display Stacked Timelines or requiring recovery. Reuse the existing diagnostic
+  branch rather than add another visibility owner.
+- [ ] Review responsibility boundaries and removed old paths before completion;
+  verify the numbered assembled flow and record platform/live gaps separately.
+
+Planning and isolated branch setup only; no production changes or installation.
+
 ## Development status — October 29, 2026
 
 **Work in progress: the audio-channel commands are not working end to end.**

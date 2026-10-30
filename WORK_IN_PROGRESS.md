@@ -4,6 +4,10 @@
 has not been implemented. Local fixture passes do not establish live acceptance.**
 
 Start with the **[current work, requirements, findings and bug index](doc/platforms/opengate-current-work.md)**.
+
+October 30: [Timeline content, width, toolbar and focused-command plan](doc/platforms/opengate-timeline-content-plan-20261030.md)
+records the agreed acceptance contract and local planning/feature branches. Setup
+only; these branches contain no new production implementation at creation.
 The **[full task list and evidence ledger](doc/platforms/opengate-repair-checklist-20261024.md)**
 retains the detailed history and remaining acceptance gates.
 
