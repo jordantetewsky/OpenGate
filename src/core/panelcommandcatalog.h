@@ -4,6 +4,7 @@
 #include "panelshortcuteditor.h"
 #include "nativekeyboardnavigation.h"
 #include "nativepresetbindings.h"
+#include "nativeshortcutcontext.h"
 #include "pagecontext.h"
 #include <QPointer>
 
@@ -62,18 +63,21 @@ public:
         return preset->snapshot().owners.value(sequence.toString(QKeySequence::PortableText));
     }
 private:
+    static QString presetLabel(const Command &command) {
+        auto label=command.label;
+        if(command.id=="edit.inspector.stabilize")label="Edit - Stabilize";
+        else if(command.id=="edit.timeline.fixed-playhead")label="Edit - Toggle Fixed Playhead";
+        else if(command.id=="panel.expand.hovered")label="Maximize-Restore Hovered Panel";
+        else label.replace(" / ","-");
+        return "OpenGate - "+label;
+    }
     NativeMatch matchPreset(const QKeySequence &pressed) const {
         if(!preset || currentWorkspacePage(resolveMainWindow())!="edit" || !preset->snapshot().error.isEmpty())return {};
         const auto &snapshot=preset->snapshot();
         QString id,label;
         for(const auto &command:entries()) {
-            auto nativeLabel=command.label;
-            if(command.id=="edit.inspector.stabilize")nativeLabel="Edit - Stabilize";
-            else if(command.id=="edit.timeline.fixed-playhead")nativeLabel="Edit - Toggle Fixed Playhead";
-            else if(command.id=="panel.expand.hovered")nativeLabel="Maximize-Restore Hovered Panel";
-            else nativeLabel.replace(" / ","-");
-            nativeLabel="OpenGate - "+nativeLabel;
-            if(!snapshot.commands.value(nativeLabel).contains(pressed) || !command.available || !command.available())continue;
+            const auto nativeLabel=presetLabel(command);
+            if(!snapshot.commands.value(nativeLabel).contains(pressed) || !shortcutEligible(command.id) || !command.available || !command.available())continue;
             if(!id.isEmpty() && id!=command.id)return {{},"ambiguous-opengate-assignment"};
             id=command.id;label=nativeLabel;
         }
@@ -81,8 +85,11 @@ private:
         if(pressed.count()!=1)return {{},"multi-chord-not-supported"};
         for(const auto &other:snapshot.owners.value(pressed.toString(QKeySequence::PortableText))) {
             if(other==label)continue;
-            // This known Fairlight-scoped command cannot run on the Edit page.
-            if(other.startsWith("FairlightTimeline."))continue;
+            bool disjoint=false;
+            for(const auto &command:entries()) if(presetLabel(command)==other)
+                disjoint=!PanelCommandContext::overlaps(commandScope(id),command.scope);
+            if(disjoint)continue;
+            if(!NativeShortcutContext::active(other,"edit",focusedTarget().panel))continue;
             return {{},"native-preset-conflict: "+other};
         }
         return {id,{}};

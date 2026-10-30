@@ -9,6 +9,7 @@
 #include "workspacesnapshot.h"
 #include "panelexpansioncontroller.h"
 #include <QPushButton>
+#include "../../core/workspace-callers/focusedcommandchecks.h"
 int main(int argc,char **argv) {
     qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM","1");
     QApplication app(argc,argv); app.setQuitOnLastWindowClosed(false);
@@ -16,6 +17,7 @@ int main(int argc,char **argv) {
     qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());
     int failures=0; auto check=[&](bool ok,const char *why) { if (!ok) { ++failures; std::fprintf(stderr,"FAIL: %s\n",why); } };
     QWidget main; main.setAttribute(Qt::WA_DontShowOnScreen); main.show(); QApplication::setActiveWindow(&main);
+    OpenGateTest::focusedCommandChecks(main,check);
     bool ready=true,editVisible=true; int source=0,program=0,navigation=0;
     Unbound::PanelCommands commands(nullptr); commands.context=[&] { return ready; };
     commands.add({"source","Show / Hide Source",[&] { return editVisible; },[&] { ++source; }});

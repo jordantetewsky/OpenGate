@@ -18,8 +18,8 @@ public:
     std::function<void(QString)> report;
     std::function<bool()> editActive;
     void addTo(PanelCommands *commands) {
-        commands->add({"edit.timeline.fixed-playhead","Edit Timeline / Toggle Fixed Playhead",[this] { return ready(); },[this] { fixedPlayhead(); }});
-        commands->add({"edit.inspector.stabilize","Edit Inspector / Stabilize",[this] { return ready(); },[this] { stabilize(); }});
+        commands->add({"edit.timeline.fixed-playhead","Edit Timeline / Toggle Fixed Playhead",[this] { return ready(); },[this] { fixedPlayhead(); },"frameConformTimelines"});
+        commands->add({"edit.inspector.stabilize","Edit Inspector / Stabilize",[this] { return ready(); },[this] { stabilize(); },"frameConformTimelines"});
     }
     // Edit-page presentation command: no clip-selection or focused-panel requirement.
     bool fixedPlayhead() {

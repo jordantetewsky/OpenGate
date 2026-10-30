@@ -19,6 +19,8 @@ commands=[('panel.toggle.'+id,'Show-Hide '+label) for id,label in panels]
 commands += [('panel.expand.'+id,'Maximize-Restore '+label) for id,label in panels]
 commands += [('panel.expand.hovered','Maximize-Restore Hovered Panel'),('panel.toggle.page-navigation','Show-Hide Page Navigation'),
              ('edit.timeline.fixed-playhead','Edit - Toggle Fixed Playhead'),('edit.inspector.stabilize','Edit - Stabilize')]
+commands += [('panel.scale.'+operation.lower(),'Panel Content Scale-'+operation)
+             for operation in ('Increase','Decrease','Reset')]
 manifest=[]
 for command,label in commands:
     filename='OpenGate - '+label+'.py'

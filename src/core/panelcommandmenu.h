@@ -26,6 +26,7 @@ public:
             } else if(command.id.startsWith("panel.toggle.")){
                 target=visibility;label=command.label;label.remove("Show / Hide ");
             }
+            else if(command.id.startsWith("panel.scale.")){target=menu;label=command.label;}
             if(!target)continue;
             auto action=target->addAction(label);action->setProperty("openGateCommandId",command.id);
             connect(action,&QAction::triggered,this,[this,id=command.id]{queue(id);});

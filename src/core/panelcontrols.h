@@ -51,6 +51,7 @@
 #include "workspacearrangements.h"
 #include "panelcallermenu.h"
 #include "panelcommandcatalog.h"
+#include "focusedpanelscalecommands.h"
 #include "panelcommandmenu.h"
 #include "nativeeditcommands.h"
 #include "nativepaneltoggles.h"
@@ -380,6 +381,10 @@ public:
             [this] { return page() && page()->isVisible() && hoveredExpansionTarget()>=0; },
             [this] { const int target=hoveredExpansionTarget(); if (target>=0) toggleExpanded(target); }});
         commands->defaultBinding("panel.expand.hovered","`");
+        Unbound::FocusedPanelScaleCommands::addTo(commands,[this](const QString &id) -> Unbound::ManagedPanelSession * {
+            for (const auto &panel:panels) if (panel.name==id) return panel.session;
+            return nullptr;
+        });
         commands->addNavigation([this] { return footer && Unbound::resolveMainWindow(); },[this] {
             const auto error=footer->toggleVisibility();
             if (!error.isEmpty()) status->setText(error);
