@@ -242,3 +242,12 @@ save/conflict presentation and actual scoped key coexistence also require that l
 check. This candidate is not a completed width feature, toolbar repair, release or
 live acceptance. Reread the numbered contract and record every assembled gap before
 an install proposal; the hidden entry-flow fixture does not satisfy native painting.
+
+Native registration caveat from final source review: the policy fixtures exercise
+OpenGate's preset-input route. Resolve still owns original Workflow action
+registration and its native shortcut dispatcher. Yielding a key in our filter does
+not alone prove that an original native Workflow binding cannot fire or reserve it
+outside Timeline, nor that the native editor accepts/displays the desired scope.
+Those native-dispatch and editor checks are mandatory before calling panel-aware
+mapping complete. Do not replace them with another synthetic fixture or mutate
+native action owners/connectors without establishing the supported boundary.
