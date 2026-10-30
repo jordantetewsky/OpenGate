@@ -23,5 +23,13 @@ int main(int argc,char **argv) {
  QWidget tabs;tabs.setObjectName("timelineTabsHolder");probe.observe(&tabs,QEvent::Hide);
  app.processEvents();Unbound::flushDiagnostics();f.seek(0);bytes=f.readAll();
  if(bytes.count("timeline.presentation.transition")!=520 || !bytes.contains("timelineTabsHolder"))++failures;
+ QGraphicsScene scene;QGraphicsView view(&scene,&timeline);view.setObjectName("m_TiTimelineView");
+ auto nativeControl=new QWidget;nativeControl->setObjectName("nativeTrackControls");
+ auto proxy=scene.addWidget(nativeControl);proxy->setPos(15,20);
+ view.setTransform(QTransform::fromScale(1.25,1.25));
+ const auto transform=view.transform();const auto sceneRect=scene.sceneRect();const auto position=proxy->pos();
+ const auto topology=Unbound::TimelineContentInspection::capture(&timeline);
+ if(topology["views"].toArray().size()!=1 || !topology["read_only"].toBool() ||
+    view.transform()!=transform || scene.sceneRect()!=sceneRect || proxy->pos()!=position || proxy->widget()!=nativeControl)++failures;
  std::printf("timeline presentation probe failures=%d\n",failures);return failures?1:0;
 }
