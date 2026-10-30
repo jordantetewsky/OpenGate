@@ -14,10 +14,10 @@ public:
             commands->add({"panel.scale."+name.toLower(),"Panel Content Scale / "+name,
                 [commands,lookup] {
                     auto session=lookup(commands->focusedTarget().panel);
-                    return session && session->active();
+                    return session && session->supportsContentScale();
                 },[commands,lookup,delta=operation.second] {
                     auto session=lookup(commands->focusedTarget().panel);
-                    if (!session || !session->active()) return;
+                    if (!session || !session->supportsContentScale()) return;
                     const auto factor=delta==0.0 ? 1.0 : qBound(0.7,qRound((session->interfaceScale()+delta)*10.)/10.,3.0);
                     session->setInterfaceScale(factor);
                 },"*"});
