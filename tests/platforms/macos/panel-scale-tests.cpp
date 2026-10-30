@@ -10,6 +10,7 @@
 #include "../../core/workspace-callers/focusedpanelscalechecks.h"
 int main(int argc,char **argv) {
     QApplication app(argc,argv); QTemporaryDir logs; qputenv("UNBOUND_DIAGNOSTICS_DIR",logs.path().toUtf8());
+    qputenv("UNBOUND_SHORTCUTS_FILE",(logs.path()+"/Shortcuts.json").toUtf8());
     int failures=0; auto check=[&](bool ok,const char *message) { if (!ok) { ++failures; std::fprintf(stderr,"FAIL: %s\n",message); } };
     OpenGateTest::timelineContentScaleChecks(check);
     OpenGateTest::focusedPanelScaleChecks(check);

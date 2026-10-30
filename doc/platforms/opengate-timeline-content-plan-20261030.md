@@ -251,3 +251,13 @@ outside Timeline, nor that the native editor accepts/displays the desired scope.
 Those native-dispatch and editor checks are mandatory before calling panel-aware
 mapping complete. Do not replace them with another synthetic fixture or mutate
 native action owners/connectors without establishing the supported boundary.
+
+Fixture isolation correction: the first integrated focused-scale test lacked its
+`UNBOUND_SHORTCUTS_FILE` override and created a 105-byte legacy Shortcuts.json in
+Application Support/Unbound. The initial directory inventory contained only
+Arrangements.json and Workspace.json, so this was a newly created test file.
+Its three exact F17/F18/F19 scale entries were verified and the file was moved,
+not deleted, to ignored `build/macos/fixture-isolation-incident/` to restore the
+prior absence. Native Resolve preset files were not written. The harness now
+sets its shortcut file inside its existing QTemporaryDir; verify absence before
+and after the corrected run. Do not describe the earlier run as fully isolated.
