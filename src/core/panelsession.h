@@ -20,7 +20,7 @@
 #include "panelwidth.h"
 #include "paneloverflow.h"
 #include "timelinetoolbarviewport.h"
-#include "panelmetricscale.h"
+#include "panelcontentscale.h"
 #include "nativegroupslot.h"
 #include "nativepanelposition.h"
 #include "nativerootlayout.h"
@@ -100,7 +100,7 @@ public:
         if (beforeLayoutTransfer) {
             const auto error=beforeLayoutTransfer();if(!error.isEmpty())return error;
         }
-        metricScale.restore();
+        contentScale.suspend();
         detachedGeometry = host->geometry();
         QScopedValueRollback<bool> moving(recovering, true);
         {
@@ -133,7 +133,7 @@ public:
         if (!grouped()) return;
         if (!host) return;
         QScopedValueRollback<bool> moving(recovering, true);
-        metricScale.restore();
+        contentScale.suspend();
         groupWidth.restore();
         if (groupContainer->layout()) host->setLayout(groupContainer->layout());
         groupContainer->removeEventFilter(this);
@@ -149,7 +149,7 @@ public:
     {
         if (!grouped() || expandedHost || !groupContainer->layout()) return false;
         QScopedValueRollback<bool> moving(recovering, true);
-        metricScale.restore();
+        contentScale.suspend();
         expandedHost = new WorkspaceFloatingHost(originalMain);
         expandedHost->setObjectName(QStringLiteral("unboundFloating_expanded_") + groupContainer->objectName());
         expandedHost->setWindowTitle(groupContainer->windowTitle());
@@ -163,7 +163,7 @@ public:
     void endGroupedExpansion()
     {
         if (!expandedHost) return;
-        metricScale.restore();
+        contentScale.suspend();
         QScopedValueRollback<bool> moving(recovering, true);
         if (groupContainer && expandedHost->layout()) groupContainer->setLayout(expandedHost->layout());
         expandedHost->removeEventFilter(this); expandedHost->hide(); expandedHost->deleteLater(); expandedHost = nullptr;
@@ -173,10 +173,10 @@ public:
     bool pinned() const { return host && host->property("unboundPinned").toBool(); }
     void setPinned(bool value) { if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setPinned(value); }
     void setSnapping(bool enabled) { snapping = enabled; if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setSnapping(enabled); }
-    double interfaceScale() const { return metricFactor; }
+    double interfaceScale() const { return contentScale.value(); }
     bool setInterfaceScale(double value) {
-        if (!qIsFinite(value) || value<0.7 || value>3.0) return false;
-        metricFactor=value; refreshMetricScale();
+        if (!contentScale.setValue(value)) return false;
+        refreshMetricScale();
         if (arrangementChanged) arrangementChanged();
         return true;
     }
@@ -426,7 +426,7 @@ public:
             if (!originalParent || !originalLayout || !placeholderLayout ||
                 originalParent->layout() != placeholderLayout || !transferredSurface || transferredSurface->layout() != originalLayout)
                 return QStringLiteral("Resolve changed this panel's content layout.");
-            metricScale.restore();
+            contentScale.suspend();
             widthAllowance.restore();
             delete placeholderLayout.data();
             delete placeholder.data();
@@ -459,10 +459,10 @@ public:
                 (originalSplitter && originalSplitter->indexOf(placeholder)<0) ||
                 (destinationParent->layout() && !originalStack && !originalSplitter && destinationParent->layout()->indexOf(placeholder)<0))
                 return QStringLiteral("The original panel slot changed.");
-            metricScale.restore();
+            contentScale.suspend();
             overflow.releaseInto(host);
         }
-        metricScale.restore();
+        contentScale.suspend();
         if(!timelineToolbar.restore())return QStringLiteral("Could not restore the attached Timeline toolbar safely.");
         const bool reclaimed = content->parentWidget() == destinationParent;
         QLayout *currentLayout = destinationParent->layout();
@@ -631,7 +631,7 @@ private:
     {
         releaseOriginalPosition={};
         if (releaseGroup) { auto release = releaseGroup; release(); }
-        metricScale.restore();
+        contentScale.suspend();
         timelineToolbar.restore();
         groupWidth.restore(); widthAllowance.restore(); vacatedContents.restore(); relaxedWidth = false;
         overflow.forget();
@@ -654,12 +654,11 @@ private:
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
     PanelWidthAllowance widthAllowance, groupWidth;
     void refreshMetricScale() {
-        if (!active() || qFuzzyCompare(metricFactor,1.0)) { metricScale.restore(); return; }
+        if (!active()) { contentScale.suspend(); return; }
         auto target=content ? content.data() : expandedHost ? expandedHost.data() : window();
-        metricScale.attach(target,metricFactor);
+        contentScale.apply(target);
     }
-    PanelMetricScale metricScale;
-    double metricFactor=1.0;
+    PanelContentScale contentScale;
     PanelOverflow overflow;
     TimelineToolbarViewport timelineToolbar;
     VacatedContents vacatedContents;
