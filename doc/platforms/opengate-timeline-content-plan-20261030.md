@@ -10,9 +10,10 @@ production implementation and live acceptance remain open. This refines the
 1. Drag the right boundary of Timeline's pinned left track-header area left or
    right to give clips more or less horizontal space. This is an internal divider,
    not merely the outer panel's minimum width. Blue/red track buttons remain
-   pinned, readable and usable. Other track controls must fit or be horizontally
-   scrollable. No overlaps, spill into the clips, inaccessible clipping or lost
-   controls. Header rows remain aligned with their tracks throughout resizing,
+   pinned on the left, readable and usable. Other track controls must fit or have
+   a visible, draggable horizontal scrollbar when they overflow; gesture-only
+   scrolling is insufficient. No overlaps, spill into the clips, inaccessible
+   clipping or lost controls. Header rows remain aligned with their tracks throughout resizing,
    scrolling and scaling. Widening reveals controls naturally. Horizontal scrolling
    of header controls must not scroll the clip timeline or move the pinned buttons.
 2. Timeline's scale/resolution control primarily changes its content: track
@@ -41,6 +42,16 @@ production implementation and live acceptance remain open. This refines the
    tabs as one arranged element. Preserve Display Stacked Timelines, active
    timeline, selection, playhead, grouping and saved/unsaved layout. No reset or
    manual recovery is an acceptable normal page-return path.
+7. Set it once and OpenGate remembers it: retain the user's pinning choices,
+   track-header divider width, header-control horizontal scroll position and
+   independent panel content scale. Page departure/return, hide/show/recall,
+   float/dock/group/tab transitions and temporary maximize/restore must not reset
+   these settings. Restore the last working values after restart, including
+   unsaved workspace changes. Saved workspaces retain their own values through
+   the existing Save/Update/recall model. Original Resolve UI restores exact native
+   owners/metrics while retaining OpenGate preferences for re-entry. Clamp a saved
+   width/offset only when the current viewport requires it to keep controls
+   reachable; ordinary layout changes must not silently replace the user's setting.
 
 Shortcut scope refines the older focus-independent keyboard requirement for Fixed
 Playhead. It does not require restricting explicit menu invocation or changing the
@@ -94,8 +105,10 @@ that forward to core are compatibility entry points, not a second implementation
 | Existing `PanelControls` | Coordinate existing panels, sessions and callers; wire dependencies without accumulating header, renderer, input or persistence implementations |
 
 Use the existing stable panel IDs, `interface_scale`, session setter and workspace
-save/checkpoint path. Do not create another scale store. Persist header width and
-overflow through that same owner if needed; do not add a separate settings writer.
+save/checkpoint path. Do not create another scale store. Persist header width,
+pinning choices and overflow offset through that same owner as required state;
+do not add a separate settings writer. Restore after native content/layout is ready
+so an initial empty scrollbar range cannot overwrite a retained scroll position.
 One generic focused-panel scale command set is preferable to duplicate per-panel
 commands. Exact native registration remains to be established, not bypassed with
 hard-coded keys or a second shortcut editor.
@@ -138,7 +151,8 @@ not a claim that every one caused the reported defect.
 
 | Acceptance action | Required evidence (all currently open) |
 | --- | --- |
-| Drag divider narrow/wide, then scroll controls | Actual native divider hit target; pinned buttons stationary; all controls reachable; row alignment and clip-area gain; matching behavior fixture where representable |
+| Drag divider narrow/wide, then drag its horizontal scrollbar | Actual native divider and scrollbar hit targets; pinned left buttons stationary; all controls reachable; row alignment and clip-area gain; matching behavior fixture where representable |
+| Set pinning, header width/offset and scale; leave/return/restart | Same settings after page switches, hide/show, float/dock/group/tab, maximize/restore and fresh-process unsaved restore; saved workspace recall restores its own values; late layout/range initialization does not erase the retained offset |
 | Scale Timeline repeatedly, reset, resize | Content changes visibly/sharply; toolbar height stable; ruler/labels/waveforms and pointer hits correct; no cumulative drift or blank painting |
 | Use the same scale keys in Timeline, Media Pool, Inspector | Only focused content changes; correct per-panel readback; independent settings survive grouping, page return, save/unsaved restart and native return |
 | Rename a Media Pool clip; type in native fields | Typing/editing preserved, zero unintended scale/Stabilize/Fixed Playhead/audio dispatch, no focus/selection movement |

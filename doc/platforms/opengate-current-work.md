@@ -48,8 +48,10 @@ The [agreed Timeline implementation plan](opengate-timeline-content-plan-2026103
 adds a draggable internal track-header boundary with pinned blue/red buttons and
 reachable control overflow, real Timeline content scaling with a compact toolbar,
 focused-panel scale shortcuts and contextual operation mappings, and the new
-page-switch reproduction for disappearing Timeline tools. It records isolated
-branches, production responsibilities, existing paths to replace and assembled
+page-switch reproduction for disappearing Timeline tools. Pinned left buttons,
+a visible header-control horizontal scrollbar and remembered pinning/width/scroll/
+scale settings are explicit requirements, including unsaved restart restoration.
+It records isolated branches, production responsibilities, existing paths to replace and assembled
 acceptance gates. Requirements/branch setup only; production work remains open.
 
 ## Commands currently in progress

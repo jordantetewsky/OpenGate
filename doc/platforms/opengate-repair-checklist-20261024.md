@@ -7,8 +7,13 @@ for the full contract, module boundaries and verification matrix. This refines
 older scaling/shortcut requirements without closing the existing bug reports.
 
 - [ ] Drag Timeline's internal track-header boundary narrower/wider; keep blue/red
-  buttons pinned and every other control fitted or horizontally scrollable, with
-  no overlaps, inaccessible clipping or track misalignment.
+  buttons pinned on the left and other controls fitted or reachable through a
+  visible horizontal scrollbar, with no overlaps, inaccessible clipping or track
+  misalignment.
+- [ ] Remember pinning choices, header width, horizontal scroll position and each
+  panel's content scale through page switches, hide/show, placement/group changes,
+  maximize/restore and restart, including unsaved workspace state; retain each
+  saved workspace's values through the existing Save/Update/recall mechanism.
 - [ ] Scale actual Timeline content while retaining a compact toolbar; the current
   toolbar/widget-only scale does not satisfy the requirement.
 - [ ] Map scale keys once for the focused panel and retain each panel's own scale;
