@@ -1,7 +1,8 @@
 # Timeline content, width, toolbar and focused commands
 
-Agreed with Jordan on October 30, 2026. Status: requirements and branch setup;
-production implementation and live acceptance remain open. This refines the
+Agreed with Jordan on October 30, 2026. Status: partial source implementation and
+verified build candidate; native width/overflow, toolbar/tab repair and live
+acceptance remain open. This refines the
 [current work](opengate-current-work.md) and
 [repair checklist](opengate-repair-checklist-20261024.md), preserving other tasks.
 
@@ -31,14 +32,16 @@ production implementation and live acceptance remain open. This refines the
    and, when functional, audio-channel commands. Timeline focus permits those
    Timeline operations; disjoint panel contexts can reuse a key. Media Pool rename
    and other text editing retain their keys, selection and focus. Text editing,
-   dialogs and popups take priority. Do not infer the target from hover or move
+   dialogs and popups take priority. A Timeline-only mapping must leave that key
+   available for a different native or OpenGate command outside Timeline; this
+   is command eligibility by firing area, not a global reservation. Do not infer the target from hover or move
    focus to execute. An unsupported/unknown target cannot silently scale another
    panel or fall through to an OpenGate command in another context.
 5. Preserve Toggle Maximum Viewer's user-reported correct behavior and existing
    intentional hover-based maximize bindings. Focus policy for the commands above
    must not silently convert unrelated bindings to a different targeting model.
-6. Repair the reported sequence: Timeline toolbar visible -> switch Resolve page
-   -> return -> toolbar missing. Keep Timeline, its toolbar and native timeline
+6. Repair the reported sequence: Timeline toolbar and stacked-timeline tabs
+   visible -> switch Resolve page -> return -> toolbar and/or stacked tabs missing. Keep Timeline, its toolbar and native timeline
    tabs as one arranged element. Preserve Display Stacked Timelines, active
    timeline, selection, playhead, grouping and saved/unsaved layout. No reset or
    manual recovery is an acceptable normal page-return path.
@@ -189,6 +192,53 @@ before implementation completion or an installation proposal. Relevant mappings:
   evidence; list remaining gaps instead of relying on isolated fixtures.
 
 Record implementation, compilation, fixtures, installation and live acceptance
-separately for each branch. Setup changes documentation only: no module has been
-implemented, no build or fixture result is claimed, and the installed runtime,
-user settings, projects and best-known rollback remain unchanged.
+separately for each branch. Initial setup changed documentation only. The implementation checkpoint below
+records subsequent source/build evidence; it does not close the full requirements.
+The installed runtime, user settings, projects and best-known rollback are unchanged.
+
+
+## Implementation checkpoint and actual gaps
+
+Integrated source is on `integration/timeline-content-20261030` in
+`timeline-content-candidate`. The independent feature histories remain intact:
+focused commands `4934fb5` (plus guard extraction `4c3749d`), scale-state extraction
+`7f1c07d` and graphics experiment `8bf5f93`, and read-only Timeline topology
+inspection `ef7db1f` (reusing the earlier presentation probe).
+
+| Requirement | Actual source/build status |
+| --- | --- |
+| Command mappings restricted to their firing panel | Implemented in the existing dispatcher/catalog with read-only `PanelCommandContext` and `NativeShortcutContext`; native-preset fixture verifies Timeline Stabilize sharing a key with native Media Pool, yielding outside Timeline, same-context collision rejection, text priority and queued target stability |
+| Shared increase/decrease/reset panel content commands | Registered through the existing registry, workflow generator and native editor route; integrated fixture uses two actual isolated sessions to verify independent values, one existing save callback per change, reset, native metric restoration and retained scale on re-entry |
+| Scale responsibility extraction | `PanelContentScale` now owns the existing value and reversible application; session removes `metricFactor`/direct metric-adapter ownership and delegates lifecycle application; existing `interface_scale` and workspace save remain the only persistence path |
+| Timeline body scale, compact toolbar | Opt-in `TimelineContentScale` uses actual Qt scene transforms with inverse input mapping; fixture verifies native scene geometry/hits and unchanged toolbar height/font. It is disabled by default with `OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT`; custom Resolve painting, complete ruler/header coverage, native temporal zoom interplay and GPU behavior are unverified. Missing capability does not grow only the toolbar or claim success |
+| Pinned left buttons, draggable width and visible scrollbar | Not implemented: a safe native track-control/scene boundary has not been established. The width branch remains isolated. No invented width state or test-only adapter was added |
+| Toolbar and stacked tabs surviving page changes | Not repaired: current logs establish page-return transitions through zero-sized ancestors, not the full cause. Reused lifecycle probe plus bounded graphics inspection now record native scene/proxy/view topology without visibility, input, layout or project writes |
+| Remembered header width, pinning and header scroll position | Still open with the width adapter. Existing scale retention is exercised; this is not evidence of completed header-state persistence or fresh-process native live acceptance |
+
+The combined universal Mac helper and IO bootstrap build against Resolve's Qt
+libraries with warnings as errors; both contain arm64/x86_64 and ad-hoc signatures
+verify. The native bootstrap handshake self-test and integrated hidden entry-flow,
+command-menu and panel-scale suites pass. Command/preset and read-only topology
+fixtures also pass on their source branches. Generated Mac and Windows workflow
+wrappers pass; Windows native compilation and live acceptance are not performed.
+Exact artifact identity, hashes and checks belong in ignored
+`build/macos/timeline-content-build-receipt.json` rather than a moving claim here.
+
+Organization review: text editing moved out of `InteractionDiagnostics`; conflict
+inventory/validation moved out of `PanelCommands` and its original implementation
+was removed; panel scale state/application moved out of `ManagedPanelSession`.
+Panel targeting, native scope translation, scale-command registration and native
+scene inspection have distinct modules. No new panel registry, input event filter,
+settings file/writer, project writer or toolbar visibility controller was added.
+`PanelControls` gains only the registration include and lookup wiring. Review sizes
+at this checkpoint: dispatcher 173 -> 159 lines; coordinator 1,288 -> 1,293;
+session 690 -> 691. Related scene/scale logic stays together; no arbitrary part files.
+
+Remaining external gate: actual renderer capabilities and toolbar/tab loss need a
+fresh Resolve session loading this candidate. The currently running process cannot
+load a replaced helper merely by rebuilding it. Do not quit the user's project or
+install over the preserved runtime without authorization. Native keyboard editor
+save/conflict presentation and actual scoped key coexistence also require that live
+check. This candidate is not a completed width feature, toolbar repair, release or
+live acceptance. Reread the numbered contract and record every assembled gap before
+an install proposal; the hidden entry-flow fixture does not satisfy native painting.

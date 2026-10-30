@@ -52,7 +52,9 @@ page-switch reproduction for disappearing Timeline tools. Pinned left buttons,
 a visible header-control horizontal scrollbar and remembered pinning/width/scroll/
 scale settings are explicit requirements, including unsaved restart restoration.
 It records isolated branches, production responsibilities, existing paths to replace and assembled
-acceptance gates. Requirements/branch setup only; production work remains open.
+acceptance gates. Its implementation checkpoint distinguishes tested focused
+commands/scale state and the built experiment/diagnostics from unfinished native
+width/scrollbar, toolbar/tab repair and live rendering. Nothing is installed.
 
 ## Commands currently in progress
 

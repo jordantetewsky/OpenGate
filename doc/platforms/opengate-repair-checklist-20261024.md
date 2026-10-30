@@ -27,7 +27,12 @@ older scaling/shortcut requirements without closing the existing bug reports.
 - [ ] Review responsibility boundaries and removed old paths before completion;
   verify the numbered assembled flow and record platform/live gaps separately.
 
-Planning and isolated branch setup only; no production changes or installation.
+Source/build follow-up is recorded in the plan's implementation checkpoint:
+focused mappings and scale-state extraction are implemented/tested; an opt-in scene
+scale experiment and read-only toolbar/tab topology diagnostics are built. Native
+width/scrollbar, header-state persistence, page-return repair and live rendering
+remain open. Nothing is installed or live accepted. Jordan additionally confirms
+that stacked-timeline tabs can disappear along with the toolbar.
 
 ## Development status — October 29, 2026
 

@@ -7,10 +7,12 @@
 #include "panelmetricscale.h"
 #include "panelsession.h"
 #include "../../core/workspace-callers/timelinecontentscalechecks.h"
+#include "../../core/workspace-callers/focusedpanelscalechecks.h"
 int main(int argc,char **argv) {
     QApplication app(argc,argv); QTemporaryDir logs; qputenv("UNBOUND_DIAGNOSTICS_DIR",logs.path().toUtf8());
     int failures=0; auto check=[&](bool ok,const char *message) { if (!ok) { ++failures; std::fprintf(stderr,"FAIL: %s\n",message); } };
     OpenGateTest::timelineContentScaleChecks(check);
+    OpenGateTest::focusedPanelScaleChecks(check);
     QWidget native,first,second; auto layout=new QVBoxLayout(&first); layout->setContentsMargins(10,12,14,16); layout->setSpacing(8);
     auto button=new QPushButton("Real native action",&first); button->setFixedSize(100,40); button->setIconSize({20,20});
     auto font=button->font(); font.setPointSizeF(12); button->setFont(font); layout->addWidget(button);
