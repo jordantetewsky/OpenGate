@@ -175,11 +175,13 @@ public:
     void setSnapping(bool enabled) { snapping = enabled; if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setSnapping(enabled); }
     double interfaceScale() const { return contentScale.value(); }
     bool setInterfaceScale(double value) {
+        const auto previous=contentScale.value();
         if (!contentScale.setValue(value)) return false;
-        refreshMetricScale();
+        if (!refreshMetricScale()) { contentScale.setValue(previous);refreshMetricScale();return false; }
         if (arrangementChanged) arrangementChanged();
         return true;
     }
+    bool supportsContentScale() const { return active() && PanelContentScale::supported(content ? content.data() : window()); }
     bool hiddenByUser() const { return userHidden; }
     QPoint overflowOffset() const { return overflow.offset(); }
     void restoreOverflowOffset(QPoint position) { overflow.restoreOffset(position); }
@@ -653,10 +655,10 @@ private:
     }
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
     PanelWidthAllowance widthAllowance, groupWidth;
-    void refreshMetricScale() {
-        if (!active()) { contentScale.suspend(); return; }
+    bool refreshMetricScale() {
+        if (!active()) { contentScale.suspend(); return true; }
         auto target=content ? content.data() : expandedHost ? expandedHost.data() : window();
-        contentScale.apply(target);
+        return contentScale.apply(target);
     }
     PanelContentScale contentScale;
     PanelOverflow overflow;
