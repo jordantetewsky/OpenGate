@@ -329,3 +329,23 @@ Timeline GPU painting/input, Media Pool custom content, native shortcut editor
 scope behavior, pinned header width and toolbar/stacked-tab page-return loss
 remain open. A project must be open and the actual scaling/page-return gestures
 exercised before those native acceptance results can be recorded.
+
+### Live rejection: fractured Timeline drawing
+
+Jordan's October 31 10:06:10 and 10:06:23 screenshots reject Timeline scaling
+in installed `6c3ffb4`. At 227%, track-button labels/borders, glyph size/spacing,
+and the surrounding layout do not enlarge coherently. This is not acceptable
+content scaling, even though clip thumbnails and waveforms visibly enlarge.
+The Qt rectangle/inverse-hit fixture does not model these native drawing paths
+and cannot establish their correctness.
+
+Runtime events confirm the experimental transform was applied at 1.25 through
+2.34, ending at 2.27. The captured native topology contains nested track-control
+and clip `QGraphicsView` surfaces inside the outer sequence scene. The last
+available topology capture precedes the scale change and shows no items with
+`ItemIgnoresTransformations`; do not claim that flag explains the corruption.
+The exact native drawing/cache mismatch remains unproven. Source applies one
+outer-view transform; this approach has now failed native acceptance and is not
+a supported Timeline scaling capability. Preserve this evidence and the prior
+rollback. No installed binary or user scale preference was changed during this
+read-only review.
