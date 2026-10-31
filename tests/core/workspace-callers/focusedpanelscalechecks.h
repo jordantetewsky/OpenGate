@@ -9,7 +9,8 @@ template<class Check> void focusedPanelScaleChecks(Check check) {
     QWidget page;page.setAttribute(Qt::WA_DontShowOnScreen);page.resize(700,500);auto outer=new QVBoxLayout(&page);
     QWidget inspector,pool;inspector.setObjectName("widgetEditInspector");pool.setObjectName("frameEditPageMediaPool");
     auto firstLayout=new QVBoxLayout(&inspector);auto first=new QPushButton("Inspector control");first->setFixedSize(100,40);firstLayout->addWidget(first);
-    auto secondLayout=new QVBoxLayout(&pool);auto second=new QPushButton("Media Pool control");second->setFixedSize(100,40);secondLayout->addWidget(second);
+    auto secondLayout=new QVBoxLayout(&pool);auto second=new QPushButton("Media Pool control");second->setFixedSize(100,40);
+    auto canvas=new QSplitter;canvas->setObjectName("mediaPoolViewSplitter");canvas->addWidget(second);secondLayout->addWidget(canvas);
     outer->addWidget(&inspector);outer->addWidget(&pool);page.show();QApplication::processEvents();
     Unbound::ManagedPanelSession firstSession,secondSession;
     check(firstSession.undock(&inspector,&page,"Inspector").isEmpty()&&secondSession.undock(&pool,&page,"Media Pool").isEmpty(),"focused scale uses actual managed sessions");
@@ -31,10 +32,10 @@ template<class Check> void focusedPanelScaleChecks(Check check) {
     send(first,Qt::Key_F17);
     check(qFuzzyCompare(firstSession.interfaceScale(),1.1)&&secondSession.interfaceScale()==1.&&first->minimumSize()==QSize(110,44),"increase changes only focused Inspector content");
     send(second,Qt::Key_F18);
-    check(qFuzzyCompare(secondSession.interfaceScale(),0.9)&&qFuzzyCompare(firstSession.interfaceScale(),1.1)&&second->minimumSize()==QSize(90,36),"same scale command set targets focused Media Pool independently");
+    check(qFuzzyCompare(secondSession.interfaceScale(),0.9)&&qFuzzyCompare(firstSession.interfaceScale(),1.1)&&second->minimumSize()==QSize(100,40),"same scale command set targets focused Media Pool independently");
     check(firstSaves==1&&secondSaves==1,"scale commands notify existing persistence path once per change");
     send(first,Qt::Key_F19);check(firstSession.interfaceScale()==1.&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"reset affects only focused panel");
     check(secondSession.dock().isEmpty()&&second->minimumSize()==QSize(100,40)&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"native restoration retains preference and restores original metrics");
-    check(secondSession.undock(&pool,&page,"Media Pool").isEmpty()&&second->minimumSize()==QSize(90,36),"re-entry reapplies the same retained scale value");
+    check(secondSession.undock(&pool,&page,"Media Pool").isEmpty()&&second->minimumSize()==QSize(100,40),"re-entry reapplies the same retained scale value");
 }
 }

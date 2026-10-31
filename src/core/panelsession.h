@@ -38,6 +38,7 @@ class ManagedPanelSession : public QObject
 public:
     explicit ManagedPanelSession(QObject *owner = nullptr) : QObject(owner)
     {
+        contentScale.changed=[this]{if(arrangementChanged)arrangementChanged();};
         arrangeTimer.setSingleShot(true);
         arrangeTimer.setInterval(180);
         connect(&arrangeTimer, &QTimer::timeout, this, [this] {
@@ -100,7 +101,7 @@ public:
         if (beforeLayoutTransfer) {
             const auto error=beforeLayoutTransfer();if(!error.isEmpty())return error;
         }
-        contentScale.suspend();
+        if(!contentScale.suspend())return QStringLiteral("Could not restore the native content viewport before grouping.");
         detachedGeometry = host->geometry();
         QScopedValueRollback<bool> moving(recovering, true);
         {
@@ -133,7 +134,7 @@ public:
         if (!grouped()) return;
         if (!host) return;
         QScopedValueRollback<bool> moving(recovering, true);
-        contentScale.suspend();
+        if(!contentScale.suspend())return;
         groupWidth.restore();
         if (groupContainer->layout()) host->setLayout(groupContainer->layout());
         groupContainer->removeEventFilter(this);
@@ -149,7 +150,7 @@ public:
     {
         if (!grouped() || expandedHost || !groupContainer->layout()) return false;
         QScopedValueRollback<bool> moving(recovering, true);
-        contentScale.suspend();
+        if(!contentScale.suspend())return false;
         expandedHost = new WorkspaceFloatingHost(originalMain);
         expandedHost->setObjectName(QStringLiteral("unboundFloating_expanded_") + groupContainer->objectName());
         expandedHost->setWindowTitle(groupContainer->windowTitle());
@@ -180,6 +181,12 @@ public:
         if (!refreshMetricScale()) { contentScale.setValue(previous);refreshMetricScale();return false; }
         if (arrangementChanged) arrangementChanged();
         return true;
+    }
+    QJsonObject interfaceState() const { return contentScale.snapshot(); }
+    bool restoreInterfaceState(const QJsonObject &saved) {
+        const auto previous=contentScale.snapshot();contentScale.restoreState(saved);
+        if(refreshMetricScale())return true;
+        contentScale.restoreState(previous);refreshMetricScale();return false;
     }
     bool supportsContentScale() const { return active() && PanelContentScale::supported(content ? content.data() : window()); }
     bool hiddenByUser() const { return userHidden; }
@@ -461,10 +468,10 @@ public:
                 (originalSplitter && originalSplitter->indexOf(placeholder)<0) ||
                 (destinationParent->layout() && !originalStack && !originalSplitter && destinationParent->layout()->indexOf(placeholder)<0))
                 return QStringLiteral("The original panel slot changed.");
-            contentScale.suspend();
+            if(!contentScale.suspend())return QStringLiteral("Could not restore the native content viewport.");
             overflow.releaseInto(host);
         }
-        contentScale.suspend();
+        if(!contentScale.suspend())return QStringLiteral("Could not restore the native content viewport.");
         if(!timelineToolbar.restore())return QStringLiteral("Could not restore the attached Timeline toolbar safely.");
         const bool reclaimed = content->parentWidget() == destinationParent;
         QLayout *currentLayout = destinationParent->layout();
@@ -656,7 +663,7 @@ private:
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
     PanelWidthAllowance widthAllowance, groupWidth;
     bool refreshMetricScale() {
-        if (!active()) { contentScale.suspend(); return true; }
+        if (!active()) return contentScale.suspend();
         auto target=content ? content.data() : expandedHost ? expandedHost.data() : window();
         return contentScale.apply(target);
     }

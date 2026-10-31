@@ -261,3 +261,49 @@ not deleted, to ignored `build/macos/fixture-isolation-incident/` to restore the
 prior absence. Native Resolve preset files were not written. The harness now
 sets its shortcut file inside its existing QTemporaryDir; verify absence before
 and after the corrected run. Do not describe the earlier run as fully isolated.
+
+
+## Content viewport correction — October 31
+
+Jordan's live screenshot rejects the first candidate: Media Pool headings grew
+while rows/clip text stayed small, and Timeline reported unavailable. This is a
+failed content-scale acceptance result. Scaling must enlarge actual native
+content, keep chrome compact, and leave panel width independent with reachable
+scrollbars; native minimum geometry must not lock the outer panel wider.
+
+Isolated `feature/panel-content-viewport` replaces Media Pool's root-wide widget
+metric path with a live Qt canvas viewport around the existing bins/clip splitter.
+It reuses the native layout-slot lease; original widget/model/action identities
+remain. The native title and toolbar remain outside that viewport. A focused
+`ScalableContentViewport` owns rendering/inverse input/scroll geometry;
+`MediaPoolContentScale` owns reversible canvas attachment and retained viewport
+state; `PanelContentScale` retains the scale/canvas-width/scroll schema. Session
+and workspace persistence delegate to that state owner. No second settings store,
+project model, global font change or screenshot-based renderer was introduced.
+
+The captured native Timeline is `UiTiSequenceView : QGraphicsView` with a
+`BmdDavUI::UiGraphicsViewportWidget` native paint surface. The renderer adapter now
+accepts that observed combination instead of rejecting every native viewport.
+This test candidate enables its scene scaling on ordinary launch (explicit `0`
+remains an opt-out), restores its original transform/scroll policies, and applies
+the retained factor to newly created stacked views through local deferred events.
+This still needs actual Resolve GPU, clip/track/ruler and pointer acceptance.
+The independent pinned-header divider/frozen controls are not implemented by this
+whole-scene scaling correction; do not call that width requirement complete.
+
+`NativePanelPosition` gains an explicit covered-content acquisition option,
+defaulting off for every existing caller. The Media Pool adapter uses it to
+prepare a covered group/tab without revealing it. Semantic ancestry crosses Qt's
+embedded-widget boundary for command focus and native Media Pool navigation.
+Original broad widget metric scaling is removed from the production Media Pool
+path; no parallel scale owner or extra global input filter was added.
+
+Behavioral checks cover fixed-size native delegate drawing at larger physical
+size, a narrowed panel with draggable overflow, pointer selection of the original
+item, inline rename protection, focused key targeting, exact owner/layout/metric
+restoration, serialization into a fresh state owner, explicit zero-scroll reset,
+covered-tab/editor preservation, lazy stacked-view scale, and zero native-window
+recreation warnings. The assembled entry-flow fixture is also required. These
+are Qt integration fixtures, not actual Resolve acceptance. Windows callers are
+reviewed through shared core; Windows native compilation/live verification remain
+open. The installed 8149657 stays intact until a fresh-process test of this build.

@@ -8,12 +8,21 @@
 #include "panelsession.h"
 #include "../../core/workspace-callers/timelinecontentscalechecks.h"
 #include "../../core/workspace-callers/focusedpanelscalechecks.h"
+#include "../../core/workspace-callers/mediapoolcontentscalechecks.h"
 int main(int argc,char **argv) {
+    static int recreationWarnings=0;
+    qInstallMessageHandler([](QtMsgType,const QMessageLogContext &,const QString &message) {
+        if(message.contains("active key-value observers")) {
+            ++recreationWarnings;
+        }
+        std::fprintf(stderr,"%s\n",qPrintable(message));
+    });
     QApplication app(argc,argv); QTemporaryDir logs; qputenv("UNBOUND_DIAGNOSTICS_DIR",logs.path().toUtf8());
     qputenv("UNBOUND_SHORTCUTS_FILE",(logs.path()+"/Shortcuts.json").toUtf8());
     int failures=0; auto check=[&](bool ok,const char *message) { if (!ok) { ++failures; std::fprintf(stderr,"FAIL: %s\n",message); } };
     OpenGateTest::timelineContentScaleChecks(check);
     OpenGateTest::focusedPanelScaleChecks(check);
+    OpenGateTest::mediaPoolContentScaleChecks(check);
     QWidget native,first,second; auto layout=new QVBoxLayout(&first); layout->setContentsMargins(10,12,14,16); layout->setSpacing(8);
     auto button=new QPushButton("Real native action",&first); button->setFixedSize(100,40); button->setIconSize({20,20});
     auto font=button->font(); font.setPointSizeF(12); button->setFont(font); layout->addWidget(button);
@@ -42,5 +51,6 @@ int main(int argc,char **argv) {
     check(button->minimumSize()==QSize(100,40) && button->maximumSize()==QSize(100,40) && button->font()==original && button->iconSize()==QSize(20,20),"native control metrics restore exactly");
     check(layout->contentsMargins()==QMargins(10,12,14,16) && layout->spacing()==8,"native layout metrics restore exactly");
     auto disposable=new QWidget; scale.attach(disposable,1.1); delete disposable; scale.restore();
+    check(recreationWarnings==0,"content transfers avoid native window recreation warnings");
     std::printf("panel scale failures=%d\n",failures); return failures ? 1 : 0;
 }

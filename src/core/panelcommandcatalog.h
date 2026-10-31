@@ -34,7 +34,7 @@ public:
             };
         }
         context=[owner,running] {
-            auto window=QApplication::activeWindow();
+            auto window=panelWindow(QApplication::activeWindow());
             return running() && window && (window==owner || window->objectName()=="UiMainWindow" ||
                 window->objectName().startsWith("unboundFloating_"));
         };

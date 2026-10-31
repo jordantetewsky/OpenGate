@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <QStringList>
 #include "textediting.h"
+#include "panelancestry.h"
 namespace Unbound {
 // Read-only panel resolution from existing command IDs and native/group ancestry.
 // No panel registry, event filter, visibility writer or remembered hover target.
@@ -18,11 +19,11 @@ public:
     static Target capture(const QStringList &ids) {
         auto focus=QApplication::focusWidget();
         if (!focus || !focus->isVisible() || !focus->isEnabled()) return {};
-        for (auto widget=focus;widget;widget=widget->parentWidget()) {
+        for (auto widget=focus;widget;widget=panelParent(widget)) {
             const auto grouped=widget->property("groupPanel").toString();
             if (ids.contains(grouped)) return {grouped,widget};
             if (ids.contains(widget->objectName())) return {widget->objectName(),widget};
-            if (widget->isWindow()) break;
+            if (widget->isWindow() && !widget->graphicsProxyWidget()) break;
         }
         return {};
     }

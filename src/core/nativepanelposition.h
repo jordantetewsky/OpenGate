@@ -38,11 +38,11 @@ public:
         auto layout=owner->layout();
         return layout && (qobject_cast<QBoxLayout *>(layout) || qobject_cast<QGridLayout *>(layout)) && layout->indexOf(panel)>=0;
     }
-    QString acquire(QWidget *panel,QWidget *page,bool allowParked=false) {
+    QString acquire(QWidget *panel,QWidget *page,bool allowParked=false,bool allowCovered=false) {
         bool parked=false;
         if(allowParked&&panel&&page)for(auto p=panel->parentWidget();p;p=p->parentWidget())
             if(p->objectName()=="unboundNativeLayoutStash"&&p->parentWidget()==page&&p->property("unboundParkedNativePage").value<QObject *>())parked=true;
-        if (active() || !panel || !page || panel==page || !page->isAncestorOf(panel) || panel->isWindow() || (!panel->isVisible()&&!parked))
+        if (active() || !panel || !page || panel==page || !page->isAncestorOf(panel) || panel->isWindow() || (!panel->isVisible()&&!parked&&!(allowCovered&&!panel->isHidden())))
             return QStringLiteral("The native panel position is unavailable.");
         auto owner=panel->parentWidget();
         auto split=qobject_cast<QSplitter *>(owner); auto stack=qobject_cast<QStackedWidget *>(owner);

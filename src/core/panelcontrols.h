@@ -262,7 +262,7 @@ public:
             panel.desired = panel.saved["floating"].toBool();
             panel.session = new Unbound::ManagedPanelSession(this);
             panel.session->beforeLayoutTransfer=[this] {return releaseWorkspaceBands();};
-            panel.session->setInterfaceScale(panel.saved["interface_scale"].toDouble(1.0));
+            panel.session->restoreInterfaceState(panel.saved);
             nativeWorkspace->registerPanel(panel.name,panel.session,panel.label);
             panel.session->attachRequested = [this, i](QWidget *target, Qt::Edge edge) {
                 attachDrop(i, target, edge);
@@ -779,7 +779,7 @@ private:
         const auto saved = value["panels"].toObject();
         for (auto &panel : panels) {
             panel.saved = saved[panel.name].toObject();
-            panel.session->setInterfaceScale(panel.saved["interface_scale"].toDouble(1.0));
+            panel.session->restoreInterfaceState(panel.saved);
             panel.desired = panel.saved["floating"].toBool() || nativeWorkspace->requiredPanels().contains(panel.name);
         }
         return {};
@@ -952,7 +952,7 @@ private:
             p.session->restoreWindowMaximized(p.saved["maximized"].toBool());
             if(p.saved.contains("display")&&Unbound::DisplayPlacement::match(p.saved,Unbound::workspaceDisplays())<0)
                 p.saved["display_fallback"]=Unbound::DisplayPlacement::rect(p.session->floatingGeometry());
-            p.session->setInterfaceScale(p.saved["interface_scale"].toDouble(1.0));
+            p.session->restoreInterfaceState(p.saved);
             p.session->setPinned(p.name=="unboundWorkspaceToolbar" ? p.saved["toolbar_float_pinned"].toBool(true) : p.saved["pinned"].toBool());
             if (p.saved["hidden"].toBool()) p.session->setHiddenByUser(true);
             if (background->isChecked()) QTimer::singleShot(0, this, [this] {

@@ -32,11 +32,11 @@ public:
         auto row=new QHBoxLayout(this); row->setContentsMargins(0,0,0,0); row->setSpacing(0);
         auto button=new QToolButton(this);button->setObjectName("openGatePanelScaleButton");
         button->setAutoRaise(true);button->setFocusPolicy(Qt::NoFocus);button->setPopupMode(QToolButton::InstantPopup);
-        button->setToolTip("Panel interface size; custom-painted timeline tracks are not scaled");row->addWidget(button);
+        button->setToolTip("Content size for this panel");row->addWidget(button);
         auto update=[button,value] { button->setText(QString::number(qRound(value()*100))+"%"); };update();
         auto menu=new QMenu(button);menu->setProperty("unboundOwnMenu",true);button->setMenu(menu);
         connect(menu,&QMenu::aboutToShow,this,[menu,this,value,set,available,update] {
-            update();menu->clear();menu->addSection("Panel interface size");
+            update();menu->clear();menu->addSection("Panel content size");
             auto holder=new QWidget(menu);auto layout=new QHBoxLayout(holder);auto slider=new QSlider(Qt::Horizontal,holder);
             slider->setRange(70,300);slider->setSingleStep(10);slider->setValue(qRound(value()*100));slider->setMinimumWidth(150);layout->addWidget(slider);
             auto action=new QWidgetAction(menu);action->setDefaultWidget(holder);menu->addAction(action);

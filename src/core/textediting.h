@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QGraphicsView>
 #include <QGraphicsTextItem>
+#include <QGraphicsProxyWidget>
 namespace Unbound {
 // Shared input guard; never reads or records editor contents.
 inline bool textEditor(QWidget *widget)
@@ -20,6 +21,11 @@ inline bool textEditor(QWidget *widget)
             auto item=view->scene()->focusItem();
             auto text=qgraphicsitem_cast<QGraphicsTextItem *>(item);
             if (text && (text->textInteractionFlags() & Qt::TextEditable)) return true;
+            auto proxy=qgraphicsitem_cast<QGraphicsProxyWidget *>(item);
+            if(proxy && proxy->widget()) {
+                auto editor=proxy->widget()->focusWidget();
+                if(editor && editor!=parent && textEditor(editor))return true;
+            }
         }
         if (parent->isWindow()) break;
     }

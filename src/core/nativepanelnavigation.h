@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include "panelancestry.h"
 #include <QAbstractItemView>
 #include <QAbstractScrollArea>
 #include <QActionEvent>
@@ -65,7 +66,7 @@ public:
         if(!parent || parent->objectName()!="mediaPoolClipView" || mouse->button()!=Qt::LeftButton)return;
         const auto before=context(sourceId());
         if(!eligible(before,"media-pool-double-click"))return;
-        if(!before.pool || !before.pool->isAncestorOf(parent)){skip("pool-outside-managed-owner");return;}
+        if(!before.pool || !panelContains(before.pool,parent)){skip("pool-outside-managed-owner");return;}
         if(auto view=qobject_cast<QAbstractItemView *>(parent)) {
             if(view->viewport()!=viewport || !view->indexAt(mouse->pos()).isValid()){skip("no-item-at-pointer");return;}
             request(sourceId(),before,"media-pool-double-click");return;

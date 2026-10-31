@@ -3,19 +3,29 @@
 #include <QGraphicsView>
 #include <QPointer>
 #include <QtMath>
+#include <QTimer>
+#include <QScopedValueRollback>
 #include "diagnostics.h"
 namespace Unbound {
 // Experimental native scene transform. Qt owns vector rendering and inverse input
 // mapping. No screenshot, proxy replacement, toolbar or native timeline zoom change.
-class TimelineContentScale {
+class TimelineContentScale : public QObject {
 public:
+    TimelineContentScale() {
+        pending.setSingleShot(true);
+        connect(&pending,&QTimer::timeout,this,[this]{if(root&&!applying)apply(root,amount);});
+    }
     ~TimelineContentScale() { restore(); }
-    static bool enabled() { return qEnvironmentVariableIntValue("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT")==1; }
+    static bool enabled() { return qEnvironmentVariable("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT")!="0"; }
     static QList<QGraphicsView *> surfaces(QWidget *root) {
         QList<QGraphicsView *> result;
         if(root)for(auto view:root->findChildren<QGraphicsView *>("m_TiTimelineView")) {
-            if(!view->scene() || !view->viewport() || view->viewport()->testAttribute(Qt::WA_NativeWindow) ||
-               view->viewport()->testAttribute(Qt::WA_PaintOnScreen))return {};
+            if(!view->scene())continue;
+            if(!view->viewport())return {};
+            const auto nativeType=QByteArray(view->metaObject()->className());
+            const auto viewportType=QByteArray(view->viewport()->metaObject()->className());
+            if((view->viewport()->testAttribute(Qt::WA_NativeWindow) || view->viewport()->testAttribute(Qt::WA_PaintOnScreen)) &&
+               (nativeType!="UiTiSequenceView" || viewportType!="BmdDavUI::UiGraphicsViewportWidget"))return {};
             result.append(view);
         }
         return result;
@@ -23,14 +33,18 @@ public:
     static bool supported(QWidget *root) { return enabled() && !surfaces(root).isEmpty(); }
     bool apply(QWidget *surface,double factor) {
         if(!enabled() || !qIsFinite(factor) || factor<0.7 || factor>3.0)return false;
-        const auto candidates=surfaces(surface);if(candidates.isEmpty())return false;
         if(root!=surface){restore();root=surface;}
+        amount=factor;watch(surface);
+        const auto candidates=surfaces(surface);if(candidates.isEmpty())return false;
+        QScopedValueRollback<bool> guard(applying,true);
         for(auto view:candidates) {
             bool known=false;for(const auto &entry:views)if(entry.view==view){known=true;break;}
-            if(!known)views.append({view,view->transform()});
+            if(!known)views.append({view,view->transform(),view->horizontalScrollBarPolicy(),view->verticalScrollBarPolicy()});
         }
         for(const auto &entry:views)if(entry.view) {
             const auto center=entry.view->mapToScene(entry.view->viewport()->rect().center());
+            entry.view->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+            entry.view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
             entry.view->setTransform(entry.baseline*QTransform::fromScale(factor,factor));
             entry.view->centerOn(center);
         }
@@ -39,14 +53,37 @@ public:
         return true;
     }
     void restore() {
+        pending.stop();QScopedValueRollback<bool> guard(applying,true);
+        for(auto widget:watched)if(widget)widget->removeEventFilter(this);
+        watched.clear();
         for(const auto &entry:views)if(entry.view) {
             const auto center=entry.view->mapToScene(entry.view->viewport()->rect().center());
-            entry.view->setTransform(entry.baseline);entry.view->centerOn(center);
+            entry.view->setTransform(entry.baseline);
+            entry.view->setHorizontalScrollBarPolicy(entry.horizontal);entry.view->setVerticalScrollBarPolicy(entry.vertical);
+            entry.view->centerOn(center);
         }
         views.clear();root=nullptr;
     }
+protected:
+    bool eventFilter(QObject *object,QEvent *event) override {
+        if(applying || !root)return false;
+        if(event->type()==QEvent::ChildAdded || event->type()==QEvent::ChildPolished || event->type()==QEvent::Show)pending.start(0);
+        if(event->type()==QEvent::Resize)if(auto view=qobject_cast<QGraphicsView *>(object))
+            for(const auto &entry:views)if(entry.view==view && view->transform()!=entry.baseline*QTransform::fromScale(amount,amount))pending.start(0);
+        return false;
+    }
 private:
-    struct View { QPointer<QGraphicsView> view; QTransform baseline; };
+    void watch(QWidget *surface) {
+        for(int i=watched.size()-1;i>=0;--i)if(!watched[i])watched.removeAt(i);
+        auto widgets=surface?surface->findChildren<QWidget *>():QList<QWidget *>{};if(surface)widgets.prepend(surface);
+        for(auto widget:widgets) {
+            const auto name=widget->objectName();
+            if(widget!=surface && name!="m_TiTimelineView" && name!="UiTiLayoutContainer" && name!="timelineViewsSplitter" && name!="frameEditTimelinesContainer")continue;
+            if(!watched.contains(widget)){watched.append(widget);widget->installEventFilter(this);}
+        }
+    }
+    QTimer pending;QList<QPointer<QWidget>> watched;bool applying=false;double amount=1.;
+    struct View { QPointer<QGraphicsView> view; QTransform baseline; Qt::ScrollBarPolicy horizontal,vertical; };
     QPointer<QWidget> root;QList<View> views;
 };
 }

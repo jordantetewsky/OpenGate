@@ -14,7 +14,7 @@ template<class Check> void timelineContentScaleChecks(Check check) {
     timeline.resize(700,400);timeline.show();QApplication::processEvents();
     const auto toolbarFont=toolbar.font();const auto baseline=view->transform();const auto rect=item->rect();
     Unbound::PanelContentScale scale;scale.setValue(2.0);
-    qunsetenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT");
+    qputenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT","0");
     check(!scale.apply(&timeline)&&toolbar.height()==31&&view->transform()==baseline,"unverified Timeline scaling cannot silently grow the toolbar");
     qputenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT","1");
     for(double factor:{2.,0.8,1.5,2.}) {
@@ -23,6 +23,10 @@ template<class Check> void timelineContentScaleChecks(Check check) {
         check(view->itemAt(hit)==item&&item->rect()==rect,"scaled scene preserves native item geometry and inverse pointer hits");
         check(toolbar.height()==31&&toolbar.font()==toolbarFont,"content scale preserves compact toolbar height/font");
     }
+    QGraphicsScene stackedScene;auto stacked=new QGraphicsView(&stackedScene,&timeline);
+    stacked->setObjectName("m_TiTimelineView");layout->addWidget(stacked);stacked->show();
+    for(int i=0;i<8;++i)QApplication::processEvents();
+    check(qAbs(stacked->transform().m11()-2.)<0.001,"newly created stacked Timeline view inherits the retained content scale");
     scale.suspend();check(view->transform()==baseline&&scale.value()==2.,"transfer restores native transform while retaining scale preference");
     scale.apply(&timeline);scale.setValue(1.);scale.apply(&timeline);
     check(view->transform()==baseline,"reset restores exact native scene transform");
