@@ -14,6 +14,9 @@ template<class Check> void timelineContentScaleChecks(Check check) {
     timeline.resize(700,400);timeline.show();QApplication::processEvents();
     const auto toolbarFont=toolbar.font();const auto baseline=view->transform();const auto rect=item->rect();
     Unbound::PanelContentScale scale;scale.setValue(2.0);
+    qunsetenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT");
+    check(!scale.apply(&timeline)&&view->transform()==baseline,
+        "ordinary launch cannot enable the rejected Timeline transform experiment");
     qputenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT","0");
     check(!scale.apply(&timeline)&&toolbar.height()==31&&view->transform()==baseline,"unverified Timeline scaling cannot silently grow the toolbar");
     qputenv("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT","1");
@@ -23,6 +26,13 @@ template<class Check> void timelineContentScaleChecks(Check check) {
         check(view->itemAt(hit)==item&&item->rect()==rect,"scaled scene preserves native item geometry and inverse pointer hits");
         check(toolbar.height()==31&&toolbar.font()==toolbarFont,"content scale preserves compact toolbar height/font");
     }
+    view->viewport()->setAttribute(Qt::WA_PaintOnScreen);
+    check(!Unbound::TimelineContentScale::supported(&timeline) && !scale.apply(&timeline),
+        "native paint surfaces remain unavailable even with the experiment flag enabled");
+    check(view->transform()==baseline && scale.value()==2. && toolbar.height()==31,
+        "rejecting a native renderer restores prior transforms without changing preference or chrome");
+    view->viewport()->setAttribute(Qt::WA_PaintOnScreen,false);
+    check(scale.apply(&timeline),"ordinary Qt experiment can reattach after native renderer refusal");
     QGraphicsScene stackedScene;auto stacked=new QGraphicsView(&stackedScene,&timeline);
     stacked->setObjectName("m_TiTimelineView");layout->addWidget(stacked);stacked->show();
     for(int i=0;i<8;++i)QApplication::processEvents();

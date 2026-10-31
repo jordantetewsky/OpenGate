@@ -7,8 +7,8 @@
 #include <QScopedValueRollback>
 #include "diagnostics.h"
 namespace Unbound {
-// Experimental native scene transform. Qt owns vector rendering and inverse input
-// mapping. No screenshot, proxy replacement, toolbar or native timeline zoom change.
+// Opt-in transform experiment for ordinary Qt scenes. Resolve's native Timeline
+// paint engine does not scale glyphs/borders coherently through this path.
 class TimelineContentScale : public QObject {
 public:
     TimelineContentScale() {
@@ -16,16 +16,18 @@ public:
         connect(&pending,&QTimer::timeout,this,[this]{if(root&&!applying)apply(root,amount);});
     }
     ~TimelineContentScale() { restore(); }
-    static bool enabled() { return qEnvironmentVariable("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT")!="0"; }
+    static bool enabled() { return qEnvironmentVariableIntValue("OPENGATE_TIMELINE_GRAPHICS_SCALE_EXPERIMENT")==1; }
     static QList<QGraphicsView *> surfaces(QWidget *root) {
         QList<QGraphicsView *> result;
         if(root)for(auto view:root->findChildren<QGraphicsView *>("m_TiTimelineView")) {
             if(!view->scene())continue;
             if(!view->viewport())return {};
-            const auto nativeType=QByteArray(view->metaObject()->className());
-            const auto viewportType=QByteArray(view->viewport()->metaObject()->className());
-            if((view->viewport()->testAttribute(Qt::WA_NativeWindow) || view->viewport()->testAttribute(Qt::WA_PaintOnScreen)) &&
-               (nativeType!="UiTiSequenceView" || viewportType!="BmdDavUI::UiGraphicsViewportWidget"))return {};
+            // Observing a QGraphicsView base class is not a renderer capability.
+            // BMD's paint engine maps text positions separately from glyph
+            // drawing, so even an explicit experiment flag cannot opt it in.
+            if(view->viewport()->inherits("BmdDavUI::UiGraphicsViewportWidget") ||
+               view->viewport()->testAttribute(Qt::WA_NativeWindow) ||
+               view->viewport()->testAttribute(Qt::WA_PaintOnScreen))return {};
             result.append(view);
         }
         return result;

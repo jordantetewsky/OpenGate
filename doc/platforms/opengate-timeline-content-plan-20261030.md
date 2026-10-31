@@ -349,3 +349,21 @@ outer-view transform; this approach has now failed native acceptance and is not
 a supported Timeline scaling capability. Preserve this evidence and the prior
 rollback. No installed binary or user scale preference was changed during this
 read-only review.
+
+Renderer investigation found a concrete mismatch in the installed 21.1.1 ARM64
+library. `UiGraphicsPaintEngineEx::drawStaticTextItem` maps each cached glyph
+position through the painter transform, then passes the existing text item to
+`GraphicsRenderer::DrawStaticTextItem`. The world-transform bypass helper also
+explicitly disables the painter's world matrix. This supports the screenshot's
+stretched advances/fixed glyphs and inconsistent UI borders; a generic Qt view
+transform is not a coherent renderer scale. No native functions were invoked or
+patched during this static inspection.
+
+`fix/timeline-native-scale-capability` removes the observed-native-class exemption
+and makes ordinary Qt scene transforms opt-in again. The regression fixture
+rejects native paint surfaces even with the experiment flag, restores previously
+applied transforms on rejection, and retains preference/chrome. This is
+containment, not implementation of the requested Timeline scaling. It passes the
+panel-scale fixture; the first sandboxed attempt aborted because macOS window
+services were unavailable, and the authorized unsandboxed rerun passed. The live
+installation remains 6c3ffb4.
