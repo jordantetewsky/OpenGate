@@ -367,3 +367,23 @@ containment, not implementation of the requested Timeline scaling. It passes the
 panel-scale fixture; the first sandboxed attempt aborted because macOS window
 services were unavailable, and the authorized unsandboxed rerun passed. The live
 installation remains 6c3ffb4.
+
+The isolated coherent-render experiment takes a different rendering approach:
+native scene drawing remains at 1:1 world coordinates, with backing-store device
+pixel ratio enlarging glyphs and positions together. `TimelineRenderProbe` owns
+bounded opt-in comparison capture only; the existing `TimelinePresentationProbe`
+triggers it at its existing next-turn content observation boundary. It is not
+an interactive renderer, input forwarder, new Timeline model or replacement
+viewport. No native renderer pointers/private offsets are invoked. Ordinary
+launch does not capture project imagery; `OPENGATE_TIMELINE_RENDER_PROBE=1`
+explicitly enables at most two visible native views, each at 1x and 2x, in the
+existing local diagnostics directory. No user state is changed.
+
+The coordinate experiment reproduces the observed failure contract (transformed
+glyph positions with fixed glyph size) and verifies that backing-store scaling
+enlarges glyphs coherently without changing the registered views/scene geometry.
+That models the mismatch; it is not a native Resolve test. Actual native probe
+images must be inspected before an interactive approach is selected. Playback,
+native input/dragging, focus, scrollbars, sharpness and pinned width all remain
+unverified for this approach. Do not install or describe this diagnostic probe
+as the requested working content-scaling fix.

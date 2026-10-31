@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "diagnostics.h"
 #include "timelinecontentinspection.h"
+#include "timelinerenderprobe.h"
 namespace Unbound {
 // Temporary read-only transition evidence. Does not own presentation or input.
 class TimelinePresentationProbe : public QObject {
@@ -30,13 +31,15 @@ public:
         logEvent("timeline.presentation.transition",{{"sequence",sequence},{"event_type",int(type)},
             {"phase","before-handler"},{"state",before},{"read_only",true}});
         QPointer<QWidget> alive=widget;
-        QTimer::singleShot(0,this,[alive,sequence,inspect] {
+        QTimer::singleShot(0,this,[this,alive,sequence,inspect] {
             logEvent("timeline.presentation.transition",{{"sequence",sequence},{"phase","next-turn"},
                 {"state",alive?snapshot(alive,inspect):QJsonObject{{"destroyed",true}}},{"read_only",true}});
+            if(inspect && alive)renderProbe.capture(alive);
         });
     }
 private:
     int captures=0,geometryCaptures=0,contentCaptures=0;
+    TimelineRenderProbe renderProbe;
     static bool relevant(const QString &name) {
         return name=="frameEditToolbarTop" || name=="frameConformTimelines" ||
             name=="timelineTabsHolder" || name=="frameEditTimelineAndAudioView" ||

@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <cstdio>
 #include "../../../src/core/timelinepresentationprobe.h"
+#include "../../core/workspace-callers/timelinerenderprobechecks.h"
 int main(int argc,char **argv) {
  QApplication app(argc,argv);QTemporaryDir dir;qputenv("UNBOUND_DIAGNOSTICS_DIR",dir.path().toUtf8());
  QWidget timeline;timeline.setObjectName("frameConformTimelines");auto layout=new QVBoxLayout(&timeline);
@@ -31,5 +32,8 @@ int main(int argc,char **argv) {
  const auto topology=Unbound::TimelineContentInspection::capture(&timeline);
  if(topology["views"].toArray().size()!=1 || !topology["read_only"].toBool() ||
     view.transform()!=transform || scene.sceneRect()!=sceneRect || proxy->pos()!=position || proxy->widget()!=nativeControl)++failures;
+ OpenGateTest::timelineRenderProbeChecks([&](bool ok,const char *message) {
+  if(!ok){++failures;std::fprintf(stderr,"FAIL: %s\n",message);}
+ });
  std::printf("timeline presentation probe failures=%d\n",failures);return failures?1:0;
 }
