@@ -306,4 +306,26 @@ covered-tab/editor preservation, lazy stacked-view scale, and zero native-window
 recreation warnings. The assembled entry-flow fixture is also required. These
 are Qt integration fixtures, not actual Resolve acceptance. Windows callers are
 reviewed through shared core; Windows native compilation/live verification remain
-open. The installed 8149657 stays intact until a fresh-process test of this build.
+open.
+
+Installation checkpoint: corrected source `6c3ffb4` built as a signed universal
+helper and installed under Jordan's existing approval after Resolve exited.
+The staged install/rollback rehearsal restored its baseline byte-identically.
+All 21 installed hashes and signatures verified, and all 197 protected settings
+and unrelated plugin files matched their pre-install hashes. Ordinary launch
+loaded `6c3ffb4` in PID 34040, session
+`3d22e456-2a42-423a-975c-8b626fed2a2c`; helper start and controls-ready events
+confirm loading, not content rendering acceptance. Receipts are ignored local
+artifacts in `build/content-correction-install/installation-receipt.json` and
+`build/macos/content-correction-build-receipt.json`. Transaction
+`0E71A8E7-4288-4E2D-9806-F67CA9047082` retains the previous 8149657 installation;
+its earlier transaction still retains 684bc2f.
+
+The frozen-source panel-scale and assembled native-entry fixtures pass. Diff
+review confirms that Media Pool's old root-wide metrics call is replaced by
+canvas routing; the session and persistence coordinator only delegate state.
+No second model, settings writer or global input filter was added. Actual
+Timeline GPU painting/input, Media Pool custom content, native shortcut editor
+scope behavior, pinned header width and toolbar/stacked-tab page-return loss
+remain open. A project must be open and the actual scaling/page-return gestures
+exercised before those native acceptance results can be recorded.
