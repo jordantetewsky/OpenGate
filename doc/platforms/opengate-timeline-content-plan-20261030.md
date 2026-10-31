@@ -387,3 +387,21 @@ images must be inspected before an interactive approach is selected. Playback,
 native input/dragging, focus, scrollbars, sharpness and pinned width all remain
 unverified for this approach. Do not install or describe this diagnostic probe
 as the requested working content-scaling fix.
+
+Probe checkpoint: frozen source `08ff5f7` builds for arm64 and x86_64; helper
+signatures, bootstrap self-test, render-probe fixture and assembled native-entry
+fixture pass. The staged install/rollback rehearsal passes and restores its test
+baseline byte-identically. Local receipt:
+`build/coherent-render-probe-install/build-receipt.json`. Not installed; Resolve
+PID 34040 is still running 6c3ffb4. Loading the opt-in native comparison probe
+requires Jordan to save/quit and a fresh process; the running helper has no
+entry point for this new capture code. No claim of interactive scaling repair.
+
+Organization review: the failed native-class capability exemption is removed
+from the existing renderer adapter. The new 66-line probe owns visual diagnostic
+capture, and the existing presentation observer only invokes that component at
+its established observation boundary. No duplicate Timeline/state/input owner,
+new preference writer, native pointer offset access or unrelated coordinator
+implementation was added. PNGs are bounded, explicit opt-in local diagnostics.
+Shared Qt code compiles in the macOS adapter; Windows native compilation and
+native rendering remain unverified.
