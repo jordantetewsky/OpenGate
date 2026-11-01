@@ -1996,3 +1996,22 @@ restoration command. Project/preferences are outside the installer inventory.
 Local receipt: `build/timeline-performance-install/installation-receipt.json`.
 Earlier statements that `6c3ffb4` remains installed are superseded. Native live
 acceptance and playback verification remain pending; no merge, push or publication.
+
+### Live failure and requested rollback — November 1, 23:17 UTC
+
+`61aceef` failed live acceptance. Jordan reports stale visual Undo/Redo, failed
+Go to Mouse Pointer and feedback dependent on backtick/maximize or maximized
+geometry. Pinned blue/red controls working are partial evidence only. Correct
+commands, native editing and immediate feedback at every scale/window size are
+required; a visually coherent raster or passing fixture alone is insufficient.
+Captured logs show 11 Undo/Redo shortcuts and 11 corresponding native action
+signals (9 Undo, 2 Redo). They do not show resulting model or pixel changes, so
+the redraw/geometry cause remains unproven. Raw session logs and findings are
+preserved under `build/timeline-live-undo-redo-review/20261101T231332Z/`.
+
+Restored `6c3ffb4` after Resolve closed, using the authorized rollback transaction.
+All 21 managed hashes and bundle signature verify; all 197 protected paths remain
+unchanged. Receipt: `build/timeline-performance-install/rollback-receipt.json`.
+The failed candidate is preserved separately; no repair, native acceptance,
+merge, push or publication is claimed. Earlier installed-61aceef statements are
+superseded.

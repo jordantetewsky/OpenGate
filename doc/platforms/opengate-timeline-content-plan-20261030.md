@@ -557,3 +557,28 @@ installer write targets. Receipt: `build/timeline-performance-install/installati
 This supersedes the earlier installed-checkpoint statements. Native playback,
 GPU/editing/cursor behavior and restart acceptance remain pending live testing;
 there is no merge, push or publication.
+
+### Live rejection and verified rollback — November 1, 23:17 UTC
+
+Jordan rejected `61aceef`: Undo/Redo do not reliably update the visible Timeline,
+Go to Mouse Pointer fails, and paint/command/cursor feedback can recover only
+after backtick/maximize or a maximized window. Blue/red track controls staying
+pinned during scrolling are positive partial evidence, not acceptance of the
+Timeline. Native commands and immediate feedback must remain correct at every
+scale and ordinary window geometry; maximizing cannot be a required workaround.
+
+Preserved raw/rotated logs and the post-quit log tail in
+`build/timeline-live-undo-redo-review/20261101T231332Z/`. Runtime `61aceef`, PID 48189,
+session `1f3f59d9-1cb4-4ba0-ab4c-f0986806d07f` logged 11 Undo/Redo shortcuts and
+9 native `editUndo` plus 2 native `editRedo` QAction signals with Timeline focus.
+Those establish delivery/action signals, not model changes or correct pixels.
+The existing diagnostics do not record frame/damage evidence around Undo/Redo.
+Recovery after maximize suggests missed damage/stale geometry, but does not
+establish the exact cause or justify a speculative command-specific workaround.
+
+At Jordan's request, restored the exact `6c3ffb4` checkpoint from transaction
+`6DBDAE32-41E6-4F7A-9C64-D8F83E16D23E`. All 21 installed hashes and the bundle
+signature verify; all 197 protected paths are unchanged. Receipt:
+`build/timeline-performance-install/rollback-receipt.json`. The candidate and
+source remain isolated and rejected for live use. This supersedes the preceding
+installed-runtime statement. No new repair is claimed by this rollback/log review.
