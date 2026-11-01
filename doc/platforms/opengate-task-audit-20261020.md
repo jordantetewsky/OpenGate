@@ -1954,3 +1954,34 @@ preserved separately. Its follow-up repair branch is
 in the November 1 follow-up of the Timeline content plan. Installation, compilation,
 fixture passes and native acceptance remain distinct. The restored checkpoint
 remains installed; no new live acceptance, merge, push or publication is claimed.
+
+## November 1 pre-install performance and cursor follow-up
+
+`perf/timeline-render-work` adds reusable bounded section rasters and separates
+native content damage from geometry reconciliation. The old stateless full-frame
+renderer, extra composited image and viewport's inline scene-observer path are
+removed. Cursor mirroring moves from the input router into a focused local-event
+relay; later native viewport cursor updates retain their artwork and hotspots.
+There is one native scene/model and no new global filter, command registry or
+preference writer. Both platform callers use shared Qt code; Windows native
+compilation/runtime remains unverified.
+
+Six optimized regression suites pass: Timeline content viewport, panel scale,
+assembled native entry flow, panel commands, native preset bindings and Timeline
+presentation probe. Timeline AddressSanitizer and build-manifest checks pass.
+Native contract actions remain mapped to their existing entry points as recorded
+in the Timeline plan; component results do not close clauses 9–12. Native trim,
+roll, transition cursors, page-return bands/tabs, full GPU rendering, native keys,
+restart persistence and playback while editing remain live acceptance work.
+
+The matched optimized synthetic comparison shows lower playhead and pan cost at
+all measured scales. At 300%, playhead-loop p95 is 1.173 ms versus 49.714 ms before;
+full-pan p95 is 23.907 ms versus 81.609 ms. Panning at 70%/300% still exceeds a 60 Hz
+budget in this workload. No promise of arbitrary native playback frame rates is
+supported. See the [performance review](opengate-timeline-performance-review-20261101.md)
+for workload, evidence, responsibility boundaries and limitations.
+
+The source checkpoints are local. Compilation/staging evidence belongs in the
+candidate receipt. The requested 6c3ffb4 installation is preserved; this entry
+authorizes no silent replacement and records no new live acceptance, merge, push
+or publication.

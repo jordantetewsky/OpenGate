@@ -527,3 +527,21 @@ The matched optimized synthetic workload improves playhead and pan timings acros
 playback at every frame rate. See the [performance review and live gaps](opengate-timeline-performance-review-20261101.md).
 Native functionality, persistence, GPU rendering and playback acceptance remain
 open until the completed candidate is loaded into a fresh Resolve process.
+
+### Edit-point cursor feedback
+
+Jordan also reports edit-point/transition operations succeeding while the pointer
+remains an arrow. The old router sampled cursor state only after mouse events and
+could choose static scene-item state over a later native viewport cursor change.
+`TimelineCursorRelay` now owns native hover/grab cursor mirroring through local
+CursorChange subscriptions along the hit path. The router keeps event forwarding;
+its previous cursor resolver is removed. There is no polling, second command path
+or synthetic trim/roll mode. Native QCursor artwork and hotspots are preserved,
+and leaving/hiding the presentation clears its cursor and subscriptions.
+
+The regression reproduces missed viewport cursor changes before the repair.
+Native edit-item hover changes, native viewport changes without another mouse
+move, custom bitmap/hotspot preservation and leaving the edit point pass at 70%,
+100%, 147%, 213% and 300%. The full Timeline and AddressSanitizer fixtures pass.
+Actual Resolve trim-in/out, roll, transition and modifier cursor acceptance is
+still required; these fixtures do not establish the cause of every live report.

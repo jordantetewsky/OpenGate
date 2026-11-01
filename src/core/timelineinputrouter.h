@@ -15,6 +15,7 @@
 #include <QGraphicsView>
 #include <QGraphicsProxyWidget>
 #include <functional>
+#include "timelinecursorrelay.h"
 
 namespace Unbound {
 // Route presentation-local input to the original native viewport/child. Native
@@ -24,7 +25,7 @@ public:
     TimelineInputRouter(QWidget *display, QWidget *nativeViewport,
                         std::function<QPointF(QPointF)> mapping,
                         std::function<double()> scale)
-        : QObject(display), display(display), native(nativeViewport), mapping(std::move(mapping)), scale(std::move(scale)) {
+        : QObject(display), display(display), native(nativeViewport), mapping(std::move(mapping)), scale(std::move(scale)), cursors(display) {
         display->installEventFilter(this);
         display->setFocusPolicy(Qt::StrongFocus);
         display->setFocusProxy(nativeViewport);
@@ -55,6 +56,8 @@ protected:
         if (!native || forwarding)
             return false;
         switch (event->type()) {
+        case QEvent::Hide:
+            cursors.clear();return false;
         case QEvent::MouseButtonPress:
         case QEvent::MouseButtonRelease:
         case QEvent::MouseButtonDblClick:
@@ -106,7 +109,7 @@ protected:
             return drop(mapped, source);
         }
         case QEvent::Leave:
-            if(display)display->unsetCursor();
+            cursors.clear();
             return send(native,*event,event);
         case QEvent::DragLeave:
         case QEvent::KeyPress:
@@ -131,6 +134,7 @@ private:
         QApplication::sendEvent(target, &mapped);
         if(!alive)return true;
         forwarding = false;
+        cursors.refresh();
         if(placingPopup) {
             expectedPopup=mapped.isAccepted()?(placingTooltip?tooltip():QApplication::activePopupWidget()):nullptr;
             placingPopup=false;
@@ -162,36 +166,15 @@ private:
         if(event->type()==QEvent::MouseButtonRelease)
             placePopup(event->screenPos().toPoint(),native->mapToGlobal(point.toPoint()));
         const auto position = local(target, point);
+        cursors.track(native,point);
         QPointer<TimelineInputRouter> alive=this;
         QMouseEvent mapped(event->type(), position, position + target->mapTo(target->window(), QPoint()),
                            native->mapToGlobal(point.toPoint()), event->button(), event->buttons(), event->modifiers(), event->source());
         const bool result = send(target, mapped, event);
         if(!alive)return result;
-        if(display && native) {
-            if(auto child=native->childAt(point.toPoint()))display->setCursor(child->cursor());
-            else display->setCursor(cursorInView(qobject_cast<QGraphicsView *>(native->parentWidget()),point));
-        }
         if (event->type() == QEvent::MouseButtonRelease && event->buttons() == Qt::NoButton)
             pressed = nullptr;
         return result;
-    }
-    static QCursor cursorInView(QGraphicsView *view,QPointF point,int depth=0) {
-        if(!view || !view->scene() || depth>=8)return view?view->viewport()->cursor():QCursor();
-        auto grabber=view->scene()->mouseGrabberItem();
-        const auto items=grabber?QList<QGraphicsItem *>{grabber}:view->items(point.toPoint());
-        for(auto item:items) {
-            auto proxy=qgraphicsitem_cast<QGraphicsProxyWidget *>(item);
-            if(!proxy || !proxy->widget()) {
-                for(auto owner=item;owner;owner=owner->parentItem())if(owner->hasCursor())return owner->cursor();
-                continue;
-            }
-            auto widget=proxy->widget();
-            const auto at=proxy->mapFromScene(view->mapToScene(point.toPoint()));
-            if(auto nested=qobject_cast<QGraphicsView *>(widget))
-                return cursorInView(nested,at-nested->viewport()->pos(),depth+1);
-            auto child=widget->childAt(at.toPoint());return child?child->cursor():widget->cursor();
-        }
-        return view->viewport()->cursor();
     }
     bool drop(QDropEvent &mapped, QDropEvent *original) {
         mapped.setDropAction(original->dropAction());
@@ -228,6 +211,7 @@ private:
     QPointer<QWidget> display, native, pressed;
     std::function<QPointF(QPointF)> mapping;
     std::function<double()> scale;
+    TimelineCursorRelay cursors;
     bool forwarding = false;
     bool placingPopup=false,placingTooltip=false;
     quint64 popupToken=0;

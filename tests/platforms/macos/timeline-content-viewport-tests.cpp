@@ -11,6 +11,7 @@
 #include "../../core/workspace-callers/timelinepointerchecks.h"
 #include "../../core/workspace-callers/timelinescaledinputchecks.h"
 #include "../../core/workspace-callers/timelinerendercachechecks.h"
+#include "../../core/workspace-callers/timelinecursorchecks.h"
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -88,6 +89,7 @@ int main(int argc, char **argv) {
     QApplication::sendEvent(layer, &wheel);
     check(qAbs(view->lastWheel.x() - 300.) < 2., "native wheel routing uses the same header/scale coordinate map");
     timelineScaledInputChecks(presentation,view,check);
+    timelineCursorChecks(presentation,view,check);
     QMenu nativeMenu(view);
     nativeMenu.setAttribute(Qt::WA_DontShowOnScreen);
     nativeMenu.addAction("Native clip action");
