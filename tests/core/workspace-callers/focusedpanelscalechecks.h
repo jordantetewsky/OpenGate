@@ -35,6 +35,8 @@ template<class Check> void focusedPanelScaleChecks(Check check) {
     check(qFuzzyCompare(secondSession.interfaceScale(),0.9)&&qFuzzyCompare(firstSession.interfaceScale(),1.1)&&second->minimumSize()==QSize(100,40),"same scale command set targets focused Media Pool independently");
     check(firstSaves==1&&secondSaves==1,"scale commands notify existing persistence path once per change");
     send(first,Qt::Key_F19);check(firstSession.interfaceScale()==1.&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"reset affects only focused panel");
+    firstSession.setInterfaceScale(2.63);send(first,Qt::Key_F17);
+    check(qAbs(firstSession.interfaceScale()-2.73)<0.000001,"focused scale hotkey preserves a typed fine percentage");
     check(secondSession.dock().isEmpty()&&second->minimumSize()==QSize(100,40)&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"native restoration retains preference and restores original metrics");
     check(secondSession.undockContents(&pool,&page,"Media Pool").isEmpty()&&second->minimumSize()==QSize(100,40),"re-entry reapplies the same retained scale value through the transferred layout");
 }

@@ -9,6 +9,7 @@
 #include "../../core/workspace-callers/timelinecontentscalechecks.h"
 #include "../../core/workspace-callers/focusedpanelscalechecks.h"
 #include "../../core/workspace-callers/mediapoolcontentscalechecks.h"
+#include "../../core/workspace-callers/panelscalecontrolchecks.h"
 int main(int argc,char **argv) {
     static int recreationWarnings=0;
     qInstallMessageHandler([](QtMsgType,const QMessageLogContext &,const QString &message) {
@@ -23,6 +24,7 @@ int main(int argc,char **argv) {
     OpenGateTest::timelineContentScaleChecks(check);
     OpenGateTest::focusedPanelScaleChecks(check);
     OpenGateTest::mediaPoolContentScaleChecks(check);
+    OpenGateTest::panelScaleControlChecks(check);
     QWidget native,first,second; auto layout=new QVBoxLayout(&first); layout->setContentsMargins(10,12,14,16); layout->setSpacing(8);
     auto button=new QPushButton("Real native action",&first); button->setFixedSize(100,40); button->setIconSize({20,20});
     auto font=button->font(); font.setPointSizeF(12); button->setFont(font); layout->addWidget(button);

@@ -454,3 +454,64 @@ checks are separate from live Resolve acceptance. Actual native GPU playback,
 editing gestures and restart acceptance still require the installed candidate;
 macOS fixtures cannot establish those or Windows integration. No live acceptance
 claim is made by a passing fixture.
+
+
+## November 1 live regression follow-up
+
+Jordan tested c92fe3b and reported correctly placed clicks but missing reachable
+header scrolling after narrowing, cursor glitches, native commands not behaving,
+and audio painting over video at 300%. The build is not live-accepted. Logs confirm
+that session loaded c92fe3b and that Tab is the native controlGoToMousePointer
+assignment; its native Shortcut events fired. Existing topology captures do not
+contain the actual 300% overlap, so its precise live cause is not established.
+
+At Jordan's explicit request, restored 6c3ffb4 at 19:50 UTC while repairs continue
+on `fix/timeline-header-overflow-input`. All 21 managed files match its checkpoint,
+signatures verify, and 197 protected files stayed unchanged. Receipt:
+`build/timeline-complete-install/rollback-receipt.json`. The c92fe3b payload and
+source branch remain preserved. Do not silently replace the restored checkpoint.
+
+The repair candidate reserves an always-painted 18-pixel header footer independently
+of native content height and projects the native time scrollbar beside it. Scaled
+painting is bounded by section raster devices, including native paint paths that
+drop their clip. Native hover cursors come from the actual nested scene item or
+viewport, retaining mouse-grab continuity. Existing mouse forwarding stays on the
+same original scene/model and is exercised across the header/footer boundary.
+
+Native Qt shortcut delivery uses the existing command filter's optional adapter,
+without a key/command whitelist or another binding registry. The focused Timeline
+adapter aligns the original view's coordinate origin during synchronous native
+shortcut delivery, then restores it immediately. This lets a native handler query
+QCursor::pos() through its original viewport at the displayed location. Qt chooses
+the command and retains its assignments/context. Text editing, other panels,
+ambiguous shortcuts and ordinary native return keep their previous dispatch.
+A lifetime guard tolerates command-owner retirement during native dispatch.
+Asynchronous native handlers that query coordinates later still need live checking;
+fixtures establish synchronous delivery, not every Resolve command's internals.
+
+Both title and native-panel scale menus share one live 1-percent slider and typed
+percentage editor, covering 70–300%. Intermediate values are not restricted to
+preset menu entries. Updates coalesce at 16 ms; release/menu dismissal flushes the
+exact final value. Reset cannot be overwritten by a stale pending update. Menu and
+focused-key increments preserve custom precision, for example 263% -> 273%.
+
+| User action | Production entry and local regression |
+| --- | --- |
+| Narrow the pinned header and reach hidden controls | Divider -> shared header layout -> real bar; bounds and actual painted thumb tested even when native content minimum height exceeds the display |
+| Scale and seek to the pointer with the native key | Existing Qt Shortcut -> TimelineShortcutCoordinates -> input router; original handler receives mapped point once, view position restores and OS pointer does not move |
+| Drag clips across header/footer and hover clip controls | Input router -> original nested scenes; continuous grab coordinates and native cursor tested |
+| Scale audio/video content without cross-section paint | Section-backed scene rendering; regression reproduces an escaping native-style painter and contains it |
+| Choose 147%, 213% or 263%, drag continuously, then Reset | Shared scale-menu row -> existing setter; coalescing, typed values, exact final flush, reset and focused-key precision tested |
+| Return to native ownership and reload saved state | Existing view leases/session checkpoint; assembled native-entry and viewport fixtures retained |
+
+Interaction checkpoints include 70%, 73%, 85%, 100%, 125%, 147%, 200%, 213%, 263%
+and 300%. The production diff keeps geometry, rendering, input, command coordination
+and control editing in their existing focused boundaries. The old outer-cursor
+lookup and duplicated title-menu slider path are removed. The only added command
+coordination module connects existing focus ancestry to existing presentation;
+there is no new scene/model, global event filter or settings writer. The coordinator
+changes are interface wiring, not implementation growth. Both scale-menu callers
+are exercised. Shared Qt code is built in the macOS adapter; Windows native builds,
+actual GPU playback, every native shortcut and ordinary restart still require their
+own live validation. Frozen build/fixture evidence belongs in the repair receipt;
+it is not native acceptance of contract clauses 9–12.

@@ -6,6 +6,7 @@
 #include "nativepresetbindings.h"
 #include "nativeshortcutcontext.h"
 #include "pagecontext.h"
+#include "timelineshortcutcoordinates.h"
 #include <QPointer>
 
 namespace Unbound {
@@ -16,6 +17,7 @@ public:
     PanelCommandCatalog(QWidget *owner, std::function<bool()> running)
         : PanelCommands(owner), nativeEditor(this)
     {
+        nativeShortcutDispatch=TimelineShortcutCoordinates::dispatch;
         // Native assignments must work on an ordinary app launch. Keep an
         // explicit recovery opt-out; malformed overrides do not enable input.
         const auto mode=qEnvironmentVariable("OPENGATE_NATIVE_PRESET_SHORTCUTS");

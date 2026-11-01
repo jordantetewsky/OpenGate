@@ -24,7 +24,7 @@ public:
         layer->setAttribute(Qt::WA_OpaquePaintEvent);
         nativeView->setParent(this);
         nativeView->show();
-        new TimelineInputRouter(layer, view->viewport(), [this](QPointF point) {
+        input = new TimelineInputRouter(layer, view->viewport(), [this](QPointF point) {
             return geometry.toNative(point / factor);
         }, [this] { return factor; });
         controls.divider->moved = [this](double delta) {
@@ -74,6 +74,9 @@ public:
     bool headerPinned() const { return pinned; }
     QGraphicsView *nativeView() const { return view; }
     QWidget *presentation() const { return layer; }
+    bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
+        return input->dispatchPointerShortcut(receiver,event);
+    }
 protected:
     void resizeEvent(QResizeEvent *event) override { QWidget::resizeEvent(event); arrange(); }
     bool eventFilter(QObject *, QEvent *event) override {
@@ -121,7 +124,7 @@ private:
             setMinimumSize(qCeil((headerMinimum+geometry.minimumBodyWidth)*factor),qCeil(geometry.minimumHeight*factor));
             layer->setGeometry(rect());
         } else setMinimumSize(0,0);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned);
+        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
         const auto frame = view->size() - view->viewport()->size();
         const int nativeWidth = qMax(1, qCeil(width() / factor + geometry.nativeWidth - geometry.width)) + frame.width();
         QList<QPair<QPointer<QGraphicsView>, QGraphicsView::ViewportAnchor>> anchors;
@@ -132,12 +135,13 @@ private:
             if (nested) anchors.append({nested, nested->resizeAnchor()});
         }
         for (const auto &entry : anchors) if (entry.first) entry.first->setResizeAnchor(QGraphicsView::NoAnchor);
-        view->setGeometry(0, 0, nativeWidth, qMax(1, qCeil(height() / factor)) + frame.height());
+        const double nativeFooter=geometry.horizontalBar.isEmpty()?0.:geometry.horizontalBar.height();
+        view->setGeometry(0, 0, nativeWidth,
+            qMax(1,qCeil((height()-controls.footerHeight)/factor+nativeFooter))+frame.height());
         for (const auto &entry : anchors) if (entry.first) entry.first->setResizeAnchor(entry.second);
         geometry = TimelineTrackHeaderLayout::discover(view);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned);
-        const int barTop = geometry.horizontalBar.isEmpty() ? height() - controls.bar->sizeHint().height() :
-                           qRound(geometry.horizontalBar.top() * factor);
+        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
+        const int barTop = qMax(0,height()-controls.footerHeight);
         controls.arrange(qRound(geometry.width * factor), height(), barTop, factor, geometry.offset,
                          geometry.maximumOffset(), pinned, geometry.pinnedWidth);
         layer->raise();
@@ -150,10 +154,10 @@ private:
             return;
         QScopedValueRollback<bool> guard(rendering, true);
         geometry = TimelineTrackHeaderLayout::discover(view);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned);
+        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
         const auto source = view->mapToScene(view->viewport()->rect()).boundingRect();
         const double backing = factor * surface->devicePixelRatioF();
-        auto image = renderTimelineScene(view->scene(), source, backing);
+        auto image = renderTimelineScene(view->scene(), source, backing, geometry.sectionTops);
         if (image.isNull())
             return;
         {
@@ -180,6 +184,7 @@ private:
     QPointer<QGraphicsScene> scene;
     QList<QPointer<QWidget>> editors;
     Layer *layer;
+    TimelineInputRouter *input = nullptr;
     TimelineTrackHeaderControls controls;
     TimelineTrackHeaderLayout geometry;
     double factor = 1., requestedWidth = 0., requestedOffset = 0.;

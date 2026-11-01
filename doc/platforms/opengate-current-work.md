@@ -56,6 +56,10 @@ acceptance gates. The November 1 implementation checkpoint includes the interact
 pinned header divider/scrollbar, shared persistence, compact toolbar and native
 toolbar/tab page-return repair. Fixture, build, installation and live acceptance
 evidence remain separate; see the plan and installation receipt for exact status.
+Jordan's November 1 live check found header-scrollbar, cursor/shortcut and 300%
+audio/video overlap regressions in c92fe3b. Per request, 6c3ffb4 is restored while
+`fix/timeline-header-overflow-input` carries the follow-up, including intermediate
+percentages and live/typed scaling. Native acceptance remains open.
 
 ## Commands currently in progress
 

@@ -50,6 +50,14 @@ public:
         bar->setObjectName("openGateTimelineHeaderScroll");
         bar->setAccessibleName("Scroll track controls");
         bar->setFocusPolicy(Qt::NoFocus);
+        // Resolve/macOS may use transient scrollbars. This independent header
+        // control must remain visibly draggable even before the first scroll.
+        bar->setStyleSheet(
+            "QScrollBar:horizontal { background:#202124; border:1px solid #111214; height:16px; margin:0; }"
+            "QScrollBar::handle:horizontal { background:#60666e; min-width:24px; border-radius:4px; margin:2px; }"
+            "QScrollBar::handle:horizontal:hover { background:#858c96; }"
+            "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal { width:0; }"
+            "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal { background:none; }");
         bar->setToolTip("Scroll track controls; pinned track buttons stay visible");
         pin = new QToolButton(owner);
         pin->setObjectName("openGateTimelinePinTrackControls");
@@ -61,6 +69,7 @@ public:
         pin->setAutoRaise(true);
         pin->setFocusPolicy(Qt::NoFocus);
     }
+    static constexpr int footerHeight = 18;
     void arrange(int width, int height, int bottom, double scale, double offset, double maximum, bool pinned, double pinnedWidth) {
         if(width<=0) { divider->hide();pin->hide();bar->hide();return; }
         const int thickness = qMax(1, height-bottom);

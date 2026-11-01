@@ -1935,3 +1935,22 @@ installation completed. Its pre-install copy is preserved; the live workspace
 was not overwritten to force a checksum match. Earlier uninstalled statements
 are superseded. Live header/tab acceptance and docking-target investigation
 remain open. No merge, push or publication.
+
+
+## November 1 Timeline scaling regression and requested rollback
+
+c92fe3b was installed and loaded, then failed live acceptance: missing header
+scrollbar, native shortcut/cursor problems and reported audio/video overlap at
+300%. Correct click placement and improved content rendering are partial evidence,
+not acceptance of the complete scaled workflow. Tab is the user's native Go to
+Mouse Pointer assignment; native shortcut events are present in the loaded logs.
+The captured topology does not establish the 300% overlap's exact runtime cause.
+
+Jordan requested the earlier fractured checkpoint while repairs continue. Restored
+6c3ffb4 at 19:50 UTC, verified 21 managed files/signatures and 197 unchanged protected
+paths. No settings/project data were replaced. The complete c92fe3b candidate is
+preserved separately. Its follow-up repair branch is
+`fix/timeline-header-overflow-input`; detailed responsibility/behavior evidence is
+in the November 1 follow-up of the Timeline content plan. Installation, compilation,
+fixture passes and native acceptance remain distinct. The restored checkpoint
+remains installed; no new live acceptance, merge, push or publication is claimed.

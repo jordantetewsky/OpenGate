@@ -4,17 +4,43 @@
 #include <QMenu>
 #include <QToolButton>
 #include <QSlider>
-#include <QLabel>
+#include <QSpinBox>
+#include <QTimer>
+#include <QPointer>
 #include <QWidgetAction>
 #include <functional>
 namespace Unbound {
 inline void populatePanelScaleMenu(QMenu *menu,QObject *owner,std::function<double()> value,std::function<void(double)> set) {
     menu->setProperty("unboundOwnMenu",true);
+    auto holder=new QWidget(menu);auto layout=new QHBoxLayout(holder);
+    auto slider=new QSlider(Qt::Horizontal,holder);slider->setObjectName("openGatePanelScaleSlider");
+    slider->setRange(70,300);slider->setSingleStep(1);slider->setPageStep(10);
+    slider->setValue(qRound(value()*100));slider->setMinimumWidth(180);
+    slider->setAccessibleName("Panel content size");layout->addWidget(slider);
+    auto percent=new QSpinBox(holder);percent->setObjectName("openGatePanelScalePercent");
+    percent->setRange(70,300);percent->setSingleStep(1);percent->setSuffix("%");
+    percent->setKeyboardTracking(false);percent->setValue(slider->value());
+    percent->setAccessibleName("Panel content size in percent");layout->addWidget(percent);
+    auto action=new QWidgetAction(menu);action->setDefaultWidget(holder);menu->addAction(action);
+    auto pending=new QTimer(holder);pending->setSingleShot(true);pending->setInterval(16);
+    auto apply=[pending,slider,value,set,alive=QPointer<QObject>(owner)] {
+        pending->stop();if(!alive)return;
+        if(qAbs(value()-slider->value()/100.)>0.000001)set(slider->value()/100.);
+    };
+    QObject::connect(pending,&QTimer::timeout,holder,apply);
+    QObject::connect(slider,&QSlider::valueChanged,holder,[percent,pending](int next) {
+        percent->setValue(next);if(!pending->isActive())pending->start();
+    });
+    QObject::connect(percent,QOverload<int>::of(&QSpinBox::valueChanged),slider,&QSlider::setValue);
+    auto flush=[pending,apply] { if(pending->isActive())apply(); };
+    QObject::connect(slider,&QSlider::sliderReleased,holder,flush);
+    QObject::connect(menu,&QMenu::aboutToHide,holder,flush);
+    menu->addSeparator();
     const QPair<const char *,double> changes[]={{"Smaller",-0.1},{"Larger",0.1},{"Reset to 100%",0.0}};
     for (const auto &change:changes) {
         auto action=menu->addAction(QString::fromLatin1(change.first));
         QObject::connect(action,&QAction::triggered,owner,[value,set,delta=change.second] {
-            set(delta==0.0 ? 1.0 : qBound(0.7,qRound((value()+delta)*10.0)/10.0,3.0));
+            set(delta==0.0 ? 1.0 : qBound(0.7,qRound((value()+delta)*100.0)/100.0,3.0));
         });
     }
     menu->addSeparator();
@@ -37,10 +63,6 @@ public:
         auto menu=new QMenu(button);menu->setProperty("unboundOwnMenu",true);button->setMenu(menu);
         connect(menu,&QMenu::aboutToShow,this,[menu,this,value,set,available,update] {
             update();menu->clear();menu->addSection("Panel content size");
-            auto holder=new QWidget(menu);auto layout=new QHBoxLayout(holder);auto slider=new QSlider(Qt::Horizontal,holder);
-            slider->setRange(70,300);slider->setSingleStep(10);slider->setValue(qRound(value()*100));slider->setMinimumWidth(150);layout->addWidget(slider);
-            auto action=new QWidgetAction(menu);action->setDefaultWidget(holder);menu->addAction(action);
-            connect(slider,&QSlider::valueChanged,this,[set,available,update](int percent) { if (available()) { set(percent/100.);update(); } });
             populatePanelScaleMenu(menu,this,value,[set,available,update](double factor) { if (available()) { set(factor);update(); } });
         });
     }

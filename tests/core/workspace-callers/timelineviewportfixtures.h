@@ -54,11 +54,14 @@ class ClickRect : public QGraphicsRectItem {
 public:
     int clicks = 0;
     int contexts = 0;
+    int moves = 0;
+    QPointF lastDrag;
     std::function<void(QPoint)> showContext;
     explicit ClickRect(QRectF rect) : QGraphicsRectItem(rect) { setPen(QPen(Qt::cyan)); }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override { ++clicks; event->accept(); }
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override { event->accept(); }
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override { ++moves;lastDrag=event->scenePos();event->accept(); }
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override {
         ++contexts;
         if(showContext)showContext(event->screenPos());
@@ -132,9 +135,9 @@ struct TimelineViewportFixture {
     QVBoxLayout *layout;
     QPushButton *toolbar;
     TimelineSourceView *view;
-    TimelineViewportFixture() {
+    explicit TimelineViewportFixture(QWidget *owner=nullptr) : timeline(owner) {
         timeline.setObjectName("frameConformTimelines");
-        timeline.setAttribute(Qt::WA_DontShowOnScreen);
+        if(!owner)timeline.setAttribute(Qt::WA_DontShowOnScreen);
         layout = new QVBoxLayout(&timeline); layout->setContentsMargins(0, 0, 0, 0);
         toolbar = new QPushButton("Native timeline tools"); toolbar->setFixedHeight(31); layout->addWidget(toolbar);
         view = new TimelineSourceView(&timeline); layout->addWidget(view);

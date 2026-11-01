@@ -11,6 +11,9 @@
 #include <QWheelEvent>
 #include <QTimer>
 #include <QScreen>
+#include <QCursor>
+#include <QGraphicsView>
+#include <QGraphicsProxyWidget>
 #include <functional>
 
 namespace Unbound {
@@ -27,6 +30,25 @@ public:
         display->setFocusProxy(nativeViewport);
         display->setMouseTracking(true);
         display->setAcceptDrops(true);
+    }
+    // Native handlers can read QCursor::pos(), rather than a mouse event.
+    // Align the original surface only for the native shortcut dispatch;
+    // the overlay, OS pointer, scene/model, and saved geometry stay unchanged.
+    bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
+        if(!native || !display || !receiver)return false;
+        const auto physical=QCursor::pos();
+        const auto displayed=display->mapFromGlobal(physical);
+        if(!display->rect().contains(displayed))return false;
+        const auto point=mapping(displayed);
+        const auto shift=physical-native->mapToGlobal(point.toPoint());
+        if(shift.isNull())return false;
+        QPointer<QWidget> surface=native->parentWidget();
+        if(!surface)return false;
+        const auto original=surface->pos();QPointer<QWidget> parent=surface->parentWidget();
+        surface->move(original+shift);
+        QApplication::sendEvent(receiver,event);
+        if(surface && surface->parentWidget()==parent)surface->move(original);
+        return true;
     }
 protected:
     bool eventFilter(QObject *, QEvent *event) override {
@@ -83,15 +105,14 @@ protected:
                               source->mouseButtons(), source->keyboardModifiers());
             return drop(mapped, source);
         }
-        case QEvent::DragLeave:
         case QEvent::Leave:
+            if(display)display->unsetCursor();
+            return send(native,*event,event);
+        case QEvent::DragLeave:
         case QEvent::KeyPress:
         case QEvent::KeyRelease:
         case QEvent::ShortcutOverride:
-            forwarding = true;
-            QApplication::sendEvent(native, event);
-            forwarding = false;
-            return true;
+            return send(native,*event,event);
         default:
             return false;
         }
@@ -106,7 +127,6 @@ private:
     }
     bool send(QWidget *target, QEvent &mapped, QEvent *original) {
         QPointer<TimelineInputRouter> alive=this;
-        QPointer<QWidget> receiver=target;
         forwarding = true;
         QApplication::sendEvent(target, &mapped);
         if(!alive)return true;
@@ -116,8 +136,6 @@ private:
             placingPopup=false;
         }
         original->setAccepted(mapped.isAccepted());
-        if (display && receiver)
-            display->setCursor(receiver->cursor());
         return true;
     }
     bool mouse(QMouseEvent *event) {
@@ -149,9 +167,31 @@ private:
                            native->mapToGlobal(point.toPoint()), event->button(), event->buttons(), event->modifiers(), event->source());
         const bool result = send(target, mapped, event);
         if(!alive)return result;
+        if(display && native) {
+            if(auto child=native->childAt(point.toPoint()))display->setCursor(child->cursor());
+            else display->setCursor(cursorInView(qobject_cast<QGraphicsView *>(native->parentWidget()),point));
+        }
         if (event->type() == QEvent::MouseButtonRelease && event->buttons() == Qt::NoButton)
             pressed = nullptr;
         return result;
+    }
+    static QCursor cursorInView(QGraphicsView *view,QPointF point,int depth=0) {
+        if(!view || !view->scene() || depth>=8)return view?view->viewport()->cursor():QCursor();
+        auto grabber=view->scene()->mouseGrabberItem();
+        const auto items=grabber?QList<QGraphicsItem *>{grabber}:view->items(point.toPoint());
+        for(auto item:items) {
+            auto proxy=qgraphicsitem_cast<QGraphicsProxyWidget *>(item);
+            if(!proxy || !proxy->widget()) {
+                for(auto owner=item;owner;owner=owner->parentItem())if(owner->hasCursor())return owner->cursor();
+                continue;
+            }
+            auto widget=proxy->widget();
+            const auto at=proxy->mapFromScene(view->mapToScene(point.toPoint()));
+            if(auto nested=qobject_cast<QGraphicsView *>(widget))
+                return cursorInView(nested,at-nested->viewport()->pos(),depth+1);
+            auto child=widget->childAt(at.toPoint());return child?child->cursor():widget->cursor();
+        }
+        return view->viewport()->cursor();
     }
     bool drop(QDropEvent &mapped, QDropEvent *original) {
         mapped.setDropAction(original->dropAction());

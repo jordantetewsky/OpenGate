@@ -11,6 +11,8 @@
 #include <QKeyEvent>
 #include <QSaveFile>
 #include <QShortcut>
+#include <QShortcutEvent>
+#include <QPointer>
 #include <QTimer>
 #include <functional>
 #include "diagnostics.h"
@@ -84,10 +86,22 @@ public:
     struct NativeMatch { QString command,error; };
     // Optional read-only adapter. Assignment remains owned by Resolve.
     std::function<NativeMatch(const QKeySequence &)> nativeMatch;
+    // Adapt an already-selected native Qt shortcut, without registering a
+    // second binding or executing its handler twice.
+    std::function<bool(QObject *,QShortcutEvent *)> nativeShortcutDispatch;
     std::function<bool()> legacyBacktickAllowed;
     std::function<bool()> context;
 protected:
-    bool eventFilter(QObject *,QEvent *event) override {
+    bool eventFilter(QObject *receiver,QEvent *event) override {
+        if(event->type()==QEvent::Shortcut && nativeShortcutDispatch && !routingNativeShortcut &&
+           PanelCommandContext::blocked().isEmpty() && context && context()) {
+            QPointer<PanelCommands> alive=this;
+            const auto dispatch=nativeShortcutDispatch;
+            routingNativeShortcut=true;
+            const bool handled=dispatch(receiver,static_cast<QShortcutEvent *>(event));
+            if(alive)routingNativeShortcut=false;
+            return handled;
+        }
         if (event->type()==QEvent::ActionAdded || event->type()==QEvent::ActionChanged || event->type()==QEvent::ActionRemoved) {
             refresh.start(0); return false;
         }
@@ -150,6 +164,7 @@ private:
     QString path;
     QHash<QString,QString> conflicts;
     QTimer refresh;
+    bool routingNativeShortcut = false;
     QHash<QString,QString> bindingErrors(const QJsonObject &proposed) const {
         QList<CommandBindingConflicts::Binding> scopes;
         for (const auto &command:commands) scopes.append({command.id,command.scope});

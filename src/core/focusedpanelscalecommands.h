@@ -18,7 +18,7 @@ public:
                 },[commands,lookup,delta=operation.second] {
                     auto session=lookup(commands->focusedTarget().panel);
                     if (!session || !session->supportsContentScale()) return;
-                    const auto factor=delta==0.0 ? 1.0 : qBound(0.7,qRound((session->interfaceScale()+delta)*10.)/10.,3.0);
+                    const auto factor=delta==0.0 ? 1.0 : qBound(0.7,qRound((session->interfaceScale()+delta)*100.)/100.,3.0);
                     session->setInterfaceScale(factor);
                 },"*"});
         }

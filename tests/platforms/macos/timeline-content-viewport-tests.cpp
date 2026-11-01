@@ -7,6 +7,9 @@
 #include "../../../src/core/panelcontentscale.h"
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
 #include "../../core/workspace-callers/timelineattachedchecks.h"
+#include "../../core/workspace-callers/timelineoverflowchecks.h"
+#include "../../core/workspace-callers/timelinepointerchecks.h"
+#include "../../core/workspace-callers/timelinescaledinputchecks.h"
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -83,6 +86,7 @@ int main(int argc, char **argv) {
                       QPoint(0, 20), QPoint(0, 120), Qt::NoButton, Qt::NoModifier, Qt::ScrollUpdate, false);
     QApplication::sendEvent(layer, &wheel);
     check(qAbs(view->lastWheel.x() - 300.) < 2., "native wheel routing uses the same header/scale coordinate map");
+    timelineScaledInputChecks(presentation,view,check);
     QMenu nativeMenu(view);
     nativeMenu.setAttribute(Qt::WA_DontShowOnScreen);
     nativeMenu.addAction("Native clip action");
@@ -125,7 +129,7 @@ int main(int argc, char **argv) {
     pin->click();TimelineViewportFixture::settle();
     check(!scale.snapshot()["timeline_header_pinned"].toBool(true),"explicit pin preference is retained through the existing state owner");
     const double footerX=(presentation->headerWidth()+(layer->width()/2.-presentation->headerWidth())*.5)*2.;
-    TimelineViewportFixture::click(layer,QPointF(footerX,view->bar->bounds.center().y()*2.));
+    TimelineViewportFixture::click(layer,QPointF(footerX,layer->height()-9.));
     check(qAbs(view->bar->lastClick.x()-view->bar->bounds.center().x())<3.,
           "native timeline scrollbar remains operable beside the independent header scrollbar");
     auto stacked = new TimelineSourceView(&fixture.timeline); fixture.layout->addWidget(stacked); stacked->show();
@@ -145,6 +149,8 @@ int main(int argc, char **argv) {
     check(restored.snapshot() == saved, "scale, pinning, header width and offset serialize together");
     check(restored.suspend(), "restored configuration returns cleanly to native ownership");
     timelineAttachedChecks(check);
+    timelineOverflowChecks(check);
+    timelinePointerChecks(check);
     std::printf("timeline content viewport failures=%d\n", failures);
     return failures ? 1 : 0;
 }

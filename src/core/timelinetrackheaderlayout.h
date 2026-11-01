@@ -19,10 +19,11 @@ struct TimelineTrackHeaderLayout {
     double minimumBodyWidth = 32.;
     double minimumHeight = 0.;
     bool pinned = true;
-    QRectF horizontalBar;
+    QRectF horizontalBar, footer;
     QSizeF sourceSize;
     QSizeF targetSize;
     QVector<Row> buttonRows;
+    QVector<double> sectionTops;
 
     static bool isType(QGraphicsItem *item, const char *type) {
         auto object = item ? item->toGraphicsObject() : nullptr;
@@ -45,6 +46,7 @@ struct TimelineTrackHeaderLayout {
             auto proxy = qgraphicsitem_cast<QGraphicsProxyWidget *>(item);
             auto controls = proxy ? qobject_cast<QGraphicsView *>(proxy->widget()) : nullptr;
             if(controls && controls->objectName().endsWith("TracksView") && proxy->size().height()>0.) {
+                result.sectionTops.append(view->viewportTransform().mapRect(proxy->sceneBoundingRect()).top());
                 const auto minimum=proxy->effectiveSizeHint(Qt::MinimumSize);
                 result.minimumBodyWidth=qMax(result.minimumBodyWidth,minimum.width());
                 trackMinimum+=qMax(32.,minimum.height());
@@ -77,8 +79,10 @@ struct TimelineTrackHeaderLayout {
         if(trackMinimum>0.)result.minimumHeight=firstTrackTop+trackMinimum+separators+result.horizontalBar.height();
         return result;
     }
-    void configure(QSizeF target, double requestedWidth, double requestedOffset, bool pin) {
+    void configure(QSizeF target, double requestedWidth, double requestedOffset, bool pin, double footerHeight = 0.) {
         targetSize = target;
+        const auto height=qBound(0.,footerHeight>0.?footerHeight:horizontalBar.height(),target.height());
+        footer=QRectF(0,target.height()-height,target.width(),height);
         pinned = pin;
         const double minimum = pinned ? pinnedWidth + 24. : 40.;
         const double maximum=qMax(0.,qMin(nativeWidth,target.width()-minimumBodyWidth));
@@ -95,9 +99,10 @@ struct TimelineTrackHeaderLayout {
         return false;
     }
     QPointF toNative(QPointF point) const {
-        if (!horizontalBar.isEmpty() && point.y() >= horizontalBar.top()) {
+        if (!horizontalBar.isEmpty() && footer.height()>0. && point.y() >= footer.top()) {
             if (targetSize.width() > width)
                 point.setX(horizontalBar.left() + (point.x() - width) * horizontalBar.width() / (targetSize.width() - width));
+            point.setY(horizontalBar.top()+(point.y()-footer.top())*horizontalBar.height()/footer.height());
             return point;
         }
         if (point.x() >= width)
@@ -108,7 +113,7 @@ struct TimelineTrackHeaderLayout {
     }
     QVector<Slice> slices() const {
         QVector<Slice> result;
-        const double bottom = horizontalBar.isEmpty() ? targetSize.height() : horizontalBar.top();
+        const double bottom = horizontalBar.isEmpty() ? footer.top() : qMin(footer.top(),horizontalBar.top());
         result.append({QRectF(offset, 0, width, bottom), QRectF(0, 0, width, bottom)});
         if (pinned && pinnedWidth > 0.) {
             // Redraw whole button rows in two bands. Names below the buttons
@@ -125,7 +130,7 @@ struct TimelineTrackHeaderLayout {
         result.append({QRectF(nativeWidth, 0, qMax(0., targetSize.width() - width), bottom),
                        QRectF(width, 0, qMax(0., targetSize.width() - width), bottom)});
         if (!horizontalBar.isEmpty())
-            result.append({horizontalBar, QRectF(width, horizontalBar.top(), qMax(0., targetSize.width() - width), horizontalBar.height())});
+            result.append({horizontalBar, QRectF(width, footer.top(), qMax(0., targetSize.width() - width), footer.height())});
         return result;
     }
 };
