@@ -10,6 +10,7 @@
 #include "../../core/workspace-callers/timelineoverflowchecks.h"
 #include "../../core/workspace-callers/timelinepointerchecks.h"
 #include "../../core/workspace-callers/timelinescaledinputchecks.h"
+#include "../../core/workspace-callers/timelinerendercachechecks.h"
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -151,6 +152,7 @@ int main(int argc, char **argv) {
     timelineAttachedChecks(check);
     timelineOverflowChecks(check);
     timelinePointerChecks(check);
+    timelineRenderCacheChecks(check);
     std::printf("timeline content viewport failures=%d\n", failures);
     return failures ? 1 : 0;
 }

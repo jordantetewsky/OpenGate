@@ -515,3 +515,15 @@ are exercised. Shared Qt code is built in the macOS adapter; Windows native buil
 actual GPU playback, every native shortcut and ordinary restart still require their
 own live validation. Frozen build/fixture evidence belongs in the repair receipt;
 it is not native acceptance of contract clauses 9–12.
+
+## November 1 performance gate before the next installation
+
+The input/header repair is built and preserved separately; `6c3ffb4` remains the
+installed checkpoint. Jordan requested performance checks before replacing it.
+`perf/timeline-render-work` separates native pixel damage from geometry work,
+reuses bounded section raster devices and removes the extra full-frame copy.
+The matched optimized synthetic workload improves playhead and pan timings across
+70–300%; full-pan p95 at 300% remains about 24 ms. This is not a guarantee of native
+playback at every frame rate. See the [performance review and live gaps](opengate-timeline-performance-review-20261101.md).
+Native functionality, persistence, GPU rendering and playback acceptance remain
+open until the completed candidate is loaded into a fresh Resolve process.

@@ -11,6 +11,10 @@ if [[ "${UNBOUND_TEST_ASAN:-0}" == 1 ]]; then
     compile_flags+=(-fsanitize=address -fno-omit-frame-pointer)
     out="$out-asan"
 fi
+if [[ "${UNBOUND_TEST_OPTIMIZE:-0}" == 1 ]]; then
+    compile_flags+=(-O2)
+    out="$out-optimized"
+fi
 extra_sources=("$root/src/platforms/macos/nativechrome.mm")
 if [[ -n "${UNBOUND_TEST_MOC_HEADER:-}" ]]; then
     moc="$root/build/macos/test-tools/moc"

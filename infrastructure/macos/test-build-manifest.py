@@ -13,13 +13,14 @@ with tempfile.TemporaryDirectory() as directory:
     info_path=application/'Contents/Info.plist';info_path.parent.mkdir(parents=True)
     info_bytes=plistlib.dumps({'CFBundleShortVersionString':'21.fixture','CFBundleVersion':'123','LSMinimumSystemVersion':'15.0'})
     info_path.write_bytes(info_bytes)
-    environment=os.environ.copy();environment['OPENGATE_RESOLVE_APP']=str(application)
+    environment=os.environ.copy();environment['OPENGATE_RESOLVE_APP']=str(application);environment['OPENGATE_WIDGET_OPTIMIZATION']='O2'
     subprocess.run(['python3',str(root/'infrastructure/macos/build-manifest.py'),directory],check=True,env=environment)
     manifest=json.loads((pathlib.Path(directory)/'build-manifest.json').read_text())
     host=manifest['resolve_build_host']
     assert host['version']=='21.fixture' and host['build']=='123' and host['minimum_macos']=='15.0'
     assert host['info_sha256']==hashlib.sha256(info_bytes).hexdigest()
     assert manifest['qt_runtime_contract']=='5.15.2'
+    assert manifest['widget_optimization']=='O2'
     lock=json.loads((root/'infrastructure/macos/integration-features.json').read_text())
     assert len(manifest['features']) == len(lock['features']) > 0
     for actual,expected in zip(manifest['features'],lock['features']):

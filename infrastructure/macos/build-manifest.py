@@ -24,6 +24,7 @@ manifest = {'schema': 1, 'product': 'OpenGate', 'vendor': 'CineWaltz', 'foundati
             'dirty': bool(git('status', '--porcelain')), 'features': features,
             'macos_deployment_target': os.getenv('OPENGATE_MACOS_DEPLOYMENT_TARGET', 'unspecified'),
             'macos_architectures': os.getenv('OPENGATE_MACOS_ARCHS', 'host-default'),
+            'widget_optimization': os.getenv('OPENGATE_WIDGET_OPTIMIZATION', 'unspecified'),
             'meaning': 'Included means present in source ancestry, not acceptance-tested or complete.'}
 resolve_app = pathlib.Path(os.getenv('OPENGATE_RESOLVE_APP', '/Applications/DaVinci Resolve/DaVinci Resolve.app'))
 info_path = resolve_app/'Contents/Info.plist'

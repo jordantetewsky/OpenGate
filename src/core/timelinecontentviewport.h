@@ -6,6 +6,7 @@
 #include "timelinetrackheaderlayout.h"
 #include "timelinetrackheadercontrols.h"
 #include "timelineinputrouter.h"
+#include "timelinesceneupdates.h"
 
 namespace Unbound {
 // Present one live native Timeline view. The original scene/model/input handlers
@@ -43,22 +44,30 @@ public:
             arrange();
             notify();
         });
-        observeScene();
-        view->installEventFilter(this);
-        view->viewport()->installEventFilter(this);
+        updates=new TimelineSceneUpdates(view,this);
+        updates->suspended=[this]{if(!rendering)renderer.releasePixels();};
+        updates->layoutChanged=[this]{if(!arranging && !rendering)arrange();};
+        updates->damaged=[this](const QList<QRectF> &rects) {
+            if(rendering)return;
+            if(rects.isEmpty()){renderer.invalidateAll();updates->schedulePaint(QRegion(layer->rect()));return;}
+            QRegion visible;
+            for(const auto &rect:rects) {
+                if(!rect.isValid()){renderer.invalidateAll();updates->schedulePaint(QRegion(layer->rect()));return;}
+                renderer.invalidate(rect);
+                visible+=geometry.presentationDamage(view->viewportTransform().mapRect(TimelineSceneRenderer::damageBounds(rect)),factor);
+            }
+            if(!visible.isEmpty())updates->schedulePaint(visible);
+        };
+        updates->repaint=[this]{if(!rendering && !arranging)updates->schedulePaint(QRegion(layer->rect()));};
+        updates->paintReady=[this](const QRegion &region){layer->update(region);};
+        updates->refresh();
         layer->show();
     }
     ~TimelineContentViewport() override {
-        if(scene)disconnect(scene,nullptr,this,nullptr);
+        updates->stop();
         disconnect(controls.bar,nullptr,this,nullptr);
         disconnect(controls.pin,nullptr,this,nullptr);
-        controls.divider->moved={};changed={};
-        for(auto editor:editors)if(editor)editor->removeEventFilter(this);
-        layer->retire();
-        if (view) {
-            view->removeEventFilter(this);
-            if (view->viewport()) view->viewport()->removeEventFilter(this);
-        }
+        controls.divider->moved={};changed={};layer->retire();
     }
     std::function<void()> changed;
     void configure(double value, double width, double offset, bool pin) {
@@ -79,35 +88,16 @@ public:
     }
 protected:
     void resizeEvent(QResizeEvent *event) override { QWidget::resizeEvent(event); arrange(); }
-    bool eventFilter(QObject *, QEvent *event) override {
-        if (!arranging && !rendering && (event->type() == QEvent::Paint || event->type() == QEvent::Show ||
-            event->type() == QEvent::LayoutRequest || event->type() == QEvent::ChildAdded ||
-            event->type() == QEvent::KeyPress || event->type() == QEvent::InputMethod ||
-            event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut)) {
-            observeScene();
-            layer->update();
-        }
-        return false;
-    }
 private:
     class Layer : public QWidget {
     public:
         explicit Layer(TimelineContentViewport *owner) : QWidget(owner), owner(owner) {}
         void retire() { owner=nullptr;hide(); }
     protected:
-        void paintEvent(QPaintEvent *) override { if(owner)owner->paint(this); }
+        void paintEvent(QPaintEvent *event) override { if(owner)owner->paint(this,event->region()); }
     private:
         TimelineContentViewport *owner;
     };
-    void observeScene() {
-        if (!view || scene == view->scene())
-            return;
-        if (scene) disconnect(scene, nullptr, this, nullptr);
-        scene = view->scene();
-        if (scene) connect(scene, &QGraphicsScene::changed, this, [this] {
-            if (!rendering) arrange();
-        });
-    }
     void notify() { if (changed) changed(); }
     void arrange() {
         if (arranging || !view || !view->scene() || width() <= 0 || height() <= 0)
@@ -144,45 +134,44 @@ private:
         const int barTop = qMax(0,height()-controls.footerHeight);
         controls.arrange(qRound(geometry.width * factor), height(), barTop, factor, geometry.offset,
                          geometry.maximumOffset(), pinned, geometry.pinnedWidth);
+        updates->geometryObserved();
         layer->raise();
         layer->update();
     }
-    void paint(QWidget *surface) {
+    void paint(QWidget *surface,const QRegion &region) {
+        updates->presented(region);
         QPainter painter(surface);
         painter.fillRect(surface->rect(), palette().window());
         if (!view || !view->scene() || rendering)
             return;
         QScopedValueRollback<bool> guard(rendering, true);
-        geometry = TimelineTrackHeaderLayout::discover(view);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
         const auto source = view->mapToScene(view->viewport()->rect()).boundingRect();
         const double backing = factor * surface->devicePixelRatioF();
-        auto image = renderTimelineScene(view->scene(), source, backing, geometry.sectionTops);
-        if (image.isNull())
-            return;
-        {
-            QPainter editorPainter(&image);
-            for (auto editor : view->viewport()->findChildren<QWidget *>()) {
-                if (!editor->isVisible() || !editor->inherits("QLineEdit"))
-                    continue;
-                if (!editors.contains(editor)) {
-                    editors.append(editor);
-                    editor->installEventFilter(this);
-                }
-                editor->render(&editorPainter, editor->mapTo(view->viewport(), QPoint()));
-            }
+        if(!renderer.render(view->scene(),source,backing,geometry.sectionTops))return;
+        for(const auto &slice:geometry.slices()) {
+            const QRectF destination(slice.target.topLeft()*factor,slice.target.size()*factor);
+            renderer.draw(painter,slice.source,destination);
         }
-        for (const auto &slice : geometry.slices()) {
-            if (slice.source.isEmpty() || slice.target.isEmpty())
-                continue;
-            const QRectF destination(slice.target.topLeft() * factor, slice.target.size() * factor);
-            const QRectF pixels(slice.source.topLeft() * backing, slice.source.size() * backing);
-            painter.drawImage(destination, image, pixels);
+        for(auto editor:view->viewport()->findChildren<QWidget *>()) {
+            if(!editor->isVisible() || !editor->inherits("QLineEdit"))continue;
+            updates->watchEditor(editor);
+            QImage image(QSize(qCeil(editor->width()*backing),qCeil(editor->height()*backing)),QImage::Format_ARGB32_Premultiplied);
+            if(image.isNull())continue;
+            image.setDevicePixelRatio(backing);image.fill(Qt::transparent);
+            {QPainter native(&image);editor->render(&native);}
+            const QRectF bounds(editor->mapTo(view->viewport(),QPoint()),editor->size());
+            for(const auto &slice:geometry.slices()) {
+                const auto hit=bounds.intersected(slice.source);if(hit.isEmpty())continue;
+                const double x=slice.target.width()/slice.source.width(),y=slice.target.height()/slice.source.height();
+                const auto at=slice.target.topLeft()+QPointF((hit.left()-slice.source.left())*x,(hit.top()-slice.source.top())*y);
+                painter.drawImage(QRectF(at*factor,QSizeF(hit.width()*x*factor,hit.height()*y*factor)),image,
+                    QRectF((hit.topLeft()-bounds.topLeft())*backing,hit.size()*backing));
+            }
         }
     }
     QPointer<QGraphicsView> view;
-    QPointer<QGraphicsScene> scene;
-    QList<QPointer<QWidget>> editors;
+    TimelineSceneRenderer renderer;
+    TimelineSceneUpdates *updates = nullptr;
     Layer *layer;
     TimelineInputRouter *input = nullptr;
     TimelineTrackHeaderControls controls;

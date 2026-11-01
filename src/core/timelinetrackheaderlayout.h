@@ -4,6 +4,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGraphicsObject>
 #include <QVector>
+#include <QRegion>
 #include <QtMath>
 
 namespace Unbound {
@@ -110,6 +111,17 @@ struct TimelineTrackHeaderLayout {
         else if (!(buttonRow(point.y()) && point.x() < pinnedWidth))
             point.rx() += offset;
         return point;
+    }
+    QRegion presentationDamage(const QRectF &native,double scale) const {
+        QRegion result;
+        for(const auto &slice:slices()) {
+            const auto hit=native.intersected(slice.source);
+            if(hit.isEmpty() || slice.source.isEmpty())continue;
+            const double x=slice.target.width()/slice.source.width(),y=slice.target.height()/slice.source.height();
+            const auto at=slice.target.topLeft()+QPointF((hit.left()-slice.source.left())*x,(hit.top()-slice.source.top())*y);
+            result+=QRectF(at*scale,QSizeF(hit.width()*x*scale,hit.height()*y*scale)).toAlignedRect().adjusted(-2,-2,2,2);
+        }
+        return result;
     }
     QVector<Slice> slices() const {
         QVector<Slice> result;
