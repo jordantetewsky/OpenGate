@@ -545,3 +545,15 @@ move, custom bitmap/hotspot preservation and leaving the edit point pass at 70%,
 100%, 147%, 213% and 300%. The full Timeline and AddressSanitizer fixtures pass.
 Actual Resolve trim-in/out, roll, transition and modifier cursor acceptance is
 still required; these fixtures do not establish the cause of every live report.
+
+### Authorized installation of the performance/cursor candidate
+
+Jordan confirmed Resolve was quit and requested installation. Installed runtime
+`61aceef` at 2026-11-01 23:01 UTC. All 21 managed files match the staged hashes,
+the installed bundle signature verifies, and its runtime manifest records clean
+source and O2 optimization. The previous `6c3ffb4` runtime is preserved in rollback
+transaction `6DBDAE32-41E6-4F7A-9C64-D8F83E16D23E`. User project/preferences are not
+installer write targets. Receipt: `build/timeline-performance-install/installation-receipt.json`.
+This supersedes the earlier installed-checkpoint statements. Native playback,
+GPU/editing/cursor behavior and restart acceptance remain pending live testing;
+there is no merge, push or publication.

@@ -1985,3 +1985,14 @@ The source checkpoints are local. Compilation/staging evidence belongs in the
 candidate receipt. The requested 6c3ffb4 installation is preserved; this entry
 authorizes no silent replacement and records no new live acceptance, merge, push
 or publication.
+
+### Authorized installation — November 1, 23:01 UTC
+
+Jordan explicitly confirmed Resolve was quit and requested installation. Runtime
+`61aceef` is now installed. All 21 managed-file hashes and the bundle signature
+verify. The clean-source runtime manifest records O2 optimization. Transaction
+`6DBDAE32-41E6-4F7A-9C64-D8F83E16D23E` preserves the prior `6c3ffb4` files and
+restoration command. Project/preferences are outside the installer inventory.
+Local receipt: `build/timeline-performance-install/installation-receipt.json`.
+Earlier statements that `6c3ffb4` remains installed are superseded. Native live
+acceptance and playback verification remain pending; no merge, push or publication.
