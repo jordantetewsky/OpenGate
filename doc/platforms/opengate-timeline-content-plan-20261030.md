@@ -405,3 +405,52 @@ new preference writer, native pointer offset access or unrelated coordinator
 implementation was added. PNGs are bounded, explicit opt-in local diagnostics.
 Shared Qt code compiles in the macOS adapter; Windows native compilation and
 native rendering remain unverified.
+
+
+## November 1 complete implementation candidate
+
+This supersedes the diagnostic-only checkpoint above. The feature branch
+`feature/timeline-content-viewport` implements the interactive content viewport.
+The native scene paints at 1:1 world coordinates into a backing-resolution image;
+there is no outer native-view scale transform. Media Pool uses the same painting
+principle while retaining Qt proxy input, focus and popup handling. Its actual
+transferred content surface now receives the scale adapter.
+
+Timeline has a draggable internal header divider, blue/red button pinning, a
+separate header scrollbar, and its existing time scrollbar beside it. Narrowing
+the header increases native clip-body space. Scale, preferred width, pin choice
+and scroll position use the existing session/workspace checkpoint, including
+unsaved state. Responsive width clamping does not overwrite the preferred width.
+The toolbar retains its compact dimensions. Page-return reconciliation retains
+independent native toolbar and stacked-tab choices without invoking the native
+Display Stacked Timelines action or revealing a user-hidden host.
+
+Production responsibility review: TimelineContentScale owns reversible native
+view leases and retained configuration; TimelineContentViewport composes one
+presentation; TimelineSceneRenderer draws the native scene; TimelineTrackHeaderLayout
+owns geometry and inverse mapping; TimelineInputRouter forwards native input;
+TimelineTrackHeaderControls owns divider/pin/scroll gestures; and
+TimelineAttachedPresentation owns native band visibility intent and page recovery.
+PanelContentScale delegates adapters and ManagedPanelSession only wires them into
+existing ownership/persistence. ScalableContentViewport owns Media Pool's Qt proxy
+presentation. The replaced transform implementation and diagnostic-only render
+probe were removed. There is one native scene/model, one saved-state path and no
+new global input observer. Fixtures reuse the existing native-window harness.
+
+The assembled Timeline fixture passes: divider/body allocation, pinned native
+buttons, reachable rightmost header control, separate time scrollbar, coherent
+custom glyphs, clip hit testing, context-menu placement, inline rename/focus,
+stacked view discovery, narrow native minima, fresh-owner state restoration,
+page-return bands, explicit user choices and exact native return. The final
+persistence assertion previously held a dangling reference into temporary JSON;
+it now copies QJsonValue and passes. Earlier panel-scale and assembled entry-flow
+results are being rechecked against frozen source before installation.
+
+Contract mapping: entry, title dragging, vacancy reclaim, native return and
+workspace transitions remain on the existing assembled entry-flow harness;
+this change specifically exercises clauses 7/9/10/11 for content geometry,
+reachable controls, Timeline bands and page return. Installation hashes/build
+checks are separate from live Resolve acceptance. Actual native GPU playback,
+editing gestures and restart acceptance still require the installed candidate;
+macOS fixtures cannot establish those or Windows integration. No live acceptance
+claim is made by a passing fixture.

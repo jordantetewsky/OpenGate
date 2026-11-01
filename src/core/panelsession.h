@@ -20,6 +20,7 @@
 #include "panelwidth.h"
 #include "paneloverflow.h"
 #include "timelinetoolbarviewport.h"
+#include "timelineattachedpresentation.h"
 #include "panelcontentscale.h"
 #include "nativegroupslot.h"
 #include "nativepanelposition.h"
@@ -39,6 +40,7 @@ public:
     explicit ManagedPanelSession(QObject *owner = nullptr) : QObject(owner)
     {
         contentScale.changed=[this]{if(arrangementChanged)arrangementChanged();};
+        timelinePresentation.changed=[this]{if(arrangementChanged)arrangementChanged();};
         arrangeTimer.setSingleShot(true);
         arrangeTimer.setInterval(180);
         connect(&arrangeTimer, &QTimer::timeout, this, [this] {
@@ -182,13 +184,18 @@ public:
         if (arrangementChanged) arrangementChanged();
         return true;
     }
-    QJsonObject interfaceState() const { return contentScale.snapshot(); }
-    bool restoreInterfaceState(const QJsonObject &saved) {
-        const auto previous=contentScale.snapshot();contentScale.restoreState(saved);
-        if(refreshMetricScale())return true;
-        contentScale.restoreState(previous);refreshMetricScale();return false;
+    QJsonObject interfaceState() const {
+        auto saved=contentScale.snapshot();
+        const auto bands=timelinePresentation.snapshot();
+        for(auto it=bands.begin();it!=bands.end();++it)saved[it.key()]=it.value();
+        return saved;
     }
-    bool supportsContentScale() const { return active() && PanelContentScale::supported(content ? content.data() : window()); }
+    bool restoreInterfaceState(const QJsonObject &saved) {
+        const auto previous=interfaceState();contentScale.restoreState(saved);timelinePresentation.restoreState(saved);
+        if(refreshMetricScale())return true;
+        contentScale.restoreState(previous);timelinePresentation.restoreState(previous);refreshMetricScale();return false;
+    }
+    bool supportsContentScale() const { return active() && PanelContentScale::supported(scaleSurface()); }
     bool hiddenByUser() const { return userHidden; }
     QPoint overflowOffset() const { return overflow.offset(); }
     void restoreOverflowOffset(QPoint position) { overflow.restoreOffset(position); }
@@ -404,6 +411,8 @@ public:
         if (widget->findChild<QWidget *>("pageSingleScreenModeTools")) new CompactToolbar(host,widget);
         if (constrain) keepOnDisplay(host);
         refreshMetricScale();
+        timelinePresentation.attach(widget,originalPage);
+        timelinePresentation.pageReturned();
         reconcileSourcePlayerPresentation(content,"undock");
         logEvent(QStringLiteral("panel.undock.complete"), {{"panel", title}, {"widget", widgetState(content)},
             {"original_parent", originalParent->objectName()},
@@ -435,7 +444,7 @@ public:
             if (!originalParent || !originalLayout || !placeholderLayout ||
                 originalParent->layout() != placeholderLayout || !transferredSurface || transferredSurface->layout() != originalLayout)
                 return QStringLiteral("Resolve changed this panel's content layout.");
-            contentScale.suspend();
+            if(!contentScale.suspend())return QStringLiteral("Could not restore this panel's native content viewport.");
             widthAllowance.restore();
             delete placeholderLayout.data();
             delete placeholder.data();
@@ -472,6 +481,7 @@ public:
             overflow.releaseInto(host);
         }
         if(!contentScale.suspend())return QStringLiteral("Could not restore the native content viewport.");
+        timelinePresentation.release();
         if(!timelineToolbar.restore())return QStringLiteral("Could not restore the attached Timeline toolbar safely.");
         const bool reclaimed = content->parentWidget() == destinationParent;
         QLayout *currentLayout = destinationParent->layout();
@@ -633,6 +643,8 @@ private:
                 surface->show(); surface->setAttribute(Qt::WA_ShowWithoutActivating, previous);
             }
             reconcileSourcePlayerPresentation(content,"native-recovery");
+            timelinePresentation.attach(content,originalPage);
+            timelinePresentation.pageReturned();
             logEvent(QStringLiteral("panel.recover.complete"), {{"widget", widgetState(content)}, {"host", widgetState(host)}});
         });
     }
@@ -641,6 +653,7 @@ private:
         releaseOriginalPosition={};
         if (releaseGroup) { auto release = releaseGroup; release(); }
         contentScale.suspend();
+        timelinePresentation.release();
         timelineToolbar.restore();
         groupWidth.restore(); widthAllowance.restore(); vacatedContents.restore(); relaxedWidth = false;
         overflow.forget();
@@ -662,14 +675,18 @@ private:
     }
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
     PanelWidthAllowance widthAllowance, groupWidth;
+    QWidget *scaleSurface() const {
+        return content ? content.data() : transferredSurface ? transferredSurface.data() :
+               expandedHost ? expandedHost.data() : window();
+    }
     bool refreshMetricScale() {
         if (!active()) return contentScale.suspend();
-        auto target=content ? content.data() : expandedHost ? expandedHost.data() : window();
-        return contentScale.apply(target);
+        return contentScale.apply(scaleSurface());
     }
     PanelContentScale contentScale;
     PanelOverflow overflow;
     TimelineToolbarViewport timelineToolbar;
+    TimelineAttachedPresentation timelinePresentation;
     VacatedContents vacatedContents;
     bool relaxedWidth = false;
     QPointer<QWidget> originalMain;

@@ -6,9 +6,22 @@ generated="$root/build/macos/qt-generated"
 app="${1:-/Applications/DaVinci Resolve/DaVinci Resolve.app}"
 out="$root/build/macos/${UNBOUND_TEST_NAME:-panel-session-tests}"
 source_file="${UNBOUND_TEST_SOURCE:-$root/tests/platforms/macos/panel-session-tests.cpp}"
-xcrun clang++ -std=c++17 -g -Wall -Wextra -Werror -DUNBOUND_NATIVE_TESTS \
+compile_flags=(-std=c++17 -g -Wall -Wextra -Werror)
+if [[ "${UNBOUND_TEST_ASAN:-0}" == 1 ]]; then
+    compile_flags+=(-fsanitize=address -fno-omit-frame-pointer)
+    out="$out-asan"
+fi
+extra_sources=("$root/src/platforms/macos/nativechrome.mm")
+if [[ -n "${UNBOUND_TEST_MOC_HEADER:-}" ]]; then
+    moc="$root/build/macos/test-tools/moc"
+    if [[ ! -x "$moc" ]]; then python3 "$root/infrastructure/macos/build-test-moc.py"; fi
+    metadata="$out-meta.cpp"
+    "$moc" "$UNBOUND_TEST_MOC_HEADER" -o "$metadata"
+    extra_sources+=("$metadata")
+fi
+xcrun clang++ "${compile_flags[@]}" -DUNBOUND_NATIVE_TESTS \
     -I "$generated" -I "$qt/include" -I "$qt/include/QtCore" -I "$qt/include/QtGui" -I "$qt/include/QtWidgets" \
-    -I "$root/src/platforms/macos" "$source_file" "$root/src/platforms/macos/nativechrome.mm" \
+    -I "$root/src/platforms/macos" "$source_file" "${extra_sources[@]}" \
     -L "$app/Contents/Frameworks" -lQt5Widgets.5 -lQt5Gui.5 -lQt5Core.5 \
     -framework AppKit -framework CoreGraphics -Wl,-rpath,"$app/Contents/Frameworks" -o "$out"
 if [[ "${UNBOUND_TEST_COMPILE_ONLY:-0}" != 1 ]]; then

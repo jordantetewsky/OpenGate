@@ -7,6 +7,8 @@
 #include <QScrollBar>
 #include <QResizeEvent>
 #include <QWindow>
+#include <QStyleOptionGraphicsItem>
+#include <QPainter>
 namespace Unbound {
 // Live native QWidget rendering with Qt's inverse input mapping and real scrollbars.
 // The canvas keeps its logical minimum; the outer viewport remains freely resizable.
@@ -20,7 +22,8 @@ public:
         canvasWidth=qMax(logicalWidth>0?logicalWidth:content->width(),qMax(1,content->minimumSizeHint().width()));
         minimumHeight=qMax(1,content->minimumSizeHint().height());
         originalOffscreen=content->testAttribute(Qt::WA_DontShowOnScreen);originalQuit=content->testAttribute(Qt::WA_QuitOnClose);
-        auto scene=new QGraphicsScene(this);setScene(scene);proxy=new QGraphicsProxyWidget;
+        auto scene=new QGraphicsScene(this);setScene(scene);proxy=new ContentProxy;
+        proxy->setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
         scene->addItem(proxy);content->setAttribute(Qt::WA_DontShowOnScreen);content->setParent(nullptr);
         proxy->setWidget(content);proxy->setFocusPolicy(Qt::StrongFocus);content->show();
         fitCanvas();
@@ -44,6 +47,28 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override {QGraphicsView::resizeEvent(event);fitCanvas();}
 private:
+    // Keep Qt's native proxy focus, hit testing and popup integration, but paint
+    // custom native delegates at backing resolution instead of stretching their
+    // internal painter coordinates. Render only the exposed canvas region.
+    class ContentProxy : public QGraphicsProxyWidget {
+    public:
+        void paint(QPainter *painter,const QStyleOptionGraphicsItem *option,QWidget *) override {
+            auto content=widget();if(!content)return;
+            const auto exposed=option->exposedRect.intersected(boundingRect()).toAlignedRect();
+            const double backing=QStyleOptionGraphicsItem::levelOfDetailFromTransform(painter->worldTransform())*
+                                 painter->device()->devicePixelRatioF();
+            if(exposed.isEmpty() || backing<=0. || exposed.width()*backing>16384 || exposed.height()*backing>16384 ||
+               exposed.width()*exposed.height()*backing*backing>64.*1024*1024)return;
+            QImage image(QSize(qCeil(exposed.width()*backing),qCeil(exposed.height()*backing)),QImage::Format_ARGB32_Premultiplied);
+            if(image.isNull())return;
+            image.setDevicePixelRatio(backing);image.fill(Qt::transparent);
+            {
+                QPainter nativePainter(&image);
+                content->render(&nativePainter,QPoint(),QRegion(exposed));
+            }
+            painter->drawImage(QRectF(exposed),image,QRectF(QPointF(),image.size()));
+        }
+    };
     void fitCanvas() {
         if(!proxy || !content)return;
         const auto width=qMax(canvasWidth,int(viewport()->width()/amount));

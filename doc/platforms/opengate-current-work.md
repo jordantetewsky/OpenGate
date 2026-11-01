@@ -52,9 +52,10 @@ page-switch reproduction for disappearing Timeline tools. Pinned left buttons,
 a visible header-control horizontal scrollbar and remembered pinning/width/scroll/
 scale settings are explicit requirements, including unsaved restart restoration.
 It records isolated branches, production responsibilities, existing paths to replace and assembled
-acceptance gates. Its implementation checkpoint distinguishes tested focused
-commands/scale state and the built experiment/diagnostics from unfinished native
-width/scrollbar, toolbar/tab repair and live rendering. Nothing is installed.
+acceptance gates. The November 1 implementation checkpoint includes the interactive content viewport,
+pinned header divider/scrollbar, shared persistence, compact toolbar and native
+toolbar/tab page-return repair. Fixture, build, installation and live acceptance
+evidence remain separate; see the plan and installation receipt for exact status.
 
 ## Commands currently in progress
 
@@ -155,7 +156,7 @@ each was freshly reproduced in the current runtime.
 | Report / gap | Evidence or finding | Current status |
 | --- | --- | --- |
 | Audio channel command does nothing | Latest live command dispatch reached registry, then context capture rejected; mapping unchanged | Open; local receiver correction uninstalled, silent preparation/Undo still unverified |
-| Timeline loses its native toolbar | Recurring user report; recovery reset also loses Display Stacked Timelines choice; Timeline includes toolbar and tabs as one panel | Open; existing diagnostics are not a repair |
+| Timeline loses its native toolbar | Recurring user report; recovery reset also loses Display Stacked Timelines choice; Timeline includes toolbar and tabs as one panel | Implemented in November 1 candidate: retained native band intent and settled page-return reconciliation; assembled fixture passes, live acceptance pending |
 | Panels overlaps Inspector in native-origin view | October 28 screenshot; installed accessory does not reserve a Qt toolbar region | Open; unified header/clearance requirement recorded |
 | Blank native layout areas remain | Screenshot and conservative native vacancy-collapse boundary | Open; identify the matching reserved branch and reclaim without hiding useful controls |
 | Core-window edges/empty space lack docking targets | Source explicitly registers actual native leaves and excludes empty native space | Open; reuse existing target/layout mechanisms |

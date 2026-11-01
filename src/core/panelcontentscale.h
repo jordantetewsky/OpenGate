@@ -8,15 +8,23 @@ namespace Unbound {
 // Session transfer calls suspend/apply; workspace persistence reads value().
 class PanelContentScale {
 public:
-    PanelContentScale() { mediaPool.changed=[this]{if(changed)changed();}; }
+    PanelContentScale() {
+        mediaPool.changed=[this]{if(changed)changed();};
+        timeline.changed=[this]{if(changed)changed();};
+    }
     std::function<void()> changed;
     QPoint scrollOffset() const { return mediaPool.offset(); }
     void restoreScrollOffset(QPoint value) { mediaPool.restoreOffset(value); }
     QJsonObject snapshot() const {
         const auto offset=scrollOffset();
-        return {{"interface_scale",factor},{"content_scroll",QJsonArray{offset.x(),offset.y()}},{"content_canvas_width",mediaPool.canvasWidth()}};
+        auto saved=timeline.snapshot();
+        saved["interface_scale"]=factor;
+        saved["content_scroll"]=QJsonArray{offset.x(),offset.y()};
+        saved["content_canvas_width"]=mediaPool.canvasWidth();
+        return saved;
     }
     void restoreState(const QJsonObject &saved) {
+        timeline.restoreState(saved);
         mediaPool.restoreCanvasWidth(saved["content_canvas_width"].toInt());
         const auto offset=saved["content_scroll"].toArray();restoreScrollOffset({offset.at(0).toInt(),offset.at(1).toInt()});
         setValue(saved["interface_scale"].toDouble(1.0));
@@ -26,27 +34,33 @@ public:
         if (!qIsFinite(next) || next<0.7 || next>3.0) return false;
         factor=next;return true;
     }
-    bool suspend() { metrics.restore(); timeline.restore(); return mediaPool.restore(); }
+    bool suspend() {
+        metrics.restore();
+        const bool timelineRestored=timeline.restore();
+        const bool mediaPoolRestored=mediaPool.restore();
+        return timelineRestored&&mediaPoolRestored;
+    }
     static bool supported(QWidget *surface) {
         if(!surface)return false;
         if(surface->objectName()=="frameEditPageMediaPool")return MediaPoolContentScale::supported(surface);
         return !isTimeline(surface) || TimelineContentScale::supported(surface);
     }
     bool apply(QWidget *surface) {
-        if (!surface || qFuzzyCompare(factor,1.0)) return suspend();
-        if(surface->objectName()=="frameEditPageMediaPool") {
-            metrics.restore();timeline.restore();return mediaPool.apply(surface,factor);
-        }
-        if(!mediaPool.restore())return false;
+        if (!surface) return suspend();
         if(isTimeline(surface)) {
             metrics.restore();
-            if(timeline.apply(surface,factor))return true;
-            timeline.restore();
-            logEvent("timeline.content.scale.unavailable",{{"factor",factor},{"toolbar_scaled",false},
-                {"reason","native-renderer-verification-required"}});
-            return false;
+            if(!mediaPool.restore())return false;
+            return timeline.apply(surface,factor);
         }
-        timeline.restore();return metrics.attach(surface,factor);
+        if(qFuzzyCompare(factor,1.0))return suspend();
+        if(surface->objectName()=="frameEditPageMediaPool") {
+            metrics.restore();
+            if(!timeline.restore())return false;
+            return mediaPool.apply(surface,factor);
+        }
+        if(!mediaPool.restore())return false;
+        if(!timeline.restore())return false;
+        return metrics.attach(surface,factor);
     }
 private:
     static bool isTimeline(QWidget *surface) { return surface->objectName()=="frameConformTimelines"; }

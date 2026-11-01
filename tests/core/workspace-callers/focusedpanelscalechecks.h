@@ -13,7 +13,7 @@ template<class Check> void focusedPanelScaleChecks(Check check) {
     auto canvas=new QSplitter;canvas->setObjectName("mediaPoolViewSplitter");canvas->addWidget(second);secondLayout->addWidget(canvas);
     outer->addWidget(&inspector);outer->addWidget(&pool);page.show();QApplication::processEvents();
     Unbound::ManagedPanelSession firstSession,secondSession;
-    check(firstSession.undock(&inspector,&page,"Inspector").isEmpty()&&secondSession.undock(&pool,&page,"Media Pool").isEmpty(),"focused scale uses actual managed sessions");
+    check(firstSession.undock(&inspector,&page,"Inspector").isEmpty()&&secondSession.undockContents(&pool,&page,"Media Pool").isEmpty(),"focused scale uses actual managed sessions and Media Pool's transferred-layout entry point");
     int firstSaves=0,secondSaves=0;
     firstSession.arrangementChanged=[&]{++firstSaves;};secondSession.arrangementChanged=[&]{++secondSaves;};
     Unbound::PanelCommands commands(nullptr);commands.context=[]{return true;};
@@ -36,6 +36,6 @@ template<class Check> void focusedPanelScaleChecks(Check check) {
     check(firstSaves==1&&secondSaves==1,"scale commands notify existing persistence path once per change");
     send(first,Qt::Key_F19);check(firstSession.interfaceScale()==1.&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"reset affects only focused panel");
     check(secondSession.dock().isEmpty()&&second->minimumSize()==QSize(100,40)&&qFuzzyCompare(secondSession.interfaceScale(),0.9),"native restoration retains preference and restores original metrics");
-    check(secondSession.undock(&pool,&page,"Media Pool").isEmpty()&&second->minimumSize()==QSize(100,40),"re-entry reapplies the same retained scale value");
+    check(secondSession.undockContents(&pool,&page,"Media Pool").isEmpty()&&second->minimumSize()==QSize(100,40),"re-entry reapplies the same retained scale value through the transferred layout");
 }
 }

@@ -8,6 +8,7 @@
 #include <QStyledItemDelegate>
 #include <QPainter>
 #include <QMouseEvent>
+#include "nativepaintfixtures.h"
 namespace OpenGateTest {
 // Represents native custom painting that deliberately ignores QWidget fonts.
 class FixedPaintDelegate : public QStyledItemDelegate {
@@ -16,6 +17,9 @@ public:
     void paint(QPainter *p,const QStyleOptionViewItem &option,const QModelIndex &) const override {
         p->fillRect(option.rect,Qt::black);
         p->fillRect(QRect(option.rect.x()+4,option.rect.y()+4,10,10),Qt::red);
+        const auto point=p->worldTransform().map(QPointF(option.rect.x()+30,option.rect.y()+16));
+        p->save();p->setWorldTransform(QTransform());
+        QFont font;font.setPixelSize(10);p->setFont(font);p->setPen(Qt::green);p->drawText(point,"HH");p->restore();
     }
     QSize sizeHint(const QStyleOptionViewItem &,const QModelIndex &) const override {return {250,24};}
 };
@@ -30,10 +34,11 @@ template<class Check> void mediaPoolContentScaleChecks(Check check) {
     clips->setItemDelegate(new FixedPaintDelegate(clips));tabs.show();QApplication::setActiveWindow(&tabs);
     for(int i=0;i<4;++i)QApplication::processEvents();
     const auto originalParent=canvas->parentWidget();const auto toolbarFont=toolbar->font();
+    const int baselineGlyph=paintedInkHeight(clips->viewport()->grab().toImage(),Qt::green);
     Unbound::PanelContentScale scale;scale.setValue(3.);
     check(scale.apply(&root),"Media Pool actual content canvas mounts");
     for(int i=0;i<8;++i)QApplication::processEvents();
-    auto viewport=root.findChild<Unbound::ScalableContentViewport *>();
+    auto viewport=dynamic_cast<Unbound::ScalableContentViewport *>(root.findChild<QGraphicsView *>("openGateScalableContentViewport"));
     check(viewport&&viewport->horizontalScrollBar()->maximum()>0,"scaled content offers a draggable horizontal scrollbar");
     tabs.resize(230,350);for(int i=0;i<8;++i)QApplication::processEvents();
     check(root.width()<=230&&viewport&&viewport->width()<240&&viewport->horizontalScrollBar()->maximum()>500,"panel narrows while scaled canvas remains scrollable");
@@ -50,6 +55,8 @@ template<class Check> void mediaPoolContentScaleChecks(Check check) {
             const auto c=image.pixelColor(x,y);if(c.red()>220&&c.green()<30&&c.blue()<30)++red;
         }
         check(red>=600,"fixed-size native delegate drawing becomes larger, not only heading fonts");
+        check(baselineGlyph>0&&paintedInkHeight(image,Qt::green)>=baselineGlyph*2.4,
+              "Media Pool glyphs enlarge with positions even when native delegate painting bypasses world transforms");
         QApplication::setActiveWindow(&tabs);viewport->setFocus();viewport->scene()->setFocus(Qt::ActiveWindowFocusReason);
         const auto target=clips->visualItemRect(clips->topLevelItem(0)).topLeft()+QPoint(8,8);
         check(clips->itemAt(target)==clips->topLevelItem(0),"native input test point belongs to the clip item");
