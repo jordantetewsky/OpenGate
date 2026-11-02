@@ -17,6 +17,7 @@
 #include <functional>
 #include "timelinecursorrelay.h"
 #include "timelinepointercoordinates.h"
+#include "timelineviewportdragdispatch.h"
 
 namespace Unbound {
 // Route presentation-local input to the original native viewport/child. Native
@@ -34,14 +35,14 @@ public:
         display->setAcceptDrops(true);
     }
     void geometryChanged(){coordinates.geometryChanged();}
-    std::function<void()> edited;
+    std::function<void(const QString &)> edited;
     // Align through native queued handlers; no command replay or OS pointer warp.
     bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
         if(!native || !display || !receiver)return false;
         if(!coordinates.alignCursor())return false;
         QPointer<TimelineInputRouter> alive=this;
         QApplication::sendEvent(receiver,event);
-        if(alive && edited)edited();
+        if(alive && edited)edited("native-timeline-shortcut");
         return true;
     }
 protected:
@@ -83,28 +84,17 @@ protected:
             QHelpEvent mapped(QEvent::ToolTip, local(target, point).toPoint(), sourceGlobal);
             return send(target, mapped, event);
         }
-        case QEvent::DragEnter: {
-            auto drag = static_cast<QDragEnterEvent *>(event);
-            QDragEnterEvent mapped(mapping(drag->pos()).toPoint(), drag->possibleActions(), drag->mimeData(),
-                                   drag->mouseButtons(), drag->keyboardModifiers());
-            return drop(mapped, drag);
-        }
-        case QEvent::DragMove: {
-            auto drag = static_cast<QDragMoveEvent *>(event);
-            QDragMoveEvent mapped(mapping(drag->pos()).toPoint(), drag->possibleActions(), drag->mimeData(),
-                                 drag->mouseButtons(), drag->keyboardModifiers());
-            return drop(mapped, drag);
-        }
-        case QEvent::Drop: {
-            auto source = static_cast<QDropEvent *>(event);
-            QDropEvent mapped(mapping(source->posF()), source->possibleActions(), source->mimeData(),
-                              source->mouseButtons(), source->keyboardModifiers());
-            return drop(mapped, source);
+        case QEvent::DragEnter:case QEvent::DragMove:case QEvent::Drop:case QEvent::DragLeave: {
+            QPointer<TimelineInputRouter> alive=this;forwarding=true;
+            TimelineViewportDragDispatch::dispatch(display,native,event,mapping,
+                [this](QPointF point,QPoint physical){coordinates.alignNative(point,physical);});
+            if(!alive)return true;forwarding=false;cursors.refresh();
+            if(edited)edited("native-timeline-"+TimelineViewportDragDispatch::phase(event->type()));
+            return true;
         }
         case QEvent::Leave:
             cursors.clear();coordinates.restore();
             return send(native,*event,event);
-        case QEvent::DragLeave:
         case QEvent::KeyPress:
         case QEvent::KeyRelease:
         case QEvent::ShortcutOverride:
@@ -134,7 +124,7 @@ private:
         }
         original->setAccepted(mapped.isAccepted());
         const bool changing=mapped.type()!=QEvent::MouseMove || static_cast<QMouseEvent &>(mapped).buttons()!=Qt::NoButton;
-        if(edited && changing && mapped.type()!=QEvent::ToolTip && mapped.type()!=QEvent::Leave)edited();
+        if(edited && changing && mapped.type()!=QEvent::ToolTip && mapped.type()!=QEvent::Leave)edited("native-timeline-input");
         return true;
     }
     bool mouse(QMouseEvent *event) {
@@ -171,12 +161,6 @@ private:
         if (event->type() == QEvent::MouseButtonRelease && event->buttons() == Qt::NoButton)
             pressed = nullptr;
         return result;
-    }
-    bool drop(QDropEvent &mapped, QDropEvent *original) {
-        mapped.setDropAction(original->dropAction());
-        send(native, mapped, original);
-        original->setDropAction(mapped.dropAction());
-        return true;
     }
     static QWidget *tooltip() {
         for(auto widget:QApplication::topLevelWidgets())

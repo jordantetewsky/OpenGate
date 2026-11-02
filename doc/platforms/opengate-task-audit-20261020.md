@@ -2125,3 +2125,23 @@ compiled for both Mac architectures; Windows native verification remains open.
 or new installation was performed. Actual Red painting and native stored-color
 integrity require a fresh Resolve trial. The added rounded support is not proof
 of the unidentified native paint path; primitive diagnostics distinguish it.
+
+### Source-to-Timeline drag delivery investigation
+
+Installation is on hold at Jordan's request. His recording and session logs do
+not show Red-preview activity during the failed drag. A native Qt regression
+reproduces zero native moves/drops after accepted entry: QApplication retargets
+the mapped events back to the managed display through its global drag target.
+Source repair delegates mapped drag delivery to a focused virtual-viewport
+dispatcher and removes the old duplicated router path. Existing native damage
+and command evidence handle refresh; no polling or command replay was added.
+
+Optimized ASAN drag/source checks pass at 70/100/147/213/300%, including actual
+native fixture insertion, preview/cancel/rejection, deferred Source Insert and
+Place on Top, and displayed pixels. Broader commands/coordinates/pixels pass in
+the latest run, but one stationary-pointer assertion fails while the computer
+is in use; an idle-pointer gate remains pending. No complete new full-suite pass
+or live Resolve acceptance is claimed. Private root viewport filtering, native
+edit APIs and GPU painting still need live proof. Details, organization review
+and evidence: `opengate-timeline-source-drop-repair-20261102.md`. Installed0480ac1,
+preserved rollback checkpoints and project state have not been changed.

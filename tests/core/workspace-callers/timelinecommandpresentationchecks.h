@@ -130,8 +130,18 @@ template<class Check> void timelineCommandPresentationChecks(Check check) {
         QMouseEvent drag(QEvent::MouseMove,target+QPoint(1,0),physical+QPoint(1,0),Qt::NoButton,Qt::LeftButton,Qt::NoModifier);QApplication::sendEvent(layer,&drag);TimelineViewportFixture::settle();
         check(item->state==Qt::darkGreen && displayed()==QColor(Qt::darkGreen),"native paint-only drag refreshes before release even when no scene item or geometry change is emitted");
         QMouseEvent up(QEvent::MouseButtonRelease,target+QPoint(1,0),physical+QPoint(1,0),Qt::LeftButton,Qt::NoButton,Qt::NoModifier);QApplication::sendEvent(layer,&up);TimelineViewportFixture::settle();
+        // This is a separate pointer command, after unrelated edit/paint checks.
+        // Place its target under the current OS pointer instead of requiring the
+        // human pointer to remain stationary throughout all preceding work.
+        const auto widgetPhysical=QCursor::pos();
+        fixture.timeline.move(fixture.timeline.pos()+widgetPhysical-layer->mapToGlobal(target));
+        TimelineViewportFixture::settle();
         const int widgetBefore=widgetCalls;
         QKeyEvent widgetKey(QEvent::KeyPress,Qt::Key_F8,Qt::NoModifier);QApplication::sendEvent(fixture.view,&widgetKey);TimelineViewportFixture::settle();
+        if(widgetCalls!=widgetBefore+1 || (widgetPoint-QPoint(40,25)).manhattanLength()>=3 || displayed()!=QColor(Qt::darkBlue))
+            std::fprintf(stderr,"widget shortcut scale %.2f header %.2f calls %d expected %d point %d,%d pixel %s cursor delta %d,%d\n",
+                factor,header,widgetCalls,widgetBefore+1,widgetPoint.x(),widgetPoint.y(),qPrintable(displayed().name()),
+                (QCursor::pos()-widgetPhysical).x(),(QCursor::pos()-widgetPhysical).y());
         check(widgetCalls==widgetBefore+1 && (widgetPoint-QPoint(40,25)).manhattanLength()<3 && displayed()==QColor(Qt::darkBlue),
               "QWidget-owned native shortcuts execute once with queued pointer coordinates and current pixels, without a receiver-class whitelist");
     }

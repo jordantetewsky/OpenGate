@@ -69,7 +69,7 @@ public:
         };
         updates->repaint=[this]{if(!arranging)updates->schedulePaint(QRegion(layer->rect()));};
         updates->paintReady=[this](const QRegion &region){layer->update(region);};
-        input->edited=[this]{updates->commandCompleted();};
+        input->edited=[this](const QString &source){updates->commandCompleted();if(updates->commandObserved)updates->commandObserved(source);};
         updates->refresh();
         layer->show();
     }
