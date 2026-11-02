@@ -21,6 +21,9 @@ commands += [('panel.expand.hovered','Maximize-Restore Hovered Panel'),('panel.t
              ('edit.timeline.fixed-playhead','Edit - Toggle Fixed Playhead'),('edit.inspector.stabilize','Edit - Stabilize')]
 commands += [('panel.scale.'+operation.lower(),'Panel Content Scale-'+operation)
              for operation in ('Increase','Decrease','Reset')]
+commands += [('clip-color.'+surface+'.'+operation,label+' Clip Color-'+title)
+             for surface,label in [('timeline','Timeline'),('media-pool','Media Pool')]
+             for operation,title in [('red','Preview Red (Temporary)'),('clear','Clear Temporary Preview')]]
 manifest=[]
 for command,label in commands:
     filename='OpenGate - '+label+'.py'

@@ -6,6 +6,7 @@
 #include <QPainterPath>
 #include <QVector>
 #include <cmath>
+#include <functional>
 
 namespace Unbound {
 // Experimental paint-command adapter. Only rectangular solid fills can change;
@@ -32,6 +33,15 @@ public:
             p.setOpacity(opacity);p.setCompositionMode(composition);if(clipped)p.setClipPath(clip);
         }
     };
+    struct Result {Fill source;int changed=0;};
+    static Result render(QPainter *target,QColor color,const std::function<void(QPainter *)> &source,
+                         const std::function<void(QPainter *)> &inspectSource={}) {
+        const State state(*target);ClipFillPaintDevice inspect(nullptr,{},{},target->device());
+        {QPainter scan(&inspect);state.apply(scan);if(inspectSource)inspectSource(&scan);else source(&scan);}
+        const auto fill=inspect.largestFill();ClipFillPaintDevice device(target,fill.color,color);
+        {QPainter output(&device);state.apply(output);source(&output);}
+        return {fill,device.changedFillCommands()};
+    }
 protected:
     int metric(PaintDeviceMetric key) const override {
         switch(key) {

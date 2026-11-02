@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include <QtMath>
 #include <QGraphicsView>
 #include <QPointer>
 #include <QGraphicsScene>

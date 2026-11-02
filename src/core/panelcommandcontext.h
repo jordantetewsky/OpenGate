@@ -17,7 +17,9 @@ public:
         bool operator==(const Target &other) const { return panel==other.panel && surface==other.surface; }
     };
     static Target capture(const QStringList &ids) {
-        auto focus=QApplication::focusWidget();
+        return capture(QApplication::focusWidget(),ids);
+    }
+    static Target capture(QWidget *focus,const QStringList &ids) {
         if (!focus || !focus->isVisible() || !focus->isEnabled()) return {};
         for (auto widget=focus;widget;widget=panelParent(widget)) {
             const auto grouped=widget->property("groupPanel").toString();

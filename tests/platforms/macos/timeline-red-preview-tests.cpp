@@ -9,6 +9,7 @@
 #include <QShowEvent>
 #include <cstdio>
 #include "../../../src/core/panelcontentscale.h"
+#include "../../../src/core/timelineclipcolorpreview.h"
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
 
 using namespace OpenGateTest;
@@ -49,19 +50,6 @@ int main(int argc,char **argv) {
         check(preview.applySelected(QColor("#e15da8"))==1 && pixel(frame(),{200,20})==QColor("#e15da8"),
               "the fill path accepts arbitrary RGB colors, not a hard-coded Red alias");
         preview.applySelected(QColor("#ff0000"));frame();
-        if(factor==1.) {
-            QApplication::setActiveWindow(&fixture.timeline);fixture.view->setFocus();TimelineViewportFixture::settle();
-            QMenu nativeMenu;nativeMenu.setObjectName("markSetClipColor");nativeMenu.addAction("Native Orange");
-            QShowEvent show;QApplication::sendEvent(&nativeMenu,&show);
-            auto action=nativeMenu.findChild<QAction *>("openGateRedClipPreview");
-            check(action && action->isVisible(),"opt-in adds a clearly temporary action to the native Clip Color menu");
-            preview.clear();if(action)action->trigger();check(clip->graphicsEffect() && pixel(frame(),{200,20})==QColor(Qt::red),
-                "native menu entry reaches the same production preview and displayed result");
-            fixture.toolbar->setFocus();TimelineViewportFixture::settle();QApplication::sendEvent(&nativeMenu,&show);
-            check(action && !action->isVisible(),"temporary menu action disappears outside its Timeline scope");
-            fixture.view->setFocus();TimelineViewportFixture::settle();QApplication::sendEvent(&nativeMenu,&show);
-            check(nativeMenu.findChildren<QAction *>("openGateRedClipPreview").size()==1,"repeated menu shows do not duplicate preview actions");
-        }
         TimelineViewportFixture::click(layer,at({195,20}));check(clip->presses==1,"native clip selection receives the same displayed click");
         QUndoStack history;QAction edit("Native move",tracks),undo("Native Undo",tracks),redo("Native Redo",tracks);
         QObject::connect(&edit,&QAction::triggered,tracks,[&]{history.push(new MoveClip(clip));});

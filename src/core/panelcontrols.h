@@ -52,6 +52,7 @@
 #include "panelcallermenu.h"
 #include "panelcommandcatalog.h"
 #include "focusedpanelscalecommands.h"
+#include "clipcolorpreviewcommands.h"
 #include "panelcommandmenu.h"
 #include "nativeeditcommands.h"
 #include "nativepaneltoggles.h"
@@ -394,6 +395,8 @@ public:
         editCommands->editActive=[] { return Unbound::currentWorkspacePage(Unbound::resolveMainWindow())=="edit"; };
         editCommands->report=[this](QString message) { status->setText(message); };
         editCommands->addTo(commands);
+        if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_RED_PREVIEW")==1)
+            new Unbound::ClipColorPreviewCommands(this,commands);
         workspaceMenu = new Unbound::WorkspaceArrangements(this);
         auto commandMenu=new Unbound::PanelCommandMenu(this,commands);
         workspaceMenu->commandsMenu=[commandMenu](QMenu *root) {return commandMenu->menu(root);};

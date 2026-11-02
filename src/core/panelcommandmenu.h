@@ -4,6 +4,7 @@
 #include <QPointer>
 #include <QElapsedTimer>
 #include "panelcommands.h"
+#include "menutrackingcommand.h"
 namespace Unbound {
 // Independent presentation of command IDs. Resolve-owned workflow actions stay
 // in place for native keyboard customization and script execution.
@@ -41,13 +42,7 @@ public:
 private:
     QPointer<PanelCommands> commands;QList<QPointer<QMenu>> menus;
     void queue(const QString &id){
-        auto timer=new QTimer(this);timer->setSingleShot(true);QElapsedTimer elapsed;elapsed.start();
-        connect(timer,&QTimer::timeout,this,[this,timer,id,elapsed]{
-            if(QApplication::activePopupWidget() && elapsed.elapsed()<15000){timer->start(25);return;}
-            if(commands && !QApplication::activePopupWidget())commands->invoke(id,"opengate-command-menu");
-            else logEvent("command.menu.cancelled",{{"command",id},{"reason","menu-tracking-timeout-or-owner-unavailable"}});
-            timer->deleteLater();
-        });timer->start(0);
+        MenuTrackingCommand::queue(this,[this,id]{if(commands)commands->invoke(id,"opengate-command-menu");});
     }
 };
 }
