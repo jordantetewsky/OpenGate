@@ -2145,3 +2145,9 @@ or live Resolve acceptance is claimed. Private root viewport filtering, native
 edit APIs and GPU painting still need live proof. Details, organization review
 and evidence: `opengate-timeline-source-drop-repair-20261102.md`. Installed 0480ac1,
 preserved rollback checkpoints and project state have not been changed.
+
+Clean-source `b516400` universal O2 build, both architecture checks, strict deep
+signature verification and native bootstrap tests pass. Final optimized ASAN
+drag/source suite passes; broader fixture compiles at this source. Idle-pointer
+execution is pending Jordan's availability; nothing was installed. Receipt:
+`build/source-drop-repaint-review/build-receipt.json`.

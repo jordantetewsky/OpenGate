@@ -90,3 +90,12 @@ edited callback has one production wiring site. macOS fixture compilation uses
 Resolve's Qt. Windows native compilation/runtime acceptance remains unverified.
 Diff review found one focused extracted responsibility, removal of its old path,
 and no new persistent state writer or parallel controller.
+
+## Built checkpoint b516400
+
+Clean-source universal O2 build completed for arm64 and x86_64. Strict deep bundle
+signature verification and native bootstrap tests pass. The final-source broader
+Timeline fixture compiles; its idle-pointer execution remains pending. Final
+optimized ASAN drag/source tests pass, including completed-drop frame evidence.
+Build receipt: `build/source-drop-repaint-review/build-receipt.json`. These are
+local build artifacts, with no installation or live acceptance.
