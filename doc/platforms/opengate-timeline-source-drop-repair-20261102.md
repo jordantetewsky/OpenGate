@@ -1,7 +1,9 @@
 # Source-to-Timeline drag delivery repair
 
 Branch: `fix/timeline-native-edit-repaint`, based on the uninstalled palette
-isolation repair. Installation remains on hold. Installed build remains `0480ac1`.
+isolation repair. Jordan subsequently authorized installation; installed and
+loaded runtime is now `b516400`. Earlier hold/build-only checkpoints are retained
+below as history. Live editing and color acceptance remain pending.
 
 ## Evidence and cause
 
@@ -102,3 +104,20 @@ Timeline fixture compiles and passes after Resolve closed. Final
 optimized ASAN drag/source tests pass, including completed-drop frame evidence.
 Build receipt: `build/source-drop-repaint-review/build-receipt.json`. These are
 local build artifacts, with no installation or live acceptance.
+
+## Authorized installation
+
+Jordan authorized installation after the final regression pass. Staged 23 managed
+files from the verified build, rehearsed installation and exact rollback, then
+installed with administrator authentication. All installed hashes and the strict
+deep signature verify. Before Resolve launch, all 197 protected settings and
+preference files matched their preinstall hashes. Existing baseline checkpoints
+remain preserved; immediate previous-build recovery is transaction
+`6DEE0B12-5577-4E7B-84E6-258F25BE28A9`.
+
+Resolve launched with the same Timeline-only color trial flags (Media Pool off).
+The active live process confirms build `b516400`, PID 66112, session
+`7ebd1844-5e92-476b-ac42-8a7e012367f9`. Installation receipt:
+`build/timeline-source-drop-install/installation-receipt.json`. No scripted
+project/color repair, main merge, push or publication occurred. Native drag,
+edit, repaint and Red-paint acceptance remain separate live tests.

@@ -2158,3 +2158,13 @@ delivery, Undo/Redo pixels and existing header/overflow checks. Final log:
 `build/source-drop-repaint-review/viewport-regression-final.log`. The earlier
 pointer-sensitive failures remain preserved. Installation is still on hold;
 actual Resolve edit, private root-filter and GPU acceptance remain open.
+
+Jordan then authorized installation. Runtime `b516400` is installed and loaded
+in a fresh Resolve process. Temporary install/exact rollback rehearsal passes;
+all 23 installed managed hashes and the strict deep signature verify, with 197
+protected files unchanged before launch. Immediate rollback transaction:
+`6DEE0B12-5577-4E7B-84E6-258F25BE28A9`; older accepted/fractured checkpoints remain
+preserved. Timeline-only trial flags are retained, Media Pool disabled. Receipt:
+`build/timeline-source-drop-install/installation-receipt.json`. Live native drag,
+Insert/Place on Top, repaint and Red-paint acceptance remain pending. No merge,
+push, publication or scripted project repair occurred.
