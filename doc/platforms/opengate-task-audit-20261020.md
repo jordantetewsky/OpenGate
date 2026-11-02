@@ -2151,3 +2151,10 @@ signature verification and native bootstrap tests pass. Final optimized ASAN
 drag/source suite passes; broader fixture compiles at this source. Idle-pointer
 execution is pending Jordan's availability; nothing was installed. Receipt:
 `build/source-drop-repaint-review/build-receipt.json`.
+
+After Jordan closed Resolve, the final-source broader Timeline fixture passes
+with zero failures, including queued pointer/shortcut coordinates, command
+delivery, Undo/Redo pixels and existing header/overflow checks. Final log:
+`build/source-drop-repaint-review/viewport-regression-final.log`. The earlier
+pointer-sensitive failures remain preserved. Installation is still on hold;
+actual Resolve edit, private root-filter and GPU acceptance remain open.

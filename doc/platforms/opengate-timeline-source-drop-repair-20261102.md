@@ -67,9 +67,12 @@ pointer setup refinement. Other runs failed pointer-sensitive assertions while
 the physical pointer moved during execution (observed deltas included hundreds
 of pixels). The independent QWidget shortcut now gets fresh pointer setup after
 unrelated edit checks; call-count, coordinate and pixel assertions are unchanged.
-Latest retained broader result, `build/source-drop-repaint-review/viewport-regression.log`,
+Earlier retained broader result, `build/source-drop-repaint-review/viewport-regression.log`,
 passes command/coordinate/pixel assertions and fails one stationary-OS-pointer
-assertion. An idle-pointer rerun is pending; this is not recorded as a full pass.
+assertion. After Jordan closed Resolve, the final-source isolated rerun passes
+all assertions with zero failures. Log:
+`build/source-drop-repaint-review/viewport-regression-final.log`. Earlier failures
+remain preserved; this fixture pass is not live Resolve acceptance.
 
 ## Acceptance gates
 
@@ -95,7 +98,7 @@ and no new persistent state writer or parallel controller.
 
 Clean-source universal O2 build completed for arm64 and x86_64. Strict deep bundle
 signature verification and native bootstrap tests pass. The final-source broader
-Timeline fixture compiles; its idle-pointer execution remains pending. Final
+Timeline fixture compiles and passes after Resolve closed. Final
 optimized ASAN drag/source tests pass, including completed-drop frame evidence.
 Build receipt: `build/source-drop-repaint-review/build-receipt.json`. These are
 local build artifacts, with no installation or live acceptance.
