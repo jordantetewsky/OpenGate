@@ -21,10 +21,14 @@ public:
         });
         layout.setSingleShot(true);paint.setSingleShot(true);
         connect(&paint,&QTimer::timeout,this,[this] {
+            if(captureActive())return;
             const auto region=pendingPaint;pendingPaint=QRegion();
             if(this->view && this->view->isVisible() && paintReady)paintReady(region);
         });
-        connect(&layout,&QTimer::timeout,this,[this]{if(this->view && this->view->isVisible() && layoutChanged)layoutChanged();});
+        connect(&layout,&QTimer::timeout,this,[this]{
+            if(captureActive()){deferredLayout=true;return;}
+            if(this->view && this->view->isVisible() && layoutChanged)layoutChanged();
+        });
         view->installEventFilter(this);view->viewport()->installEventFilter(this);
         connect(view->horizontalScrollBar(),&QScrollBar::valueChanged,this,[this]{requestLayout();});
         connect(view->verticalScrollBar(),&QScrollBar::valueChanged,this,[this]{requestLayout();});
@@ -32,13 +36,20 @@ public:
     ~TimelineSceneUpdates() override { stop(); }
     std::function<void()> layoutChanged,repaint,suspended;
     std::function<bool()> headerMovesWithTime;
+    std::function<bool()> capturing;
     std::function<void(const QString &)> commandObserved;
     std::function<void(const QRegion &)> paintReady;
     void schedulePaint(const QRegion &region) {
         if(stopped || !view || !view->isVisible() || region.isEmpty())return;
         pendingPaint+=region;if(pendingPaint.rectCount()>16)pendingPaint=QRegion(pendingPaint.boundingRect());
-        if(!paint.isActive())paint.start(0);
+        if(!captureActive() && !paint.isActive())paint.start(0);
     }
+    void captureFinished() {
+        if(stopped)return;
+        if(deferredLayout){deferredLayout=false;requestLayout();}
+        if(!pendingPaint.isEmpty() && !paint.isActive())paint.start(0);
+    }
+    void geometryInvalidated(){requestLayout();}
     void presented(const QRegion &region) {
         pendingPaint-=region;if(pendingPaint.isEmpty())paint.stop();
     }
@@ -48,7 +59,7 @@ public:
         if(auto activity=NativeCommandActivity::existing())activity->unsubscribe(commandSubscription);
         commandSubscription=0;
         stopped=true;layout.stop();paint.stop();pendingPaint=QRegion();
-        layoutChanged={};repaint={};suspended={};damaged={};paintReady={};headerMovesWithTime={};commandObserved={};
+        layoutChanged={};repaint={};suspended={};damaged={};paintReady={};headerMovesWithTime={};commandObserved={};capturing={};
         if(view){view->removeEventFilter(this);if(view->viewport())view->viewport()->removeEventFilter(this);}
         for(auto editor:editors)if(editor)editor->removeEventFilter(this);
         for(const auto &connection:connections)disconnect(connection);
@@ -96,6 +107,7 @@ protected:
         if(event->type()==QEvent::KeyPress || event->type()==QEvent::InputMethod)
             NativeCommandActivity::shared()->completed(QStringLiteral("native-timeline-input"));
         refresh();
+        if(event->type()==QEvent::Paint && captureActive())return false;
         if(object==view->viewport() && event->type()==QEvent::Paint) {
             QList<QRectF> rects;
             for(const auto &rect:static_cast<QPaintEvent *>(event)->region())rects.append(view->mapToScene(rect).boundingRect());
@@ -168,10 +180,15 @@ private:
         entry.connections.append(connect(nested->horizontalScrollBar(),&QScrollBar::valueChanged,this,scrolled));
         entry.connections.append(connect(nested->verticalScrollBar(),&QScrollBar::valueChanged,this,scrolled));
     }
-    void requestLayout() {if(!stopped && view && view->isVisible() && !layout.isActive())layout.start(0);}
+    bool captureActive() const {return capturing && capturing();}
+    void requestLayout() {
+        if(stopped || !view || !view->isVisible())return;
+        if(captureActive()){deferredLayout=true;return;}
+        if(!layout.isActive())layout.start(0);
+    }
     QPointer<QGraphicsView> view;QPointer<QGraphicsScene> scene;
     quint64 commandSubscription=0;
-    QTimer layout,paint;QRegion pendingPaint;int knownItems=-1;bool stopped=false;
+    QTimer layout,paint;QRegion pendingPaint;int knownItems=-1;bool stopped=false,deferredLayout=false;
     QList<QPointer<QGraphicsProxyWidget>> proxies;QVector<Nested> nestedViews;
     QList<QPointer<QWidget>> editors;QList<QMetaObject::Connection> connections;
 };

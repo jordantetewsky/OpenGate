@@ -2,6 +2,7 @@
 #pragma once
 #include <QResizeEvent>
 #include <QScopedValueRollback>
+#include <QtCore/qscopeguard.h>
 #include "timelinescenerenderer.h"
 #include "timelinetrackheaderlayout.h"
 #include "timelinetrackheadercontrols.h"
@@ -52,11 +53,11 @@ public:
         };
         updates=new TimelineSceneUpdates(view,this);
         updates->suspended=[this]{if(!rendering)renderer.releasePixels();};
+        updates->capturing=[this]{return rendering;};
         updates->headerMovesWithTime=[this]{return !pinned;};
         updates->commandObserved=[this](const QString &source){evidence.requested(source,renderer.revision());};
         updates->layoutChanged=[this]{if(!arranging && !rendering)arrange();};
         updates->damaged=[this](const QList<QRectF> &rects) {
-            if(rendering)return;
             if(rects.isEmpty()){renderer.invalidateAll();updates->schedulePaint(QRegion(layer->rect()));return;}
             QRegion visible;
             for(const auto &rect:rects) {
@@ -66,7 +67,7 @@ public:
             }
             if(!visible.isEmpty())updates->schedulePaint(visible);
         };
-        updates->repaint=[this]{if(!rendering && !arranging)updates->schedulePaint(QRegion(layer->rect()));};
+        updates->repaint=[this]{if(!arranging)updates->schedulePaint(QRegion(layer->rect()));};
         updates->paintReady=[this](const QRegion &region){layer->update(region);};
         input->edited=[this]{updates->commandCompleted();};
         updates->refresh();
@@ -113,6 +114,7 @@ private:
     };
     void notify() { if (changed) changed(); }
     void arrange() {
+        if(rendering){if(updates)updates->geometryInvalidated();return;}
         if (arranging || !view || !view->scene() || width() <= 0 || height() <= 0)
             return;
         QScopedValueRollback<bool> guard(arranging, true);
@@ -157,16 +159,18 @@ private:
             controls.footerHeight/factor,headerScale()/factor,controls.minimumWidth/factor,controls.footerControlsWidth/factor);
     }
     void paint(QWidget *surface,const QRegion &region) {
+        if(rendering){updates->schedulePaint(region);return;}
         updates->presented(region);
         QPainter painter(surface);
         painter.fillRect(surface->rect(), palette().window());
         if (!view || !view->scene() || rendering)
             return;
+        const auto resume=qScopeGuard([this]{updates->captureFinished();});
         QScopedValueRollback<bool> guard(rendering, true);
         const auto source = view->mapToScene(view->viewport()->rect()).boundingRect();
         const double backing = factor * surface->devicePixelRatioF();
         if(!renderer.render(view->scene(),source,backing,geometry.sectionTops))return;
-        if(evidence.waiting())evidence.presented(renderer.revision(),renderer.sampledFingerprint(),factor,headerScale(),view);
+        if(evidence.waiting() && !renderer.pendingDamage())evidence.presented(renderer.revision(),renderer.sampledFingerprint(),factor,headerScale(),view);
         for(const auto &slice:geometry.slices()) {
             const QRectF destination(slice.target.topLeft()*factor,slice.target.size()*factor);
             if(slice.background){painter.fillRect(destination,renderer.backgroundColor(slice.source,palette().window().color()));continue;}

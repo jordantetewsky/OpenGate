@@ -15,6 +15,7 @@
 #include "../../core/workspace-callers/timelinecommandpresentationchecks.h"
 #include "../../core/workspace-callers/timelineheadersizingchecks.h"
 #include "../../core/workspace-callers/timelineeditpointchecks.h"
+#include "../../core/workspace-callers/timelinecapturedamagechecks.h"
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -165,6 +166,7 @@ int main(int argc, char **argv) {
     timelineCommandPresentationChecks(check);
     timelineHeaderSizingChecks(check);
     timelineEditPointChecks(check);
+    timelineCaptureDamageChecks(check);
     std::printf("timeline content viewport failures=%d\n", failures);
     return failures ? 1 : 0;
 }

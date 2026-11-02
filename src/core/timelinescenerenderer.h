@@ -31,6 +31,7 @@ public:
     void releasePixels() {bands.clear();invalidateAll();}
     qint64 rasterBytes() const {qint64 total=0;for(const auto &band:bands)total+=band.image.sizeInBytes();return total;}
     quint64 revision() const {return paintRevision;}
+    bool pendingDamage() const {return full || !damage.isEmpty();}
     quint64 sampledFingerprint() const {
         quint64 hash=14695981039346656037ULL;
         for(const auto &band:bands)for(int y=0;y<8;++y)for(int x=0;x<16;++x) {

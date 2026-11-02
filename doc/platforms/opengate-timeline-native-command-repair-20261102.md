@@ -31,7 +31,11 @@ and current pixels. Notifications coalesce at a Qt turn.
 
 `TimelineSceneUpdates` requests fresh native rasters after command/edit input,
 separately from layout reconciliation. It does not treat unrelated playhead damage
-as proof that paint-only editing refreshed. Validated workflow results publish a
+as proof that paint-only editing refreshed. Real model/command damage arriving
+during capture is retained; only self-generated paint notifications are ignored.
+Paint/layout work resumes after capture, avoiding recursive paint and dropped
+layout updates. A regression drains actual queued scene updates during native
+painting and verifies the next visible frame without resize/maximize. Validated workflow results publish a
 completion callback wired by both OS adapters; result files still cannot execute
 commands. This covers the existing asynchronous selected-timeline Stabilize path.
 
