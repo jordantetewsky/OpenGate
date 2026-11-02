@@ -2168,3 +2168,18 @@ preserved. Timeline-only trial flags are retained, Media Pool disabled. Receipt:
 `build/timeline-source-drop-install/installation-receipt.json`. Live native drag,
 Insert/Place on Top, repaint and Red-paint acceptance remain pending. No merge,
 push, publication or scripted project repair occurred.
+
+### Live follow-up after b516400
+
+Jordan confirmed Source dragging works. The Red/Clear entries are enabled in
+runtime logs but clipped offscreen after native menu population. The focused
+follow-up adds a real menu scrollbar and screen refitting, explicit Timeline
+focus on header-scrollbar click, layout-before-paint ordering, strict raster
+slice clipping, and Find Current Timeline in Media Pool through the existing
+reveal door. Installed source branch was pushed to Jordan's GitHub at his request;
+no package or main merge. Follow-up source remains separate until verified.
+
+Independent timecode scaling is explicitly queued at Jordan's lower priority.
+Pinned-left artifacts/full-extent scale bump and actual Red painting remain live
+acceptance checks. Details and current test distinctions:
+`opengate-timeline-menu-followup-20261102.md`.
