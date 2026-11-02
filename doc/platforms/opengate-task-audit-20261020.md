@@ -2030,3 +2030,16 @@ about 23 ms, so native 60 Hz/arbitrary playback smoothness is not established.
 The header fit limit and native/Windows verification gaps are explicit in the
 review. Installed 6c3ffb4 remains unchanged; no new live acceptance, installation,
 merge, push or publication is claimed by the source/fixture checkpoint.
+
+### Authorized installation — November 2, 05:13 UTC
+
+Jordan requested installation of the staged command/result repair candidate.
+Runtime `503a969` is installed; all 21 managed-file hashes, installed runtime
+identity and the strict deep bundle signature verify. All 197 protected paths
+remain unchanged. Resolve was closed for replacement. Transaction
+`ABB4A3BE-5E18-41C0-AA4A-36943BD9822D` preserves `6c3ffb4` and its restoration
+command. Receipt: `build/timeline-native-command-install/installation-receipt.json`.
+Earlier statements that this candidate is uninstalled are superseded. Native
+command/cursor behavior, page-return toolbar/stacked tabs, Media Pool experience
+and playback remain live acceptance gaps; installation does not close them.
+No merge, push or publication.
