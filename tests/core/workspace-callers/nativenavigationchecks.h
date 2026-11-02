@@ -68,6 +68,20 @@ void checkNativePanelNavigation(PanelControls &controls,QWidget &main,QWidget *p
   check(finds==1,"native Find executes exactly once");
   check(binding->selected("frameEditPageMediaPool"),"native Find recalls and selects Media Pool");
   check(navigationPlacement(binding->saved()["tree"].toObject())==navigationPlacement(findTree.toObject()),"native Find retains placement while selecting the destination tab");
+  for(const auto &label:{"Find Timeline in Media Pool","Find Current Timeline in Media Pool"}) {
+   binding->setVisible("frameEditPageMediaPool",false);settle(50);
+   const auto placement=navigationPlacement(binding->saved()["tree"].toObject());int calls=0;
+   QAction findTimeline(label,&main);main.addAction(&findTimeline);
+   QObject::connect(&findTimeline,&QAction::triggered,&main,[&]{++calls;});findTimeline.trigger();settle(100);
+   check(calls==1 && binding->selected("frameEditPageMediaPool") && navigationPlacement(binding->saved()["tree"].toObject())==placement,
+         "Find Timeline in Media Pool executes once and reveals the existing Media Pool placement");
+   main.removeAction(&findTimeline);
+  }
+  binding->setVisible("frameEditPageMediaPool",false);settle(50);
+  int timelineFinds=0;QShortcut timelineFind(QKeySequence("Alt+H"),&main);
+  QObject::connect(&timelineFind,&QShortcut::activated,&main,[&]{++timelineFinds;});
+  QShortcutEvent timelineEvent(timelineFind.key(),timelineFind.id(),false);QApplication::sendEvent(&timelineFind,&timelineEvent);settle(100);
+  check(timelineFinds==1 && binding->selected("frameEditPageMediaPool"),"native Find Current Timeline shortcut executes once and recalls Media Pool");
   binding->setVisible("frameEditPageMediaPool",false);settle(50);
   int nativeFinds=0;
   QShortcut shortcut(QKeySequence("Alt+G"),&main);

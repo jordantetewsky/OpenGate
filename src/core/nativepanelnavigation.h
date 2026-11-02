@@ -120,7 +120,8 @@ private:
         if(!action || action->property("unboundOwnMenu").toBool())return {};
         for(auto parent=action->parent();parent;parent=parent->parent())
             if(parent->property("unboundOwnMenu").toBool())return {};
-        if(nativeEditActionLabel(action,"Find in Media Pool"))return QStringLiteral("frameEditPageMediaPool");
+        if(nativeEditActionLabel(action,"Find in Media Pool") || nativeEditActionLabel(action,"Find Timeline in Media Pool") ||
+           nativeEditActionLabel(action,"Find Current Timeline in Media Pool"))return QStringLiteral("frameEditPageMediaPool");
         if(nativeEditActionLabel(action,"Match Frame"))return sourceId();
         return {};
     }
@@ -140,7 +141,8 @@ private:
         if(!shortcutOwners)return false;
         bool find=false;
         for(const auto &owner:shortcutOwners(key)) {
-            if(owner=="clipFindClipInMediaPool" || owner=="MediaPool.clipFindClipInMediaPool")find=true;
+            if(owner=="clipFindClipInMediaPool" || owner=="MediaPool.clipFindClipInMediaPool" ||
+               owner=="timelineFindCurrentTimelineInMediaPool")find=true;
             // These preset entries belong to other pages; the context below
             // must still be the visible Edit page. Unknown conflicts fail closed.
             else if(!owner.startsWith("FusionWidget.") && !owner.startsWith("FairlightTimeline."))return false;

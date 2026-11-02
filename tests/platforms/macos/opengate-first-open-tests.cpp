@@ -31,6 +31,7 @@ int main(int argc,char **argv){
   config.write("<Config><CustomKeyboardPreset>Active</CustomKeyboardPreset></Config>");config.commit();
   QSaveFile presetFile(directory+"/keyboard.preset.xml");presetFile.open(QIODevice::WriteOnly);
   presetFile.write(nativePresetFixture({{"clipFindClipInMediaPool",{QKeySequence("Alt+G")}},
+    {"timelineFindCurrentTimelineInMediaPool",{QKeySequence("Alt+H")}},
     {"FusionWidget.fixture",{QKeySequence("Alt+G")}}, {"unrelatedEditCommand",{QKeySequence("R")}}}));presetFile.commit();
  }
  int failures=0;auto check=[&](bool ok,const char *why){if(!ok){++failures;std::fprintf(stderr,"FAIL: %s\n",why);}};
