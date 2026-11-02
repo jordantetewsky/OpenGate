@@ -6,6 +6,7 @@
 #include <QSet>
 #include <QTimer>
 #include <functional>
+#include "menuoverflowscroll.h"
 namespace Unbound {
 // Integrate native clip-color menus, retaining the originating widget across
 // nested popup focus changes. No clip lookup, painting or command execution.
@@ -44,6 +45,6 @@ protected:
 private:
     QPointer<QWidget> origin;QSet<QMenu *> watched;Prepare prepare;
     static QString label(QString text){text.remove('&');return text.trimmed().toLower();}
-    void refresh(QMenu *menu){if(matches(menu) && prepare)prepare(menu,origin);}
+    void refresh(QMenu *menu){if(matches(menu) && prepare){prepare(menu,origin);MenuOverflowScroll::refresh(menu);}}
 };
 }
