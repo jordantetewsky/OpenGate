@@ -2043,3 +2043,19 @@ Earlier statements that this candidate is uninstalled are superseded. Native
 command/cursor behavior, page-return toolbar/stacked tabs, Media Pool experience
 and playback remain live acceptance gaps; installation does not close them.
 No merge, push or publication.
+
+## November 2 temporary custom clip-color painting trial
+
+Jordan authorized installation of isolated `37a90e7` after reviewing its temporary
+paint-only scope. It is installed; all 21 managed hashes, runtime identity and the
+strict deep bundle signature verify. All 197 protected paths remained unchanged
+before launch. Transaction `E216CFDE-9683-483E-AEF6-632B73FA7618` preserves the exact
+prior `503a969` installation. Resolve was then launched with the explicit
+`OPENGATE_EXPERIMENTAL_RED_PREVIEW=1` environment. Ordinary launches leave the
+experiment disabled. Receipt: `build/red-clip-preview-install/installation-receipt.json`.
+
+Native Red painting, menu/selection compatibility and command/edit/playback
+behavior remain live acceptance work. Persistent custom colors, the shared
+HSL/RGB/hex picker and closest supported native fallback are retained requirements,
+not implemented by this temporary trial. Rendering contract/evidence:
+`opengate-custom-clip-color-rendering-proof-20261102.md`. No merge, push or publication.
