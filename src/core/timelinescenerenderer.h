@@ -110,7 +110,8 @@ public:
             const auto at=to.topLeft()+QPointF((hit.left()-from.left())*x,(hit.top()-from.top())*y);
             const QRectF target(at,QSizeF(hit.width()*x,hit.height()*y));
             const QRectF pixels(hit.left()*backing,hit.top()*backing-band.pixelTop,hit.width()*backing,hit.height()*backing);
-            painter.drawImage(target,band.image,pixels);
+            painter.save();painter.setClipRect(target,Qt::IntersectClip);
+            painter.drawImage(target,band.image,pixels);painter.restore();
         }
     }
 private:

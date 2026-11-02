@@ -43,11 +43,21 @@ private:
     int origin = 0;
 };
 
+class TimelineHeaderScrollBar : public QScrollBar {
+public:
+    explicit TimelineHeaderScrollBar(QWidget *owner):QScrollBar(Qt::Horizontal,owner) {}
+protected:
+    void mousePressEvent(QMouseEvent *event) override {
+        if(parentWidget())parentWidget()->setFocus(Qt::MouseFocusReason);
+        QScrollBar::mousePressEvent(event);
+    }
+};
+
 class TimelineTrackHeaderControls {
 public:
     explicit TimelineTrackHeaderControls(QWidget *owner) {
         divider = new TimelineHeaderDivider(owner);
-        bar = new QScrollBar(Qt::Horizontal, owner);
+        bar = new TimelineHeaderScrollBar(owner);
         bar->setObjectName("openGateTimelineHeaderScroll");
         bar->setAccessibleName("Scroll track controls");
         bar->setFocusPolicy(Qt::NoFocus);

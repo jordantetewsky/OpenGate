@@ -21,13 +21,14 @@ public:
         });
         layout.setSingleShot(true);paint.setSingleShot(true);
         connect(&paint,&QTimer::timeout,this,[this] {
-            if(captureActive())return;
+            if(captureActive() || layout.isActive())return;
             const auto region=pendingPaint;pendingPaint=QRegion();
             if(this->view && this->view->isVisible() && paintReady)paintReady(region);
         });
         connect(&layout,&QTimer::timeout,this,[this]{
             if(captureActive()){deferredLayout=true;return;}
             if(this->view && this->view->isVisible() && layoutChanged)layoutChanged();
+            if(!pendingPaint.isEmpty() && !paint.isActive())paint.start(0);
         });
         view->installEventFilter(this);view->viewport()->installEventFilter(this);
         connect(view->horizontalScrollBar(),&QScrollBar::valueChanged,this,[this]{requestLayout();});
