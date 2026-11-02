@@ -24,7 +24,10 @@ execution and completed OpenGate dispatch without a key whitelist or handler
 replay. Native action discovery/connections move out of InteractionDiagnostics;
 its old registry is removed and diagnostics subscribes to the same observer.
 The existing command filter also observes newly delivered shortcuts immediately,
-so a lazy shortcut needs no discovery delay. Notifications coalesce at a Qt turn.
+so a lazy shortcut needs no discovery delay. QWidget-owned and private QObject
+shortcut receivers are also supported without a receiver-class restriction; a
+QWidget.grabShortcut regression checks one execution, queued native coordinates
+and current pixels. Notifications coalesce at a Qt turn.
 
 `TimelineSceneUpdates` requests fresh native rasters after command/edit input,
 separately from layout reconciliation. It does not treat unrelated playhead damage

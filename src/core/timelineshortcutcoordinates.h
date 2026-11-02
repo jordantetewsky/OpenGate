@@ -12,7 +12,7 @@ namespace Unbound {
 class TimelineShortcutCoordinates {
 public:
     static bool dispatch(QObject *receiver,QShortcutEvent *event) {
-        if(event->isAmbiguous() || (!qobject_cast<QShortcut *>(receiver) && !qobject_cast<QAction *>(receiver)))return false;
+        if(event->isAmbiguous() || !receiver)return false;
         for(auto widget=QApplication::focusWidget();widget;widget=panelParent(widget))
             if(auto viewport=dynamic_cast<TimelineContentViewport *>(widget)) {
                 const bool handled=viewport->dispatchPointerShortcut(receiver,event);

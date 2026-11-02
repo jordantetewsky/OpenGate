@@ -11,6 +11,16 @@
 #include "../../../src/core/workflowcommandresults.h"
 
 namespace OpenGateTest {
+class NativeWidgetShortcut : public QWidget {
+public:
+    using QWidget::QWidget;
+    std::function<void()> execute;
+protected:
+    bool event(QEvent *event) override {
+        if(event->type()!=QEvent::Shortcut)return QWidget::event(event);
+        QTimer::singleShot(0,this,[this]{if(execute)execute();});return true;
+    }
+};
 class NativeCommandPaint : public QGraphicsRectItem {
 public:
     QColor state=Qt::yellow;
@@ -58,6 +68,10 @@ template<class Check> void timelineCommandPresentationChecks(Check check) {
     auto undoAction=undo.createUndoAction(&main);undoAction->setObjectName("editUndo");
     auto redoAction=undo.createRedoAction(&main);redoAction->setObjectName("editRedo");
     QShortcut pointer(QKeySequence(Qt::Key_Tab),&main);pointer.setContext(Qt::ApplicationShortcut);
+    NativeWidgetShortcut widgetCommand(&main);widgetCommand.setGeometry(1090,790,1,1);widgetCommand.show();
+    widgetCommand.grabShortcut(QKeySequence(Qt::Key_F8),Qt::ApplicationShortcut);
+    int widgetCalls=0;QPoint widgetPoint;
+    widgetCommand.execute=[&]{++widgetCalls;widgetPoint=tracks->viewport()->mapFromGlobal(QCursor::pos());item->state=Qt::darkBlue;fixture.view->viewport()->update();};
     QPoint rootReceived,nestedReceived;int calls=0;
     QObject::connect(&pointer,&QShortcut::activated,&main,[&] {
         QTimer::singleShot(0,&main,[&]{++calls;rootReceived=fixture.view->viewport()->mapFromGlobal(QCursor::pos());
@@ -116,6 +130,10 @@ template<class Check> void timelineCommandPresentationChecks(Check check) {
         QMouseEvent drag(QEvent::MouseMove,target+QPoint(1,0),physical+QPoint(1,0),Qt::NoButton,Qt::LeftButton,Qt::NoModifier);QApplication::sendEvent(layer,&drag);TimelineViewportFixture::settle();
         check(item->state==Qt::darkGreen && displayed()==QColor(Qt::darkGreen),"native paint-only drag refreshes before release even when no scene item or geometry change is emitted");
         QMouseEvent up(QEvent::MouseButtonRelease,target+QPoint(1,0),physical+QPoint(1,0),Qt::LeftButton,Qt::NoButton,Qt::NoModifier);QApplication::sendEvent(layer,&up);TimelineViewportFixture::settle();
+        const int widgetBefore=widgetCalls;
+        QKeyEvent widgetKey(QEvent::KeyPress,Qt::Key_F8,Qt::NoModifier);QApplication::sendEvent(fixture.view,&widgetKey);TimelineViewportFixture::settle();
+        check(widgetCalls==widgetBefore+1 && (widgetPoint-QPoint(40,25)).manhattanLength()<3 && displayed()==QColor(Qt::darkBlue),
+              "QWidget-owned native shortcuts execute once with queued pointer coordinates and current pixels, without a receiver-class whitelist");
     }
     QWidget pool(&edit);pool.setObjectName("frameEditPageMediaPool");pool.setFocusPolicy(Qt::StrongFocus);pool.show();pool.setFocus();
     const auto scopedCalls=ownCalls;QKeyEvent outside(QEvent::KeyPress,Qt::Key_F6,Qt::NoModifier);QApplication::sendEvent(&pool,&outside);TimelineViewportFixture::settle();

@@ -6,6 +6,7 @@
 #include <QPointer>
 #include <QSet>
 #include <QShortcut>
+#include <QShortcutEvent>
 #include <QStringList>
 #include <QTimer>
 #include <functional>
@@ -55,6 +56,11 @@ public:
         if(shortcut)connect(shortcut,&QShortcut::activated,this,[this,shortcut]{
             completed(shortcut->objectName().isEmpty()?QStringLiteral("shortcut:")+shortcut->key().toString(QKeySequence::PortableText):shortcut->objectName());
         });
+    }
+    void delivered(QObject *receiver,QShortcutEvent *event) {
+        observe(receiver);
+        if(!event->isAmbiguous() && !qobject_cast<QAction *>(receiver) && !qobject_cast<QShortcut *>(receiver))
+            completed(QStringLiteral("native-shortcut:")+event->key().toString(QKeySequence::PortableText));
     }
 protected:
     bool eventFilter(QObject *object,QEvent *event) override {

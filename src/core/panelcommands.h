@@ -95,7 +95,7 @@ public:
     std::function<bool()> context;
 protected:
     bool eventFilter(QObject *receiver,QEvent *event) override {
-        if(event->type()==QEvent::Shortcut)NativeCommandActivity::shared()->observe(receiver);
+        if(event->type()==QEvent::Shortcut)NativeCommandActivity::shared()->delivered(receiver,static_cast<QShortcutEvent *>(event));
         if(event->type()==QEvent::Shortcut && nativeShortcutDispatch && !routingNativeShortcut &&
            PanelCommandContext::blocked().isEmpty() && context && context()) {
             QPointer<PanelCommands> alive=this;
