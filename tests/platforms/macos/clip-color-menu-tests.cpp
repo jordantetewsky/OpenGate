@@ -18,6 +18,7 @@ public:
 protected:
     void showEvent(QShowEvent *e) override {
         clear();for(const auto &label:{"Clear Color","Orange","Apricot","Chocolate"})addAction(label);
+        for(int i=0;i<80;++i)addAction(QString("Native palette row %1").arg(i));
         QMenu::showEvent(e);
     }
 };
@@ -42,6 +43,7 @@ int main(int argc,char **argv) {
     auto popup=[&](QWidget *focus,bool expectPool) {
         QApplication::setActiveWindow(&main);focus->setFocus();TimelineViewportFixture::settle();
         QMenu root;root.setAttribute(Qt::WA_DontShowOnScreen);DynamicPalette palette(&root);palette.setAttribute(Qt::WA_DontShowOnScreen);
+        palette.setMaximumHeight(320);
         auto item=root.addAction("Clip Color");item->setMenu(&palette);root.popup(QPoint(300,300));TimelineViewportFixture::settle();
         int nativePaletteCalls=0,nativeRootCalls=0;
         QObject::connect(&palette,&QMenu::triggered,&main,[&](QAction *){++nativePaletteCalls;clip->fill=Qt::green;clip->update();});
@@ -52,6 +54,10 @@ int main(int argc,char **argv) {
         TimelineViewportFixture::settle();QAction *red=nullptr;
         for(auto action:palette.actions())if(action->objectName()=="openGateRedClipPreview")red=action;
         check(palette.isVisible() && red && red->isEnabled(),"real unnamed nested submenu gets Red after native Show population and popup focus changes");
+        auto scroll=palette.findChild<QScrollBar *>("openGateMenuOverflowScroll");
+        check(scroll && scroll->isVisible(),"late-populated overflowing Clip Color submenu exposes a visible scrollbar");
+        if(scroll){scroll->setValue(scroll->maximum());TimelineViewportFixture::settle();}
+        check(red && palette.rect().contains(palette.actionGeometry(red)),"scrolling the real color submenu makes Red fully reachable before clicking it");
         if(red){check(red->property("openGateCommandId").toString()==(expectPool?"clip-color.media-pool.red":"clip-color.timeline.red"),"context menu retains the originating panel command");
             TimelineViewportFixture::click(&palette,palette.actionGeometry(red).center());}
         palette.hide();root.hide();TimelineViewportFixture::settle();
