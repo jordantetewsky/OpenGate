@@ -2,19 +2,21 @@
 #pragma once
 #include <QFileSystemWatcher>
 #include <QTimer>
+#include <functional>
 #include "diagnostics.h"
 namespace Unbound {
-// Script completion is diagnostic data only. It can never dispatch a command.
+// Validate/report script completion and publish the accepted result. This data
+// can request presentation refresh, but can never dispatch a command.
 class WorkflowCommandResults : public QObject {
 public:
-    WorkflowCommandResults(QObject *owner,const QString &launchDirectory)
-        :QObject(owner),directory(launchDirectory+"/command-results"),watcher(this) {
+    WorkflowCommandResults(QObject *owner,const QString &launchDirectory,std::function<void(const QJsonObject &)> completed={})
+        :QObject(owner),directory(launchDirectory+"/command-results"),watcher(this),completed(std::move(completed)) {
         QDir().mkpath(directory);watcher.addPath(directory);
         connect(&watcher,&QFileSystemWatcher::directoryChanged,this,[this] {queue();});
         queue();
     }
 private:
-    QString directory;QFileSystemWatcher watcher;bool queued=false;
+    QString directory;QFileSystemWatcher watcher;std::function<void(const QJsonObject &)> completed;bool queued=false;
     void queue() {
         if(queued)return;queued=true;
         QTimer::singleShot(0,this,[this] {queued=false;consume();});
@@ -33,6 +35,7 @@ private:
                 {"completion","selected-timeline-api-returned"},{"method",result["method"].toString().left(64)},
                 {"reason",result["reason"].toString().left(128)},{"error_type",result["error_type"].toString().left(64)},
                 {"attempted",result["attempted"].toInt()},{"completed",result["completed"].toInt()}});
+            if(completed)completed(result);
         }
     }
 };

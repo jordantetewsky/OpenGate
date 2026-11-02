@@ -6,6 +6,7 @@
 #include <QSignalBlocker>
 #include <QtMath>
 #include <functional>
+#include "panelscalecontrols.h"
 
 namespace Unbound {
 // Only the divider gesture and the header overflow/pin controls. State changes
@@ -58,37 +59,56 @@ public:
             "QScrollBar::handle:horizontal:hover { background:#858c96; }"
             "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal { width:0; }"
             "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal { background:none; }");
-        bar->setToolTip("Scroll track controls; pinned track buttons stay visible");
+        bar->setToolTip("Scroll all track controls, including blue/red buttons");
         pin = new QToolButton(owner);
         pin->setObjectName("openGateTimelinePinTrackControls");
         pin->setText(QString::fromUtf8("●"));
-        pin->setToolTip("Keep blue/red track buttons pinned at the left");
-        pin->setAccessibleName("Pin track buttons");
+        pin->setToolTip("Keep the whole track-control area at the left while panning time");
+        pin->setAccessibleName("Pin track-control area");
         pin->setCheckable(true);
         pin->setChecked(true);
         pin->setAutoRaise(true);
         pin->setFocusPolicy(Qt::NoFocus);
+        scaleButton=new QToolButton(owner);scaleButton->setObjectName("openGateTimelineHeaderScale");
+        scaleButton->setAutoRaise(true);scaleButton->setFocusPolicy(Qt::NoFocus);scaleButton->setPopupMode(QToolButton::InstantPopup);
+        scaleButton->setToolTip("Track controls and timecode size; row alignment is shared with tracks");
+        auto menu=new QMenu(scaleButton);scaleButton->setMenu(menu);
+        QObject::connect(menu,&QMenu::aboutToShow,scaleButton,[this,menu] {
+            menu->clear();menu->addSection("Track controls and timecode size");
+            if(value && set)populatePanelScaleMenu(menu,scaleButton,value,set,maximum?maximum():3.);
+            menu->addSeparator();auto match=menu->addAction("Match Timeline size");
+            QObject::connect(match,&QAction::triggered,scaleButton,[this]{if(set)set(0.);});
+        });
     }
     static constexpr int footerHeight = 18;
-    void arrange(int width, int height, int bottom, double scale, double offset, double maximum, bool pinned, double pinnedWidth) {
-        if(width<=0) { divider->hide();pin->hide();bar->hide();return; }
+    static constexpr int footerControlsWidth=66,minimumWidth=144;
+    void retire() {
+        value={};maximum={};set={};divider->moved={};
+        scaleButton->menu()->clear();scaleButton->menu()->close();
+    }
+    std::function<double()> value,maximum;
+    std::function<void(double)> set;
+    void arrange(int width, int height, int bottom, double scale, double offset, double maximum, bool pinned) {
         const int thickness = qMax(1, height-bottom);
         const int top = qBound(0, bottom, qMax(0, height - thickness));
         divider->setGeometry(width - 3, 0, 6, top);
-        const int pinWidth = qMin(18, qMax(0, width));
+        const int pinWidth = 18;
         pin->setGeometry(0, top, pinWidth, thickness);
         auto font=pin->font();font.setPixelSize(qBound(6,thickness-2,12));pin->setFont(font);
-        bar->setGeometry(pinWidth, top, qMax(0, width - pinWidth), thickness);
+        scaleButton->setGeometry(pinWidth,top,footerControlsWidth-pinWidth,thickness);
+        if(value)scaleButton->setText(QString::number(qRound(value()*100))+"%");
+        bar->setGeometry(footerControlsWidth, top, qMax(0, width-footerControlsWidth), thickness);
         const QSignalBlocker barBlock(bar), pinBlock(pin);
         bar->setRange(0, qCeil(maximum * scale));
-        bar->setPageStep(qMax(1, qRound(width-(pinned?pinnedWidth*scale:0.))));
+        bar->setPageStep(qMax(1,width));
         bar->setValue(maximum>0. && offset>=maximum-0.000001?bar->maximum():qRound(offset * scale));
         pin->setChecked(pinned);
-        divider->show(); pin->show(); bar->show();
-        divider->raise(); pin->raise(); bar->raise();
+        divider->setVisible(width>0);pin->show();scaleButton->show();bar->setVisible(width>footerControlsWidth);
+        divider->raise();pin->raise();scaleButton->raise();bar->raise();
     }
     TimelineHeaderDivider *divider;
     QScrollBar *bar;
     QToolButton *pin;
+    QToolButton *scaleButton;
 };
 }

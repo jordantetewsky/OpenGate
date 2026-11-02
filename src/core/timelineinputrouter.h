@@ -16,6 +16,7 @@
 #include <QGraphicsProxyWidget>
 #include <functional>
 #include "timelinecursorrelay.h"
+#include "timelinepointercoordinates.h"
 
 namespace Unbound {
 // Route presentation-local input to the original native viewport/child. Native
@@ -25,30 +26,22 @@ public:
     TimelineInputRouter(QWidget *display, QWidget *nativeViewport,
                         std::function<QPointF(QPointF)> mapping,
                         std::function<double()> scale)
-        : QObject(display), display(display), native(nativeViewport), mapping(std::move(mapping)), scale(std::move(scale)), cursors(display) {
+        : QObject(display), display(display), native(nativeViewport), mapping(std::move(mapping)), scale(std::move(scale)), cursors(display), coordinates(display,nativeViewport,this->mapping) {
         display->installEventFilter(this);
         display->setFocusPolicy(Qt::StrongFocus);
         display->setFocusProxy(nativeViewport);
         display->setMouseTracking(true);
         display->setAcceptDrops(true);
     }
-    // Native handlers can read QCursor::pos(), rather than a mouse event.
-    // Align the original surface only for the native shortcut dispatch;
-    // the overlay, OS pointer, scene/model, and saved geometry stay unchanged.
+    void geometryChanged(){coordinates.geometryChanged();}
+    std::function<void()> edited;
+    // Align through native queued handlers; no command replay or OS pointer warp.
     bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
         if(!native || !display || !receiver)return false;
-        const auto physical=QCursor::pos();
-        const auto displayed=display->mapFromGlobal(physical);
-        if(!display->rect().contains(displayed))return false;
-        const auto point=mapping(displayed);
-        const auto shift=physical-native->mapToGlobal(point.toPoint());
-        if(shift.isNull())return false;
-        QPointer<QWidget> surface=native->parentWidget();
-        if(!surface)return false;
-        const auto original=surface->pos();QPointer<QWidget> parent=surface->parentWidget();
-        surface->move(original+shift);
+        if(!coordinates.alignCursor())return false;
+        QPointer<TimelineInputRouter> alive=this;
         QApplication::sendEvent(receiver,event);
-        if(surface && surface->parentWidget()==parent)surface->move(original);
+        if(alive && edited)edited();
         return true;
     }
 protected:
@@ -57,7 +50,7 @@ protected:
             return false;
         switch (event->type()) {
         case QEvent::Hide:
-            cursors.clear();return false;
+            cursors.clear();coordinates.restore();return false;
         case QEvent::MouseButtonPress:
         case QEvent::MouseButtonRelease:
         case QEvent::MouseButtonDblClick:
@@ -109,7 +102,7 @@ protected:
             return drop(mapped, source);
         }
         case QEvent::Leave:
-            cursors.clear();
+            cursors.clear();coordinates.restore();
             return send(native,*event,event);
         case QEvent::DragLeave:
         case QEvent::KeyPress:
@@ -140,6 +133,8 @@ private:
             placingPopup=false;
         }
         original->setAccepted(mapped.isAccepted());
+        const bool changing=mapped.type()!=QEvent::MouseMove || static_cast<QMouseEvent &>(mapped).buttons()!=Qt::NoButton;
+        if(edited && changing && mapped.type()!=QEvent::ToolTip && mapped.type()!=QEvent::Leave)edited();
         return true;
     }
     bool mouse(QMouseEvent *event) {
@@ -154,6 +149,7 @@ private:
         // or trim remains continuous when the pointer leaves its painted band.
         const auto delta=event->localPos()-pressPoint;
         const auto point=(start||pressed)?pressSource+horizontal*delta.x()+vertical*delta.y():mapping(event->localPos());
+        coordinates.alignNative(point,event->screenPos().toPoint());
         auto target = pressed ? pressed.data() : targetAt(point);
         if (start) {
             pressed = target;
@@ -212,6 +208,7 @@ private:
     std::function<QPointF(QPointF)> mapping;
     std::function<double()> scale;
     TimelineCursorRelay cursors;
+    TimelinePointerCoordinates coordinates;
     bool forwarding = false;
     bool placingPopup=false,placingTooltip=false;
     quint64 popupToken=0;

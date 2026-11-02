@@ -22,6 +22,7 @@
 #include "pagecontext.h"
 #include "textediting.h"
 #include "timelinepresentationprobe.h"
+#include "nativecommandactivity.h"
 
 
 namespace Unbound {
@@ -33,6 +34,7 @@ public:
     {
         viewerDiagnostics = new ViewerDiagnostics(this);
         timelineProbe = new TimelinePresentationProbe(this);
+        actionSubscription=NativeCommandActivity::shared()->subscribeActions(this,[this](QAction *action){recordAction(action);});
         qApp->installEventFilter(this);
         connect(qApp, &QApplication::focusChanged, this, [](QWidget *before, QWidget *after) {
             if (!related(before) && !related(after)) return;
@@ -41,7 +43,10 @@ public:
         });
         QTimer::singleShot(0, this, [this] { scanActions(); recordPage(); });
     }
-    ~InteractionDiagnostics() override { qApp->removeEventFilter(this); }
+    ~InteractionDiagnostics() override {
+        if(auto activity=NativeCommandActivity::existing())activity->unsubscribe(actionSubscription);
+        qApp->removeEventFilter(this);
+    }
 protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
@@ -49,7 +54,7 @@ protected:
         timelineProbe->observe(qobject_cast<QWidget *>(object),type);
         const bool navigationInput=type==QEvent::DragEnter || type==QEvent::Drop || type==QEvent::MouseButtonDblClick;
         if(navigationInput && !viewerDiagnostics->nativeLoadingTraceEnabled())return false;
-        if (type != QEvent::ActionAdded && type != QEvent::Shortcut && type != QEvent::Show && type != QEvent::Polish &&
+        if (type != QEvent::Shortcut && type != QEvent::Show && type != QEvent::Polish &&
             type != QEvent::MouseButtonPress && type != QEvent::KeyPress && type != QEvent::ShortcutOverride && type != QEvent::WindowActivate &&
             type != QEvent::ChildAdded && type != QEvent::ParentChange && type != QEvent::Hide &&
             type != QEvent::DragEnter && type != QEvent::Drop && type != QEvent::MouseButtonDblClick) return false;
@@ -60,9 +65,6 @@ protected:
             QTimer::singleShot(0,this,[this] { pageScanQueued=false; recordPage(); });
         }
         if (type == QEvent::Show) inspectTimelineOptions(qobject_cast<QMenu *>(widget));
-        if (event->type() == QEvent::ActionAdded && related(widget)) {
-            observe(static_cast<QActionEvent *>(event)->action());
-        }
         if (event->type() == QEvent::Shortcut && related(QApplication::focusWidget()) && !textEditor(QApplication::focusWidget())) {
             auto shortcut = static_cast<QShortcutEvent *>(event);
             logEvent(QStringLiteral("input.shortcut"), {{"receiver", object->objectName()},
@@ -184,12 +186,8 @@ private:
         connect(button, &QAbstractButton::pressed, this, [record] { record(QStringLiteral("input.button.pressed")); });
         connect(button, &QAbstractButton::clicked, this, [record] { record(QStringLiteral("input.button.clicked")); });
     }
-    void observe(QAction *action)
+    void recordAction(QAction *action)
     {
-        if (!action || tracked.contains(action)) return;
-        tracked.insert(action);
-        connect(action, &QObject::destroyed, this, [this, action] { tracked.remove(action); });
-        connect(action, &QAction::triggered, this, [this, action] {
             logEvent(QStringLiteral("input.action.triggered"), {{"action", action->objectName()},
                 {"label", action->text()}, {"focus", widgetState(QApplication::focusWidget(),false)},
                 {"page",currentWorkspacePage(resolveMainWindow())}, {"observation","qt-action-signal"}});
@@ -201,7 +199,6 @@ private:
                 QTimer::singleShot(0, this, [this, name] { viewerDiagnostics->capture("command-dispatched", name); });
                 QTimer::singleShot(600, this, [this, name] { viewerDiagnostics->capture("command-settled", name); });
             }
-        });
     }
     void observeButtonsIn(QWidget *root)
     {
@@ -251,7 +248,6 @@ private:
         QJsonArray viewerActions;
         for (auto window : QApplication::topLevelWidgets()) if (window->objectName() == QLatin1String("UiMainWindow"))
             for (auto action : window->findChildren<QAction *>()) {
-                observe(action);
                 const QString text = action->text().toLower();
                 if (text.contains("full screen") || text.contains("fullscreen") || text.contains("cinema viewer") || text.contains("single viewer"))
                     viewerActions.append(QJsonObject{{"name", action->objectName()}, {"label", action->text()},
@@ -295,7 +291,7 @@ private:
     }
     TimelinePresentationProbe *timelineProbe=nullptr;
     ViewerDiagnostics *viewerDiagnostics = nullptr;
-    QSet<QAction *> tracked;
+    quint64 actionSubscription=0;
     QSet<QAbstractButton *> buttons;
     QJsonArray lastViewerActions;
     QList<QPointer<QWidget>> controlsScanRoots;

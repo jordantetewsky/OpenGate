@@ -49,7 +49,9 @@ public:
         new WorkflowCommandBridge(this,directory,[this](QString id) {
             return controls && controls->invokeWorkflowCommand(id);
         });
-        new WorkflowCommandResults(this,directory);
+        new WorkflowCommandResults(this,directory,[](const QJsonObject &result) {
+            if(result["success"].toBool())NativeCommandActivity::shared()->completed(result["command"].toString());
+        });
         launches->consume(true);
         connect(qApp,&QCoreApplication::aboutToQuit,this,[this] { journal->markClean(); });
     }

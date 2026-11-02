@@ -19,6 +19,7 @@
 #include "panelcommandcontext.h"
 #include "commandbindingconflicts.h"
 #include "settingsprofile.h"
+#include "nativecommandactivity.h"
 namespace Unbound {
 // Unbound-owned bindings. This is not registration in Resolve's command database.
 class PanelCommands : public QObject {
@@ -49,7 +50,8 @@ public:
             logEvent("command.invoke",{{"command",id},{"origin",origin},{"accepted",accepted},
                 {"reason",accepted ? "accepted" : !blocked.isEmpty() ? blocked : !scoped ? "panel-context" : "command-unavailable"},
                 {"active_window",active ? active->objectName() : QString()}});
-            if (accepted && command.invoke) command.invoke();
+            const auto execute=command.invoke;const auto source=id;
+            if (accepted && execute) {execute();NativeCommandActivity::shared()->completed(source);}
             return accepted;
         }
         logEvent("command.invoke.unknown",{{"command",id},{"origin",origin}}); return false;
@@ -93,6 +95,7 @@ public:
     std::function<bool()> context;
 protected:
     bool eventFilter(QObject *receiver,QEvent *event) override {
+        if(event->type()==QEvent::Shortcut)NativeCommandActivity::shared()->observe(receiver);
         if(event->type()==QEvent::Shortcut && nativeShortcutDispatch && !routingNativeShortcut &&
            PanelCommandContext::blocked().isEmpty() && context && context()) {
             QPointer<PanelCommands> alive=this;
@@ -149,6 +152,7 @@ protected:
                     logEvent("command.invoke",{{"command",id},{"origin","unbound-shortcut"},{"accepted",ready}});
                     if (ready && invoke) {
                         QElapsedTimer timing; timing.start(); invoke();
+                        NativeCommandActivity::shared()->completed(id);
                         logEvent("command.dispatched",{{"command",id},{"dispatch_ms",timing.nsecsElapsed()/1000000.0},
                             {"completion","panel-transition-logged-separately"}});
                     }

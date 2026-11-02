@@ -40,7 +40,9 @@ public:
         new Unbound::WorkflowCommandBridge(this,directory,[this](QString id) {
             return controls&&controls->invokeWorkflowCommand(id);
         });
-        new Unbound::WorkflowCommandResults(this,directory);
+        new Unbound::WorkflowCommandResults(this,directory,[](const QJsonObject &result) {
+            if(result["success"].toBool())Unbound::NativeCommandActivity::shared()->completed(result["command"].toString());
+        });
         launches->consume(true);
         connect(qApp,&QCoreApplication::aboutToQuit,this,[this] {
             delete controls.data();journal->markClean();Unbound::flushDiagnostics();

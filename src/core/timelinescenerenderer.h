@@ -7,6 +7,7 @@
 #include <QPaintEngine>
 #include <QPointer>
 #include <QRegion>
+#include <QHash>
 #include <QVector>
 #include <QtMath>
 #include <algorithm>
@@ -29,6 +30,29 @@ public:
     }
     void releasePixels() {bands.clear();invalidateAll();}
     qint64 rasterBytes() const {qint64 total=0;for(const auto &band:bands)total+=band.image.sizeInBytes();return total;}
+    quint64 revision() const {return paintRevision;}
+    quint64 sampledFingerprint() const {
+        quint64 hash=14695981039346656037ULL;
+        for(const auto &band:bands)for(int y=0;y<8;++y)for(int x=0;x<16;++x) {
+            const auto pixel=band.image.pixel(qMin(band.image.width()-1,(2*x+1)*band.image.width()/32),
+                                              qMin(band.image.height()-1,(2*y+1)*band.image.height()/16));
+            hash^=pixel;hash*=1099511628211ULL;
+        }
+        return hash;
+    }
+    QColor backgroundColor(const QRectF &area,QColor fallback) const {
+        QHash<QRgb,int> counts;int most=0;QRgb selected=fallback.rgba();
+        for(int y=0;y<8;++y)for(int x=0;x<16;++x) {
+            const QPointF at(area.left()+area.width()*(x+.5)/16.,area.top()+area.height()*(y+.5)/8.);
+            for(const auto &band:bands)if(band.rect.contains(at)) {
+                const QPoint pixel(qFloor(at.x()*backing),qFloor(at.y()*backing-band.pixelTop));
+                if(!band.image.rect().contains(pixel))continue;
+                const auto color=band.image.pixel(pixel);if(qAlpha(color)!=255)continue;
+                const int count=++counts[color];if(count>most){most=count;selected=color;}break;
+            }
+        }
+        return QColor::fromRgba(selected);
+    }
     void invalidateAll() { full=true;damage=QRegion(); }
     static QRectF damageBounds(const QRectF &area) {return area.adjusted(-4,-4,4,4);}
     void invalidate(const QRectF &area) {
@@ -75,7 +99,7 @@ public:
                 }
             }
         }
-        return true;
+        ++paintRevision;return true;
     }
     void draw(QPainter &painter,const QRectF &from,const QRectF &to) const {
         if(from.isEmpty() || to.isEmpty())return;
@@ -134,5 +158,6 @@ private:
     }
     QPointer<QGraphicsScene> scene;QSize canvas;QRectF source;double backing=0.;QVector<double> tops;
     QRegion damage;bool full=true;QVector<Exposure> exposures;QVector<Band> bands;
+    quint64 paintRevision=0;
 };
 }

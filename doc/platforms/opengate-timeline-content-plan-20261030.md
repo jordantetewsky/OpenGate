@@ -582,3 +582,15 @@ signature verify; all 197 protected paths are unchanged. Receipt:
 `build/timeline-performance-install/rollback-receipt.json`. The candidate and
 source remain isolated and rejected for live use. This supersedes the preceding
 installed-runtime statement. No new repair is claimed by this rollback/log review.
+
+## November 2 native command and independently sized header repair
+
+All controls, including blue/red buttons, now scroll together inside the left
+area. Native row geometry keeps track alignment. Independent control/timecode
+size uses existing persistence and the stated fit policy limiting control size
+to body scale; automatic row growth is not implemented. Queued native pointer
+reads and paint-only native edit/Undo/Redo have before/after result tests that
+check actual model state and pixels without maximize. See the
+[repair, module review and evidence](opengate-timeline-native-command-repair-20261102.md).
+Timeline/ASAN and relevant regressions pass; actual native GPU/private command,
+preview and playback acceptance remain open. Installed 6c3ffb4 is preserved.

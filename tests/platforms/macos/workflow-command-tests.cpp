@@ -30,7 +30,8 @@ int main(int argc,char **argv) {
     check(attempts==2 && accepted==1,"unknown command IDs cannot bypass registry whitelist");
     check(QDir(files.path()+"/command-requests").entryList({"*.json"},QDir::Files).isEmpty(),"all requests are consumed once including rejected requests");
     {
-        Unbound::WorkflowCommandResults results(nullptr,files.path());
+        int completions=0;
+        Unbound::WorkflowCommandResults results(nullptr,files.path(),[&](const QJsonObject &){++completions;});
         const auto reportPath=files.path()+"/command-results/stabilize.json";
         auto publish=[&](QJsonObject value) {QSaveFile out(reportPath);out.open(QIODevice::WriteOnly);out.write(QJsonDocument(value).toJson());out.commit();
             // Directory notifications may coalesce beyond one fixed 250ms turn.
@@ -41,12 +42,12 @@ int main(int argc,char **argv) {
             {"issued_ms",double(QDateTime::currentMSecsSinceEpoch())},{"method","timeline-item-api"},{"attempted",2},{"completed",2}};
         auto logged=[&] {QFile file(files.path()+"/events.jsonl");file.open(QIODevice::ReadOnly);return file.readAll().count("selected-timeline-api-returned");};
         publish(record);
-        check(logged()==1&&!QFile::exists(reportPath),"API completion is logged and consumed once");
+        check(logged()==1&&completions==1&&!QFile::exists(reportPath),"API completion is published, logged and consumed once");
         settle();check(logged()==1&&attempts==2,"completion notifications cannot replay or dispatch a command");
         auto failure=record;failure["success"]=false;failure["completed"]=0;publish(failure);
         check(logged()==2,"actual API failure also produces completion evidence");
         auto invalid=record;invalid["command"]="arbitrary.code";publish(invalid);
-        check(logged()==2&&attempts==2,"result files cannot execute arbitrary commands");
+        check(logged()==2&&completions==2&&attempts==2,"invalid result files cannot publish completions or execute commands");
     }
     {
         QWidget popup(nullptr,Qt::Popup);popup.setAttribute(Qt::WA_DontShowOnScreen);popup.show();settle();

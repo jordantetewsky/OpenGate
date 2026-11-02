@@ -35,7 +35,7 @@ template<class Check> void timelinePointerChecks(Check check) {
         const QPoint target(qRound((viewport->headerWidth()+40)*factor),qRound(65*factor));
         fixture.timeline.move(fixture.timeline.pos()+physical-layer->mapToGlobal(target));TimelineViewportFixture::settle();
         QApplication::setActiveWindow(&main);fixture.view->setFocus();
-        const auto before=fixture.view->pos();const int previousCalls=calls;
+        const int previousCalls=calls;
         QShortcutEvent event(QKeySequence(Qt::Key_Tab),native.id(),false);QApplication::sendEvent(&native,&event);
         if(calls!=previousCalls+1 || (received-QPoint(300,65)).manhattanLength()>=3)
             std::fprintf(stderr,"pointer diagnostic factor %.2f calls %d/%d received %d,%d page %s focus %s physical-local %d,%d owner-count %d context %d block %s\n",
@@ -45,8 +45,9 @@ template<class Check> void timelinePointerChecks(Check check) {
                 commands.context(),qPrintable(Unbound::PanelCommandContext::blocked()));
         check(calls==previousCalls+1 && (received-QPoint(300,65)).manhattanLength()<3,
               "native Tab Go to Mouse Pointer handler runs once with scaled and narrowed displayed coordinates");
-        check(fixture.view->pos()==before && QCursor::pos()==physical,
-              "native pointer command restores the view origin synchronously without moving the OS pointer");
+        TimelineViewportFixture::settle();
+        check((fixture.view->viewport()->mapFromGlobal(physical)-QPoint(300,65)).manhattanLength()<3 && QCursor::pos()==physical,
+              "native pointer coordinates remain valid through queued command work without moving the OS pointer");
     }
     QWidget pool(&edit);pool.setObjectName("frameEditPageMediaPool");pool.setFocusPolicy(Qt::StrongFocus);pool.show();pool.setFocus();
     QShortcut timelineKey(QKeySequence(Qt::Key_W),fixture.view),poolKey(QKeySequence(Qt::Key_W),&pool);

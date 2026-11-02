@@ -7,6 +7,7 @@
 #include <QPointer>
 #include <QTimer>
 #include <functional>
+#include "nativecommandactivity.h"
 
 namespace Unbound {
 // Observe native damage and geometry independently. Layout work coalesces at an
@@ -14,6 +15,10 @@ namespace Unbound {
 class TimelineSceneUpdates : public QObject {
 public:
     TimelineSceneUpdates(QGraphicsView *view,QObject *owner):QObject(owner),view(view) {
+        commandSubscription=NativeCommandActivity::shared()->subscribe(this,[this](const QString &source){
+            if(stopped || !this->view || !this->view->isVisible())return;
+            commandCompleted();if(commandObserved)commandObserved(source);
+        });
         layout.setSingleShot(true);paint.setSingleShot(true);
         connect(&paint,&QTimer::timeout,this,[this] {
             const auto region=pendingPaint;pendingPaint=QRegion();
@@ -26,6 +31,8 @@ public:
     }
     ~TimelineSceneUpdates() override { stop(); }
     std::function<void()> layoutChanged,repaint,suspended;
+    std::function<bool()> headerMovesWithTime;
+    std::function<void(const QString &)> commandObserved;
     std::function<void(const QRegion &)> paintReady;
     void schedulePaint(const QRegion &region) {
         if(stopped || !view || !view->isVisible() || region.isEmpty())return;
@@ -36,9 +43,12 @@ public:
         pendingPaint-=region;if(pendingPaint.isEmpty())paint.stop();
     }
     std::function<void(const QList<QRectF> &)> damaged;
+    void commandCompleted(){if(!stopped && view && view->isVisible() && damaged)damaged({});}
     void stop() {
+        if(auto activity=NativeCommandActivity::existing())activity->unsubscribe(commandSubscription);
+        commandSubscription=0;
         stopped=true;layout.stop();paint.stop();pendingPaint=QRegion();
-        layoutChanged={};repaint={};suspended={};damaged={};paintReady={};
+        layoutChanged={};repaint={};suspended={};damaged={};paintReady={};headerMovesWithTime={};commandObserved={};
         if(view){view->removeEventFilter(this);if(view->viewport())view->viewport()->removeEventFilter(this);}
         for(auto editor:editors)if(editor)editor->removeEventFilter(this);
         for(const auto &connection:connections)disconnect(connection);
@@ -83,6 +93,8 @@ public:
 protected:
     bool eventFilter(QObject *object,QEvent *event) override {
         if(!view)return false;
+        if(event->type()==QEvent::KeyPress || event->type()==QEvent::InputMethod)
+            NativeCommandActivity::shared()->completed(QStringLiteral("native-timeline-input"));
         refresh();
         if(object==view->viewport() && event->type()==QEvent::Paint) {
             QList<QRectF> rects;
@@ -150,7 +162,7 @@ private:
                 mappedDamage(alive,surface,region);
             }));
         auto scrolled=[this,alive,surface,header] {
-            if(header)requestLayout();
+            if(header || (headerMovesWithTime && headerMovesWithTime()))requestLayout();
             mappedDamage(alive,surface,{});
         };
         entry.connections.append(connect(nested->horizontalScrollBar(),&QScrollBar::valueChanged,this,scrolled));
@@ -158,6 +170,7 @@ private:
     }
     void requestLayout() {if(!stopped && view && view->isVisible() && !layout.isActive())layout.start(0);}
     QPointer<QGraphicsView> view;QPointer<QGraphicsScene> scene;
+    quint64 commandSubscription=0;
     QTimer layout,paint;QRegion pendingPaint;int knownItems=-1;bool stopped=false;
     QList<QPointer<QGraphicsProxyWidget>> proxies;QVector<Nested> nestedViews;
     QList<QPointer<QWidget>> editors;QList<QMetaObject::Connection> connections;

@@ -44,9 +44,10 @@ template<class Check> void timelineRenderCacheChecks(Check check) {
         playhead->setX(500.);renderer.invalidateAll();
         const bool first=renderer.render(view->sequence,source,backing,geometry.sectionTops);
         check(first,"cache renders a valid native image at fractional backing resolution");
-        const auto bytes=renderer.rasterBytes();const int count=glyph->paints;
+        const auto bytes=renderer.rasterBytes();const auto revision=renderer.revision();const int count=glyph->paints;
         for(int i=0;i<10;++i)renderer.render(view->sequence,source,backing,geometry.sectionTops);
         check(glyph->paints==count && renderer.rasterBytes()==bytes,"unchanged exposure reuses pixels without drawing native clip content or detaching its image");
+        check(renderer.revision()==revision,"unchanged exposure cannot claim a fresh native raster revision");
         const auto old=playhead->sceneBoundingRect();playhead->setX(505.3);
         renderer.invalidate(old);renderer.invalidate(playhead->sceneBoundingRect());
         renderer.render(view->sequence,source,backing,geometry.sectionTops);const auto incremental=snapshot(backing);

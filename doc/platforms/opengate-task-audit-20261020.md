@@ -2015,3 +2015,18 @@ unchanged. Receipt: `build/timeline-performance-install/rollback-receipt.json`.
 The failed candidate is preserved separately; no repair, native acceptance,
 merge, push or publication is claimed. Earlier installed-61aceef statements are
 superseded.
+
+## November 2 Timeline command/result repair candidate
+
+Isolated fix/timeline-native-command-presentation reproduces queued pointer
+coordinate failure and stale paint-only edit/Undo/Redo pixels. Native/OpenGate
+command tests check state and pixels; trim/roll, workflow completion, scope and
+typing are covered. Header/timecode size and all-control scrolling retain native
+row alignment. Whole-header pinning replaces selective blue/red freezing.
+See the [repair/evidence review](opengate-timeline-native-command-repair-20261102.md).
+Timeline/ASAN and relevant regressions pass; synthetic paint-only drag has 20/20
+current frames versus 10/20 for rejected 61aceef. Full redraw/drag at 300% remains
+about 23 ms, so native 60 Hz/arbitrary playback smoothness is not established.
+The header fit limit and native/Windows verification gaps are explicit in the
+review. Installed 6c3ffb4 remains unchanged; no new live acceptance, installation,
+merge, push or publication is claimed by the source/fixture checkpoint.

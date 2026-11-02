@@ -12,6 +12,9 @@
 #include "../../core/workspace-callers/timelinescaledinputchecks.h"
 #include "../../core/workspace-callers/timelinerendercachechecks.h"
 #include "../../core/workspace-callers/timelinecursorchecks.h"
+#include "../../core/workspace-callers/timelinecommandpresentationchecks.h"
+#include "../../core/workspace-callers/timelineheadersizingchecks.h"
+#include "../../core/workspace-callers/timelineeditpointchecks.h"
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -56,11 +59,13 @@ int main(int argc, char **argv) {
           "dragging the right edge narrower gains actual clip drawing width");
     auto bar = layer->findChild<QScrollBar *>("openGateTimelineHeaderScroll");
     check(bar && bar->isVisible() && bar->maximum() >= 98, "narrow header exposes a real draggable overflow scrollbar");
-    bar->setValue(bar->maximum()); TimelineViewportFixture::settle();
     TimelineViewportFixture::click(layer, QPointF(30, 50));
-    check(view->blue->clicks == 1, "blue track button stays pinned and routes to the original item after header scrolling");
+    check(view->blue->clicks == 1, "blue track button routes to the native item before header scrolling");
     TimelineViewportFixture::click(layer, QPointF(70, 50));
-    check(view->red->clicks == 1, "red track button stays pinned and uses the original native action");
+    check(view->red->clicks == 1, "red track button uses the native action before header scrolling");
+    bar->setValue(bar->maximum()); TimelineViewportFixture::settle();
+    TimelineViewportFixture::click(layer,QPointF(30,50));
+    check(view->blue->clicks==1 && view->red->clicks==1,"blue/red buttons scroll out with the other controls instead of remaining frozen");
     TimelineViewportFixture::click(layer, QPointF(230 - presentation->headerOffset(), 50));
     check(view->lastControl->clicks == 1, "rightmost header control remains reachable through overflow");
     TimelineViewportFixture::click(layer, QPointF(presentation->headerWidth() + 40, 65));
@@ -117,10 +122,12 @@ int main(int argc, char **argv) {
     check(presentation->width()>=presentation->minimumWidth() && divider->geometry().right()<=layer->width() &&
           bar->geometry().right()<layer->width(),
           "narrow window respects pinned-button/native content minima without overlapping or losing the divider and scrollbar");
+    bar->setValue(0);TimelineViewportFixture::settle();
     TimelineViewportFixture::click(layer,QPointF(60,100));
     TimelineViewportFixture::click(layer,QPointF(140,100));
     check(view->blue->clicks==2 && view->red->clicks==2,
-          "both pinned track buttons remain fully reachable at the narrowest supported scaled width");
+          "both track buttons remain reachable by scrolling the compact header back to the start");
+    bar->setValue(bar->maximum());TimelineViewportFixture::settle();
     if(scale.snapshot()["timeline_header_width"]!=retainedWidth)
         std::fprintf(stderr,"retained width expected %.3f actual %.3f request %.3f visible %.3f\n",
             retainedWidth.toDouble(),scale.snapshot()["timeline_header_width"].toDouble(),
@@ -155,6 +162,9 @@ int main(int argc, char **argv) {
     timelineOverflowChecks(check);
     timelinePointerChecks(check);
     timelineRenderCacheChecks(check);
+    timelineCommandPresentationChecks(check);
+    timelineHeaderSizingChecks(check);
+    timelineEditPointChecks(check);
     std::printf("timeline content viewport failures=%d\n", failures);
     return failures ? 1 : 0;
 }

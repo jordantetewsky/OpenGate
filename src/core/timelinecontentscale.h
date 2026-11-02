@@ -29,14 +29,16 @@ public:
     }
     static bool supported(QWidget *root) { return !surfaces(root).isEmpty(); }
     QJsonObject snapshot() const {
-        if (headerWidth == 0. && headerOffset == 0. && pinned) return {};
+        if (headerWidth == 0. && headerOffset == 0. && pinned && headerScale==0.) return {};
         return {{"timeline_header_width", headerWidth}, {"timeline_header_scroll", headerOffset},
-                {"timeline_header_pinned", pinned}};
+                {"timeline_header_pinned", pinned},{"timeline_header_scale",headerScale}};
     }
     void restoreState(const QJsonObject &saved) {
         headerWidth = qBound(0., saved["timeline_header_width"].toDouble(), 4096.);
         headerOffset = qBound(0., saved["timeline_header_scroll"].toDouble(), 4096.);
         pinned = saved["timeline_header_pinned"].toBool(true);
+        const auto header=saved["timeline_header_scale"].toDouble();
+        headerScale=qIsFinite(header) && header>=.7 && header<=3.?header:0.;
         configure();
     }
     bool apply(QWidget *surface, double factor) {
@@ -76,6 +78,7 @@ public:
                 headerWidth = presentation->retainedHeaderWidth();
                 headerOffset = presentation->headerOffset();
                 pinned = presentation->headerPinned();
+                headerScale=presentation->headerScalePreference();
                 configure();
                 if (changed) changed();
             };
@@ -145,7 +148,7 @@ private:
     };
     void configure() {
         for (const auto &entry : entries)
-            if (entry->viewport) entry->viewport->configure(amount, headerWidth, headerOffset, pinned);
+            if (entry->viewport) entry->viewport->configure(amount, headerWidth, headerOffset, pinned,headerScale);
     }
     void watch(QWidget *surface) {
         auto widgets = surface->findChildren<QWidget *>();
@@ -165,7 +168,7 @@ private:
     QTimer pending;
     QList<QPointer<QWidget>> watched;
     std::vector<std::unique_ptr<Entry>> entries;
-    double amount = 1., headerWidth = 0., headerOffset = 0.;
+    double amount = 1., headerWidth = 0., headerOffset = 0.,headerScale=0.;
     bool pinned = true, applying = false;
 };
 }

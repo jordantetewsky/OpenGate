@@ -17,6 +17,15 @@
 #include "nativepaintfixtures.h"
 
 // Native semantic types use real Qt metadata, rather than production test flags.
+class UiTiTrackControlItem : public QGraphicsObject {
+    Q_OBJECT
+public:
+    QRectF boundingRect() const override {return {0,0,260,70};}
+    UiTiTrackControlItem(){setZValue(-100);setAcceptedMouseButtons(Qt::NoButton);}
+    void paint(QPainter *p,const QStyleOptionGraphicsItem *,QWidget *) override {
+        p->fillRect(boundingRect(),QColor(35,35,38));p->setPen(Qt::black);p->drawLine(QPointF(0,69),QPointF(260,69));
+    }
+};
 class UiTiTrackLayerItem : public QGraphicsObject {
     Q_OBJECT
 public:
@@ -93,6 +102,7 @@ public:
         controlsProxy = sequence->addWidget(controls);
         tracksProxy = sequence->addWidget(tracks);
         for (int row = 0; row < 3; ++row) {
+            auto track=new UiTiTrackControlItem;track->setPos(0,row*70);controlsScene->addItem(track);
             auto b = new UiTiTrackLayerItem(QColor(20, 90, 180));
             auto r = new UiTiTrackLayerItem(QColor(150, 30, 30));
             b->setPos(15, row * 70 + 3); r->setPos(54, row * 70 + 3);
@@ -107,6 +117,7 @@ public:
         glyph->setPos(10, 15); tracksScene->addItem(glyph);
         clip = new ClickRect({0, 0, 200, 100}); clip->setZValue(3); tracksScene->addItem(clip);
         bar = new UiTiScrollBarItem; sequence->addItem(bar);
+        auto clock=sequence->addSimpleText("00:00:00:00");clock->setBrush(QColor(255,180,0));clock->setPos(60,8);
         reflow();
     }
     static void setup(QGraphicsView *view) {

@@ -7,6 +7,7 @@
 #include "timelinetrackheadercontrols.h"
 #include "timelineinputrouter.h"
 #include "timelinesceneupdates.h"
+#include "timelinecommandpaintevidence.h"
 
 namespace Unbound {
 // Present one live native Timeline view. The original scene/model/input handlers
@@ -29,13 +30,13 @@ public:
             return geometry.toNative(point / factor);
         }, [this] { return factor; });
         controls.divider->moved = [this](double delta) {
-            requestedWidth = geometry.width + delta / factor;
+            requestedWidth = geometry.nominalWidth/geometry.ratio + delta / headerScale();
             arrange();
-            requestedWidth = geometry.width;
+            requestedWidth = geometry.nominalWidth/geometry.ratio;
             notify();
         };
         connect(controls.bar, &QScrollBar::valueChanged, this, [this](int value) {
-            requestedOffset = value / factor;
+            requestedOffset = value / headerScale();
             arrange();
             notify();
         });
@@ -44,8 +45,15 @@ public:
             arrange();
             notify();
         });
+        controls.value=[this]{return headerScale();};controls.maximum=[this]{return factor;};
+        controls.set=[this](double value) {
+            if(value!=0. && (!qIsFinite(value) || value<.7 || value>factor))return;
+            requestedHeaderScale=value;arrange();notify();
+        };
         updates=new TimelineSceneUpdates(view,this);
         updates->suspended=[this]{if(!rendering)renderer.releasePixels();};
+        updates->headerMovesWithTime=[this]{return !pinned;};
+        updates->commandObserved=[this](const QString &source){evidence.requested(source,renderer.revision());};
         updates->layoutChanged=[this]{if(!arranging && !rendering)arrange();};
         updates->damaged=[this](const QList<QRectF> &rects) {
             if(rendering)return;
@@ -60,27 +68,32 @@ public:
         };
         updates->repaint=[this]{if(!rendering && !arranging)updates->schedulePaint(QRegion(layer->rect()));};
         updates->paintReady=[this](const QRegion &region){layer->update(region);};
+        input->edited=[this]{updates->commandCompleted();};
         updates->refresh();
         layer->show();
     }
     ~TimelineContentViewport() override {
         updates->stop();
+        input->edited={};
         disconnect(controls.bar,nullptr,this,nullptr);
         disconnect(controls.pin,nullptr,this,nullptr);
-        controls.divider->moved={};changed={};layer->retire();
+        controls.retire();changed={};layer->retire();
     }
     std::function<void()> changed;
-    void configure(double value, double width, double offset, bool pin) {
+    void configure(double value, double width, double offset, bool pin,double header=0.) {
         factor = value;
         requestedWidth = width;
         requestedOffset = offset;
         pinned = pin;
+        requestedHeaderScale=header;
         arrange();
     }
     double headerWidth() const { return geometry.width; }
     double retainedHeaderWidth() const { return requestedWidth; }
     double headerOffset() const { return geometry.offset; }
     bool headerPinned() const { return pinned; }
+    double headerScalePreference() const {return requestedHeaderScale;}
+    double headerScale() const {return requestedHeaderScale>0.?qMin(requestedHeaderScale,factor):factor;}
     QGraphicsView *nativeView() const { return view; }
     QWidget *presentation() const { return layer; }
     bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
@@ -110,11 +123,11 @@ private:
             geometry = TimelineTrackHeaderLayout::discover(view);
         }
         if(geometry.nativeWidth>0.) {
-            const double headerMinimum=pinned?geometry.pinnedWidth+24.:40.;
+            const double headerMinimum=(pinned?controls.minimumWidth:controls.footerControlsWidth)/factor;
             setMinimumSize(qCeil((headerMinimum+geometry.minimumBodyWidth)*factor),qCeil(geometry.minimumHeight*factor));
             layer->setGeometry(rect());
         } else setMinimumSize(0,0);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
+        configureGeometry();
         const auto frame = view->size() - view->viewport()->size();
         const int nativeWidth = qMax(1, qCeil(width() / factor + geometry.nativeWidth - geometry.width)) + frame.width();
         QList<QPair<QPointer<QGraphicsView>, QGraphicsView::ViewportAnchor>> anchors;
@@ -130,13 +143,18 @@ private:
             qMax(1,qCeil((height()-controls.footerHeight)/factor+nativeFooter))+frame.height());
         for (const auto &entry : anchors) if (entry.first) entry.first->setResizeAnchor(entry.second);
         geometry = TimelineTrackHeaderLayout::discover(view);
-        geometry.configure(QSizeF(width() / factor, height() / factor), requestedWidth, requestedOffset, pinned, controls.footerHeight/factor);
+        configureGeometry();
         const int barTop = qMax(0,height()-controls.footerHeight);
-        controls.arrange(qRound(geometry.width * factor), height(), barTop, factor, geometry.offset,
-                         geometry.maximumOffset(), pinned, geometry.pinnedWidth);
+        controls.arrange(qRound(geometry.width * factor), height(), barTop, headerScale(), geometry.offset,
+                         geometry.maximumOffset(), pinned);
         updates->geometryObserved();
+        input->geometryChanged();
         layer->raise();
         layer->update();
+    }
+    void configureGeometry() {
+        geometry.configure(QSizeF(width()/factor,height()/factor),requestedWidth,requestedOffset,pinned,
+            controls.footerHeight/factor,headerScale()/factor,controls.minimumWidth/factor,controls.footerControlsWidth/factor);
     }
     void paint(QWidget *surface,const QRegion &region) {
         updates->presented(region);
@@ -148,8 +166,11 @@ private:
         const auto source = view->mapToScene(view->viewport()->rect()).boundingRect();
         const double backing = factor * surface->devicePixelRatioF();
         if(!renderer.render(view->scene(),source,backing,geometry.sectionTops))return;
+        if(evidence.waiting())evidence.presented(renderer.revision(),renderer.sampledFingerprint(),factor,headerScale(),view);
         for(const auto &slice:geometry.slices()) {
             const QRectF destination(slice.target.topLeft()*factor,slice.target.size()*factor);
+            if(slice.background){painter.fillRect(destination,renderer.backgroundColor(slice.source,palette().window().color()));continue;}
+            painter.setRenderHint(QPainter::SmoothPixmapTransform,slice.target.width()<slice.source.width());
             renderer.draw(painter,slice.source,destination);
         }
         for(auto editor:view->viewport()->findChildren<QWidget *>()) {
@@ -171,12 +192,13 @@ private:
     }
     QPointer<QGraphicsView> view;
     TimelineSceneRenderer renderer;
+    TimelineCommandPaintEvidence evidence;
     TimelineSceneUpdates *updates = nullptr;
     Layer *layer;
     TimelineInputRouter *input = nullptr;
     TimelineTrackHeaderControls controls;
     TimelineTrackHeaderLayout geometry;
-    double factor = 1., requestedWidth = 0., requestedOffset = 0.;
+    double factor = 1., requestedWidth = 0., requestedOffset = 0.,requestedHeaderScale=0.;
     bool pinned = true, arranging = false, rendering = false;
 };
 }
