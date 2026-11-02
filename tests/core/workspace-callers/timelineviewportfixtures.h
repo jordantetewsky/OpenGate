@@ -19,12 +19,13 @@
 class UiTiClipContainer : public QGraphicsObject {
     Q_OBJECT
 public:
-    QRectF bounds{0,0,240,95};QColor fill{30,130,180};int presses=0;
+    QRectF bounds{0,0,240,95};QColor fill{30,130,180};int presses=0;bool rounded=false,rasterOnly=false;
     UiTiClipContainer(){setFlags(ItemIsSelectable|ItemIsFocusable);}
     QRectF boundingRect() const override {return bounds;}
     void setWidth(double w){prepareGeometryChange();bounds.setWidth(w);update();}
     void paint(QPainter *p,const QStyleOptionGraphicsItem *,QWidget *) override {
-        p->fillRect(bounds,fill);
+        if(rasterOnly){QImage image(bounds.size().toSize(),QImage::Format_RGB32);image.fill(fill);p->drawImage(bounds,image);return;}
+        if(rounded){p->setPen(Qt::NoPen);p->setBrush(fill);p->drawRoundedRect(bounds,5,5);}else p->fillRect(bounds,fill);
         QImage image(40,25,QImage::Format_RGB32);image.fill(fill);image.setPixelColor(15,15,Qt::yellow);
         p->drawImage(QPointF(10,5),image);
         p->fillRect(QRectF(5,35,170,55),Qt::black);

@@ -43,14 +43,24 @@ int main(int argc,char **argv) {
         QApplication::setActiveWindow(&main);focus->setFocus();TimelineViewportFixture::settle();
         QMenu root;root.setAttribute(Qt::WA_DontShowOnScreen);DynamicPalette palette(&root);palette.setAttribute(Qt::WA_DontShowOnScreen);
         auto item=root.addAction("Clip Color");item->setMenu(&palette);root.popup(QPoint(300,300));TimelineViewportFixture::settle();
+        int nativePaletteCalls=0,nativeRootCalls=0;
+        QObject::connect(&palette,&QMenu::triggered,&main,[&](QAction *){++nativePaletteCalls;clip->fill=Qt::green;clip->update();});
+        QObject::connect(&root,&QMenu::triggered,&main,[&](QAction *){++nativeRootCalls;});
         const auto point=root.actionGeometry(item).center();QMouseEvent hover(QEvent::MouseMove,point,root.mapToGlobal(point),Qt::NoButton,Qt::NoButton,Qt::NoModifier);
         QApplication::sendEvent(&root,&hover);QElapsedTimer wait;wait.start();
         while(!palette.isVisible() && wait.elapsed()<700){QApplication::processEvents();QThread::msleep(2);}
-        TimelineViewportFixture::settle();auto red=palette.findChild<QAction *>("openGateRedClipPreview");
+        TimelineViewportFixture::settle();QAction *red=nullptr;
+        for(auto action:palette.actions())if(action->objectName()=="openGateRedClipPreview")red=action;
         check(palette.isVisible() && red && red->isEnabled(),"real unnamed nested submenu gets Red after native Show population and popup focus changes");
         if(red){check(red->property("openGateCommandId").toString()==(expectPool?"clip-color.media-pool.red":"clip-color.timeline.red"),"context menu retains the originating panel command");
             TimelineViewportFixture::click(&palette,palette.actionGeometry(red).center());}
         palette.hide();root.hide();TimelineViewportFixture::settle();
+        check(nativePaletteCalls==0 && nativeRootCalls==0 && clip->fill==QColor(30,130,180),
+            "OpenGate action never reaches native palette/root handlers or changes native model color");
+        check(!palette.signalsBlocked() && !root.signalsBlocked(),"native menu signals restore after the OpenGate action");
+        auto native=palette.actions().front();native->trigger();
+        check(nativePaletteCalls==1,"ordinary native palette actions still reach their original handler once");
+        clip->fill=QColor(30,130,180);clip->update();
     };
     popup(timeline.view,false);check(clip->graphicsEffect()!=nullptr,"Timeline context-menu gesture reaches its actual native clip adapter");
     popup(&pool.view,true);check(pool.view.itemDelegateForRow(0)!=nullptr,"Media Pool context-menu gesture reaches its model delegate adapter");

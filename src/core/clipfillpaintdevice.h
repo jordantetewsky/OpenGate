@@ -14,6 +14,7 @@ namespace Unbound {
 class ClipFillPaintDevice : public QPaintDevice {
 public:
     struct Fill {QColor color;double area=0.;};
+    struct Trace {int paths=0,rounded=0,rects=0,images=0,pixmaps=0,gradients=0,textures=0;QVector<int> pathElements;};
     ClipFillPaintDevice(QPainter *output,QColor source={},QColor replacement={},QPaintDevice *reference=nullptr)
         : engine(output,source,replacement),reference(reference?reference:output?output->device():nullptr) {}
     QPaintEngine *paintEngine() const override {return const_cast<Engine *>(&engine);}
@@ -33,14 +34,14 @@ public:
             p.setOpacity(opacity);p.setCompositionMode(composition);if(clipped)p.setClipPath(clip);
         }
     };
-    struct Result {Fill source;int changed=0;};
+    struct Result {Fill source;int changed=0;Trace trace;};
     static Result render(QPainter *target,QColor color,const std::function<void(QPainter *)> &source,
                          const std::function<void(QPainter *)> &inspectSource={}) {
         const State state(*target);ClipFillPaintDevice inspect(nullptr,{},{},target->device());
         {QPainter scan(&inspect);state.apply(scan);if(inspectSource)inspectSource(&scan);else source(&scan);}
         const auto fill=inspect.largestFill();ClipFillPaintDevice device(target,fill.color,color);
         {QPainter output(&device);state.apply(output);source(&output);}
-        return {fill,device.changedFillCommands()};
+        return {fill,device.changedFillCommands(),inspect.engine.trace};
     }
 protected:
     int metric(PaintDeviceMetric key) const override {
@@ -63,12 +64,13 @@ private:
     public:
         Engine(QPainter *output,QColor source,QColor replacement)
             :QPaintEngine(AllFeatures),out(output),source(source),replacement(replacement) {}
-        Fill largest;int changed=0;
+        Fill largest;int changed=0;Trace trace;
         bool begin(QPaintDevice *) override {if(out)out->save();return true;}
         bool end() override {if(out)out->restore();return true;}
         Type type() const override {return User;}
         void updateState(const QPaintEngineState &s) override {
             brush=s.brush();
+            if(s.state().testFlag(DirtyBrush)){trace.gradients+=brush.gradient()!=nullptr;trace.textures+=brush.style()==Qt::TexturePattern;}
             if(!out)return;
             // Rebuild from the target's saved state so nested clipping and saves
             // cannot leak into neighboring clips or remove the capture's clip.
@@ -81,11 +83,14 @@ private:
             if(painter()->hasClipping())out->setClipPath(painter()->clipPath(),Qt::IntersectClip);
         }
         void drawPath(const QPainterPath &path) override {
-            const bool rectangular=rectangle(path);
+            ++trace.paths;if(trace.pathElements.size()<8)trace.pathElements.append(path.elementCount());
+            const bool rounded=roundedRectangle(path);trace.rounded+=rounded;
+            const bool rectangular=rectangle(path)||rounded;
             if(rectangular)consider(path.boundingRect());
             if(out){out->setBrush(mapped(rectangular));out->drawPath(path);out->setBrush(brush);}
         }
         void drawRects(const QRectF *r,int count) override {
+            trace.rects+=count;
             for(int i=0;i<count;++i)consider(r[i]);
             if(out){out->setBrush(mapped(true));out->drawRects(r,count);out->setBrush(brush);}
         }
@@ -112,12 +117,19 @@ private:
             QVector<QPointF> points;points.reserve(n);for(int i=0;i<n;++i)points.append(p[i]);
             drawPolygon(points.constData(),n,mode);
         }
-        void drawPixmap(const QRectF &r,const QPixmap &p,const QRectF &s) override {if(out)out->drawPixmap(r,p,s);}
-        void drawTiledPixmap(const QRectF &r,const QPixmap &p,const QPointF &s) override {if(out)out->drawTiledPixmap(r,p,s);}
-        void drawImage(const QRectF &r,const QImage &p,const QRectF &s,Qt::ImageConversionFlags f) override {if(out)out->drawImage(r,p,s,f);}
+        void drawPixmap(const QRectF &r,const QPixmap &p,const QRectF &s) override {++trace.pixmaps;if(out)out->drawPixmap(r,p,s);}
+        void drawTiledPixmap(const QRectF &r,const QPixmap &p,const QPointF &s) override {++trace.pixmaps;if(out)out->drawTiledPixmap(r,p,s);}
+        void drawImage(const QRectF &r,const QImage &p,const QRectF &s,Qt::ImageConversionFlags f) override {++trace.images;if(out)out->drawImage(r,p,s,f);}
         void drawTextItem(const QPointF &p,const QTextItem &t) override {if(out)out->drawTextItem(p,t);}
     private:
         QPainter *out;QColor source,replacement;QBrush brush;
+        static bool roundedRectangle(const QPainterPath &path) {
+            if(path.elementCount()!=17)return false;
+            const auto bounds=path.boundingRect();const auto start=path.elementAt(0),end=path.elementAt(3);
+            const double rx=end.x-bounds.left(),ry=start.y-bounds.top();
+            if(rx<=0 || ry<=0 || rx>bounds.width()/2 || ry>bounds.height()/2)return false;
+            QPainterPath expected;expected.addRoundedRect(bounds,rx,ry);return path==expected;
+        }
         static bool rectangle(const QPainterPath &path) {
             if(path.elementCount()!=5)return false;
             const auto bounds=path.boundingRect();

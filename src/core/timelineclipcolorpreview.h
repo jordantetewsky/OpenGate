@@ -30,7 +30,12 @@ public:
             if(!clip || seen.contains(clip))continue;seen.insert(clip);
             auto effect=dynamic_cast<ClipFillGraphicsEffect *>(clip->graphicsEffect());
             if(clip->graphicsEffect() && (!effect || effect->owner()!=this))continue;
-            if(!effect){effect=new ClipFillGraphicsEffect(this);clip->setGraphicsEffect(effect);clips.append({clip,effect});}
+            if(!effect){effect=new ClipFillGraphicsEffect(this);
+                const QPointer<QGraphicsObject> alive=clip;const QPointer<ClipFillGraphicsEffect> paint=effect;
+                effect->unsupported=[alive,paint]{if(alive && paint && alive->graphicsEffect()==paint) {
+                    logEvent("clip-color.preview.unsupported",{{"native_restored",true},{"project_writes",false}});
+                    alive->setGraphicsEffect(nullptr);}};
+                clip->setGraphicsEffect(effect);clips.append({clip,effect});}
             effect->setColor(color);++count;
         }
         logEvent("clip-color.preview.requested",{{"clips",count},{"color",color.name()},

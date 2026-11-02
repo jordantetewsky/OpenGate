@@ -6,6 +6,7 @@
 #include "menutrackingcommand.h"
 #include "timelineclipcolorpreview.h"
 #include "mediapoolclipcolorpreview.h"
+#include "isolatednativeaction.h"
 namespace Unbound {
 // Wire the existing command registry and native menus to surface adapters.
 // This coordinator implements no painting, scene mutation or delegate lifecycle.
@@ -84,16 +85,19 @@ private:
         const bool supported=!id(origin,"red").isEmpty();
         if(!supported){if(menus.contains(menu))for(auto action:{menus[menu].separator,menus[menu].red,menus[menu].clear})if(action)action->setVisible(false);return;}
         if(!menus.contains(menu)) {
-            connect(menu,&QObject::destroyed,this,[this,menu]{menus.remove(menu);});menus.insert(menu,{});
+            connect(menu,&QObject::destroyed,this,[this,menu]{
+                const auto entry=menus.take(menu);
+                for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
+            });menus.insert(menu,{});
         }
         auto &entry=menus[menu];
-        if(!entry.red || !entry.clear) {
+        if(!entry.red || !entry.clear || !menu->actions().contains(entry.red) || !menu->actions().contains(entry.clear)) {
             for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
             entry.separator=menu->addSeparator();
-            entry.red=menu->addAction("Preview Red (Temporary)");entry.red->setObjectName("openGateRedClipPreview");
-            entry.clear=menu->addAction("Clear Temporary Clip Color Preview");
-            connect(entry.red,&QAction::triggered,this,[this,menu]{queue(menu,"red");});
-            connect(entry.clear,&QAction::triggered,this,[this,menu]{queue(menu,"clear");});
+            entry.red=IsolatedNativeAction::create("Preview Red (Temporary)",this,[this,menu]{queue(menu,"red");});
+            entry.red->setObjectName("openGateRedClipPreview");menu->addAction(entry.red);
+            entry.clear=IsolatedNativeAction::create("Clear Temporary Clip Color Preview",this,[this,menu]{queue(menu,"clear");});
+            menu->addAction(entry.clear);
         }
         entry.origin=origin;
         for(auto action:{entry.separator,entry.red,entry.clear})if(action)action->setVisible(true);

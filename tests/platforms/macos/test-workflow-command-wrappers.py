@@ -10,7 +10,8 @@ else:
     subprocess.run([sys.executable,str(root/'infrastructure/macos/build-workflow-commands.py')],check=True)
 output=root/('build/'+platform+'/workflow-commands')
 manifest=json.loads((output/'manifest.json').read_text())
-assert len({entry['command'] for entry in manifest})==len(manifest)==33
+assert len({entry['command'] for entry in manifest})==len(manifest)==37
+assert {'clip-color.timeline.red','clip-color.timeline.clear','clip-color.media-pool.red','clip-color.media-pool.clear'} <= {e['command'] for e in manifest}
 with tempfile.TemporaryDirectory() as directory:
     old=os.environ.get('UNBOUND_LAUNCH_DIRECTORY'); os.environ['UNBOUND_LAUNCH_DIRECTORY']=directory
     try:
@@ -22,7 +23,7 @@ with tempfile.TemporaryDirectory() as directory:
         for entry in manifest:
             runpy.run_path(str(output/entry['file']),init_globals={'resolve':resolve})
         requests=list((Path(directory)/'command-requests').glob('*.json'))
-        assert len(requests)==32
+        assert len(requests)==36
         assert {json.loads(p.read_text())['command'] for p in requests}=={e['command'] for e in manifest if e['command']!='edit.inspector.stabilize'}
         results=list((Path(directory)/'command-results').glob('*.json'))
         assert calls==['stabilize'] and len(results)==1
@@ -39,14 +40,14 @@ with tempfile.TemporaryDirectory() as directory:
             if had_ctypes:sys.modules['ctypes']=original_ctypes
             else:sys.modules.pop('ctypes',None)
         fallback=list((Path(directory)/'command-requests').glob('*.json'))
-        assert len(fallback)==33
+        assert len(fallback)==37
         stabilize=next(e for e in manifest if e['command']=='edit.inspector.stabilize')
         # No initialized Resolve context fails explicitly; it cannot fall back to
         # a legacy registry request or to the clip underneath the playhead.
         runpy.run_path(str(output/stabilize['file']))
         results=[json.loads(p.read_text()) for p in (Path(directory)/'command-results').glob('*.json')]
         assert len(results)==2 and any(r.get('reason')=='resolve-context-unavailable' for r in results)
-        assert len(list((Path(directory)/'command-requests').glob('*.json')))==33
+        assert len(list((Path(directory)/'command-requests').glob('*.json')))==37
         if platform=='windows':
             runpy.run_path(str(output/'OpenGate.py'))
             first=(Path(directory)/'show-controls.request').read_text()

@@ -2059,3 +2059,47 @@ behavior remain live acceptance work. Persistent custom colors, the shared
 HSL/RGB/hex picker and closest supported native fallback are retained requirements,
 not implemented by this temporary trial. Rendering contract/evidence:
 `opengate-custom-clip-color-rendering-proof-20261102.md`. No merge, push or publication.
+
+### Timeline-only menu repair installed — November 2, 07:52 UTC
+
+Jordan requested immediate installation without Media Pool. `0480ac1` is installed
+and loaded, with corrected unnamed/nested context-menu routing and two Timeline
+Red/Clear workflow mapping targets. All 23 managed hashes and the strict deep
+signature verify; all 197 protected paths were unchanged before launch. Resolve
+was reopened with preview enabled and Media Pool explicitly disabled. Transaction
+`856F8A59-EF23-4C88-A4EF-84FCC3414CFD` preserves 37a90e7; the earlier
+`E216CFDE-9683-483E-AEF6-632B73FA7618` still preserves 503a969.
+
+Painting, graphics-effect ownership, Timeline selection/cleanup, Media Pool
+delegate painting/cleanup, native menu integration and command registration now
+have focused modules. The old viewport-owned Timeline menu/filter path was removed;
+menu tracking dispatch is shared with the existing command menu. Real nested menu
+and native preset mapping fixtures pass optimized/ASAN; Timeline paint and existing
+command-menu fixtures pass. Media Pool scale/rename/delegate sanitizer fixtures
+pass but Media Pool is not enabled or live accepted. Windows remains unverified.
+Native submenu/painting/editing/commands/playback acceptance is pending. No saved
+custom color, native fallback, shared picker, merge or publication is claimed.
+Receipt: `build/timeline-red-menu-install/installation-receipt.json`.
+
+### Timeline-only Red trial failed native acceptance
+
+Jordan's screenshot shows Green after Red. Runtime 0480ac1 logs show the Red
+request #ff0000 reached one clip but found no eligible source fill and changed
+zero fill commands. A read-only Resolve API query confirms native track colors
+[empty, Green, empty, Green], with the selected clip Green. These are stored
+native colors, not evidence that Red paint was converted to Green. Original
+colors are not assumed and no project repair/API write was performed. Evidence:
+`build/red-native-color-failure-20261102`.
+
+Qt menu activation propagates custom actions to native QMenu::triggered handlers
+(including the parent menu). A broad-handler fixture reproduces native color
+mutation from the appended action. OpenGate's earlier no-project-writes claim
+was incorrect in practice; absence of direct scripting writes did not prevent
+that side effect. Source repair isolates only custom activation propagation,
+leaves native connections intact, and tests ordinary native actions afterward.
+
+Separate paint repair adds canonical rounded-fill support, primitive counts
+without image/text content, and removal of a preview effect when no safe fill
+is found. Raster/texture/gradient/native GPU paths are not assumed supported.
+The native paint cause remains unverified until a fresh native trial; this source
+repair is not live acceptance. Media Pool stays disabled.
