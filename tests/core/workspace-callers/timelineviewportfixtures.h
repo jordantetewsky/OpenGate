@@ -16,6 +16,28 @@
 #include <functional>
 #include "nativepaintfixtures.h"
 
+class UiTiClipContainer : public QGraphicsObject {
+    Q_OBJECT
+public:
+    QRectF bounds{0,0,240,95};QColor fill{30,130,180};int presses=0;
+    UiTiClipContainer(){setFlags(ItemIsSelectable|ItemIsFocusable);}
+    QRectF boundingRect() const override {return bounds;}
+    void setWidth(double w){prepareGeometryChange();bounds.setWidth(w);update();}
+    void paint(QPainter *p,const QStyleOptionGraphicsItem *,QWidget *) override {
+        p->fillRect(bounds,fill);
+        QImage image(40,25,QImage::Format_RGB32);image.fill(fill);image.setPixelColor(15,15,Qt::yellow);
+        p->drawImage(QPointF(10,5),image);
+        p->fillRect(QRectF(5,35,170,55),Qt::black);
+        QPainterPath waveform;waveform.moveTo(10,55);waveform.lineTo(20,40);
+        waveform.lineTo(30,55);waveform.lineTo(40,42);waveform.lineTo(50,55);waveform.closeSubpath();
+        p->setPen(Qt::NoPen);p->setBrush(fill);p->drawPath(waveform);
+        p->setPen(fill);QFont f;f.setPixelSize(13);p->setFont(f);p->drawText(QPointF(12,80),"Native clip text");
+        f.setPointSize(9);p->setFont(f);p->drawText(QPointF(120,80),"Point size");
+    }
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *e) override {++presses;QGraphicsObject::mousePressEvent(e);}
+};
+
 // Native semantic types use real Qt metadata, rather than production test flags.
 class UiTiTrackControlItem : public QGraphicsObject {
     Q_OBJECT

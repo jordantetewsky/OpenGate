@@ -9,6 +9,7 @@
 #include "timelineinputrouter.h"
 #include "timelinesceneupdates.h"
 #include "timelinecommandpaintevidence.h"
+#include "timelineclipcolorpreview.h"
 
 namespace Unbound {
 // Present one live native Timeline view. The original scene/model/input handlers
@@ -71,6 +72,9 @@ public:
         updates->paintReady=[this](const QRegion &region){layer->update(region);};
         input->edited=[this]{updates->commandCompleted();};
         updates->refresh();
+        // No menu/filter or paint effect is enabled in normal builds/sessions.
+        if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_RED_PREVIEW")==1)
+            new TimelineClipColorPreview(view,this);
         layer->show();
     }
     ~TimelineContentViewport() override {
