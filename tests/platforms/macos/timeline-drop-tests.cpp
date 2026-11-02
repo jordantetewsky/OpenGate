@@ -79,6 +79,13 @@ int main(int argc,char **argv) {
         QDragEnterEvent disabled(at,Qt::CopyAction,&mime,Qt::LeftButton,Qt::NoModifier);QApplication::sendEvent(layer,&disabled);
         check(!disabled.isAccepted() && zone->enters==enters,"a disabled native viewport cannot accept a mapped drag");
     }
+    QFile evidence(files.path()+"/events.jsonl");evidence.open(QIODevice::ReadOnly);int dropFrames=0;
+    for(const auto &line:evidence.readAll().split('\n')) {
+        const auto record=QJsonDocument::fromJson(line).object();
+        if(record["event"]=="timeline.command.presented" && record["sources"].toArray().contains("native-timeline-drop"))
+            ++dropFrames;
+    }
+    check(dropFrames==5,"each completed native drop records its frame without per-move frame diagnostics");
     timelineSourceEditChecks(check);
     std::printf("timeline drop failures=%d\n",failures);return failures?1:0;
 }
