@@ -2103,3 +2103,25 @@ without image/text content, and removal of a preview effect when no safe fill
 is found. Raster/texture/gradient/native GPU paths are not assumed supported.
 The native paint cause remains unverified until a fresh native trial; this source
 repair is not live acceptance. Media Pool stays disabled.
+
+### Native palette collision repair checkpoint d6104d8
+
+Built/staged universal O2 d6104d8. Native palette collision/menu and Timeline
+rectangle/rounded/raster-only safety fixtures pass with ASAN. Unsupported raster
+painting removes only the preview's effect, retaining native model color and
+pixels. Wrapper tests pass for all 37 generated workflow entries. Bootstrap,
+strict deep signature and temporary install/exact rollback rehearsal pass.
+Receipt: `build/red-action-isolation-install/build-receipt.json`.
+
+The new focused IsolatedNativeAction owns temporary native-menu signal leases,
+including overlapping activation state and restoration before subsequent input.
+The command coordinator constructs its action before adding it to native menus;
+ordinary native handler connections are retained. Existing paint-device and
+Timeline lease responsibilities remain in their focused modules. Diff reviewed
+for state writers, duplicate paths, dependencies and growth. Shared core code is
+compiled for both Mac architectures; Windows native verification remains open.
+
+0480ac1 remains installed at this checkpoint; no native project color repair
+or new installation was performed. Actual Red painting and native stored-color
+integrity require a fresh Resolve trial. The added rounded support is not proof
+of the unidentified native paint path; primitive diagnostics distinguish it.
