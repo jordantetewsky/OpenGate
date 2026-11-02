@@ -35,14 +35,14 @@ public:
         display->setAcceptDrops(true);
     }
     void geometryChanged(){coordinates.geometryChanged();}
-    std::function<void(const QString &)> edited;
+    std::function<void(QEvent::Type)> edited;
     // Align through native queued handlers; no command replay or OS pointer warp.
     bool dispatchPointerShortcut(QObject *receiver,QEvent *event) {
         if(!native || !display || !receiver)return false;
         if(!coordinates.alignCursor())return false;
         QPointer<TimelineInputRouter> alive=this;
         QApplication::sendEvent(receiver,event);
-        if(alive && edited)edited("native-timeline-shortcut");
+        if(alive && edited)edited(event->type());
         return true;
     }
 protected:
@@ -89,7 +89,7 @@ protected:
             TimelineViewportDragDispatch::dispatch(display,native,event,mapping,
                 [this](QPointF point,QPoint physical){coordinates.alignNative(point,physical);});
             if(!alive)return true;forwarding=false;cursors.refresh();
-            if(edited)edited("native-timeline-"+TimelineViewportDragDispatch::phase(event->type()));
+            if(edited)edited(event->type());
             return true;
         }
         case QEvent::Leave:
@@ -124,7 +124,7 @@ private:
         }
         original->setAccepted(mapped.isAccepted());
         const bool changing=mapped.type()!=QEvent::MouseMove || static_cast<QMouseEvent &>(mapped).buttons()!=Qt::NoButton;
-        if(edited && changing && mapped.type()!=QEvent::ToolTip && mapped.type()!=QEvent::Leave)edited("native-timeline-input");
+        if(edited && changing && mapped.type()!=QEvent::ToolTip && mapped.type()!=QEvent::Leave)edited(mapped.type());
         return true;
     }
     bool mouse(QMouseEvent *event) {

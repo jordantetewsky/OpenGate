@@ -69,7 +69,10 @@ public:
         };
         updates->repaint=[this]{if(!arranging)updates->schedulePaint(QRegion(layer->rect()));};
         updates->paintReady=[this](const QRegion &region){layer->update(region);};
-        input->edited=[this](const QString &source){updates->commandCompleted();if(updates->commandObserved)updates->commandObserved(source);};
+        input->edited=[this](QEvent::Type type){
+            updates->commandCompleted();
+            if(type==QEvent::Drop && updates->commandObserved)updates->commandObserved(QStringLiteral("native-timeline-drop"));
+        };
         updates->refresh();
         layer->show();
     }

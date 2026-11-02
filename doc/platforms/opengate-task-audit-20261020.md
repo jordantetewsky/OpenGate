@@ -2143,5 +2143,5 @@ the latest run, but one stationary-pointer assertion fails while the computer
 is in use; an idle-pointer gate remains pending. No complete new full-suite pass
 or live Resolve acceptance is claimed. Private root viewport filtering, native
 edit APIs and GPU painting still need live proof. Details, organization review
-and evidence: `opengate-timeline-source-drop-repair-20261102.md`. Installed0480ac1,
+and evidence: `opengate-timeline-source-drop-repair-20261102.md`. Installed 0480ac1,
 preserved rollback checkpoints and project state have not been changed.

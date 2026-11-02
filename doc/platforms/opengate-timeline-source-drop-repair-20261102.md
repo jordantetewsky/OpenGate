@@ -31,7 +31,8 @@ same cause or that Red works.
 - TimelineInputRouter delegates drag phases to that module. The replaced event
   construction cases and old drop helper are removed. Other input stays there.
 - TimelineContentViewport wires input completion to existing scene damage and
-  command-to-frame evidence. TimelineSceneUpdates remains the sole scheduler.
+  completed-drop frame evidence. Move/preview phases do not add frame-diagnostic
+  output. TimelineSceneUpdates remains the sole scheduler.
 
 No second renderer, state owner, model mutation, command replay, pointer warp,
 playback timer or repaint polling was added. Diagnostics distinguish delivery
