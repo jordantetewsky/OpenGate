@@ -141,3 +141,18 @@ yields through its existing singleton check; if it already owns a service, the
 developer entry refuses to start. The same production controller and renderer run,
 with no proxy effect and no concurrent controllers. This candidate is not yet loaded
 or live accepted; a one-session launch requires Jordan's explicit go-ahead.
+
+Prepared runtime: clean source `929758a`, universal O2, with the compile-time
+development entry. Strict/deep OFX bundle verification and final binary hashes
+pass. Stage: ignored `build/native-renderer-proof`; no installer or library
+replacement is involved. The ordinary entry variant also compiles for both Mac
+architectures after correcting Bash's empty-array handling with `set -u`. The
+builder no longer creates an empty legacy OFX timestamp file in custom bundles.
+Source backups `fix/native-view-clip-color` and `fix/native-clip-skin-color` are
+pushed to Jordan's personal repository; no main merge or package publication.
+
+Next live acceptance actions: confirm exactly one helper.start and loaded build
+929758a; select a real Timeline clip in OpenGate; use its native Clip Color > Red
+entry; verify the visible body beneath unchanged foreground content, neighboring
+clips, displayed pixels after edits/Undo/Redo, and Original UI return. Checkmarks,
+saved palette/picker and portability remain separate unfinished feature work.
