@@ -4,7 +4,11 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 source "$root/infrastructure/macos/build-target.sh"
 qt="${1:-$root/build/macos/qtbase-source}"
 app="${2:-/Applications/DaVinci Resolve/DaVinci Resolve.app}"
-out="$root/build/macos/ofx-probe/UnboundLoadingProbe.ofx.bundle/Contents/MacOS"
+out="${OPENGATE_WIDGET_PROBE_OUT:-$root/build/macos/ofx-probe/UnboundLoadingProbe.ofx.bundle/Contents/MacOS}"
+development_flags=()
+if [[ "${OPENGATE_DEVELOPMENT_ENTRY:-0}" == 1 ]]; then
+    development_flags+=(-DOPENGATE_DEVELOPMENT_ENTRY)
+fi
 if [[ ! -f "$qt/src/corelib/global/qconfig.h" || ! -f "$qt/include/QtWidgets/QApplication" || ! -d "$out" ]]; then
     echo 'Configure Qt 5.15.2 headers and build the OpenFX probe first.' >&2
     exit 1
@@ -22,7 +26,7 @@ objects="$root/build/macos/widget-probe-objects"
 mkdir -p "$objects"
 for source in "$root/tests/platforms/macos/qt-widget-probe.cpp" "$root/src/platforms/macos/nativechrome.mm"; do
     object="$objects/$(basename "$source").o"
-    xcrun clang++ "${opengate_macos_flags[@]}" -std=c++17 -Wall -Wextra -Werror -O2 -g -fvisibility=hidden \
+    xcrun clang++ "${opengate_macos_flags[@]}" "${development_flags[@]}" -std=c++17 -Wall -Wextra -Werror -O2 -g -fvisibility=hidden \
         -include "$generated/unboundbuildmanifest.h" \
         -DUNBOUND_BUILD_ID="\"$revision\"" \
         -I "$generated" -I "$qt/include" -I "$qt/include/QtCore" -I "$qt/include/QtGui" -I "$qt/include/QtWidgets" \

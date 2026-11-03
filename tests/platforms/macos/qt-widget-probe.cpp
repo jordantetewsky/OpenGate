@@ -38,6 +38,10 @@ static void captureWidgets(int capture)
     if (file.write(data) == data.size()) file.commit();
 }
 
+#ifdef OPENGATE_DEVELOPMENT_ENTRY
+#include "developmententry.h"
+#endif
+
 extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets()
 {
     // Read only, bounded snapshots let Resolve finish creating its lazy panels.
@@ -46,10 +50,17 @@ extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets()
     QTimer::singleShot(2000, qApp, [] { captureWidgets(1); });
     QTimer::singleShot(10000, qApp, [] { captureWidgets(2); });
     QTimer::singleShot(30000, qApp, [] { captureWidgets(3); });
-    QTimer::singleShot(2000, qApp, [] {
+    const auto start=[] {
         if (qApp->findChild<QObject *>(QStringLiteral("unboundControlService"))) return;
         auto diagnostics = new Unbound::WindowDiagnostics(qApp);
         qApp->installEventFilter(diagnostics);
         new Unbound::ControlService(qApp);
-    });
+    };
+#ifdef OPENGATE_DEVELOPMENT_ENTRY
+    if(qEnvironmentVariableIntValue("OPENGATE_DEVELOPMENT_SESSION")!=1)return;
+    if(!OpenGateDevelopment::reserveEntry(qApp,2000,start))
+        Unbound::logEvent("development.entry.rejected",{{"reason","service-already-owned"}});
+#else
+    QTimer::singleShot(2000,qApp,start);
+#endif
 }

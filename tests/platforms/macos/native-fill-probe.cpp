@@ -13,7 +13,7 @@
 
 namespace {
 void record(QString event,QJsonObject data={}) {
-    const auto path=qEnvironmentVariable("OPENGATE_NATIVE_FILL_TRACE_LOG");
+    const auto path=qEnvironmentVariable("OPENGATE_NATIVE_SKIN_PROBE_LOG");
     if(path.isEmpty())return;
     data["event"]=event;data["pid"]=double(QCoreApplication::applicationPid());
     data["time"]=QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
@@ -77,7 +77,7 @@ private:
         QTimer::singleShot(500,this,[this,root,selected]{
             if(!root || selected!=selection(root)){record("probe.rejected",{{"reason","selection-changed"}});return;}
             clear();
-            if(auto parent=root->parentWidget())parent->grab().save(qEnvironmentVariable("OPENGATE_NATIVE_FILL_TRACE_LOG")+".before.png");
+            if(auto parent=root->parentWidget())parent->grab().save(qEnvironmentVariable("OPENGATE_NATIVE_SKIN_PROBE_LOG")+".before.png");
             preview=new Unbound::TimelineClipColorPreview(root,this);
             const auto count=preview->applySelected(Qt::red);
             auto bindings=Unbound::TimelineClipColorBindings::find(root);const auto regions=bindings?bindings->regions():QVector<Unbound::ClipFillRegion>();
@@ -93,25 +93,35 @@ private:
                 bool relevant=false;for(const auto &region:regions)relevant|=proxy->sceneBoundingRect().intersects(region.visible);
                 if(!relevant)continue;
                 auto commands=std::make_shared<QJsonArray>();
+                auto saved=std::make_shared<QSet<qint64>>();
                 auto effect=new OpenGateTest::ClipNativeFillProbe(root,proxy,[commands](const Unbound::ClipFillPaintDevice::Result &result){
-                    record("probe.native-paint",{{"changed_fill_commands",result.changed},{"rectangles",result.trace.rects},{"pixmaps",result.trace.pixmaps},{"commands",*commands}});
+                    record("probe.native-paint",{{"changed_fill_commands",result.changed},{"changed_skin_pixmaps",result.changedPixmaps},{"rectangles",result.trace.rects},{"pixmaps",result.trace.pixmaps},{"commands",*commands}});
                 },[commands,regions](const char *kind,const QRectF &rect,QColor source,QColor replacement){
                     if(commands->size()>=256)return;
                     for(const auto &region:regions)if(rect.intersects(region.visible)) {
                         commands->append(QJsonObject{{"kind",kind},{"rect",QJsonArray{rect.x(),rect.y(),rect.width(),rect.height()}},
                             {"source",source.isValid()?source.name(QColor::HexArgb):QString()},{"replacement",replacement.isValid()?replacement.name():QString()}});break;
                     }
+                },[commands,saved,regions](const QRectF &rect,const QPixmap &pixmap,const QRectF &source){
+                    for(const auto &region:regions)if(rect.intersects(region.visible)) {
+                        if(commands->size()<256)commands->append(QJsonObject{{"kind","pixmap-source"},{"rect",QJsonArray{rect.x(),rect.y(),rect.width(),rect.height()}},
+                            {"source_rect",QJsonArray{source.x(),source.y(),source.width(),source.height()}},
+                            {"key",QString::number(pixmap.cacheKey())},{"width",pixmap.width()},{"height",pixmap.height()},{"dpr",pixmap.devicePixelRatio()}});
+                        if(saved->size()<8 && !saved->contains(pixmap.cacheKey()) && pixmap.width()<=128 && pixmap.height()<=128) {
+                            saved->insert(pixmap.cacheKey());pixmap.save(qEnvironmentVariable("OPENGATE_NATIVE_SKIN_PROBE_LOG")+".skin-"+QString::number(pixmap.cacheKey())+".png");
+                        }break;
+                    }
                 });proxies.append(proxy);effects.append(effect);proxy->setGraphicsEffect(effect);
             }
             record("probe.attached",{{"selected",count},{"view_proxies",proxies.size()},{"regions",regions.size()}});
             QTimer::singleShot(250,this,[root]{if(root)if(auto parent=root->parentWidget())
-                parent->grab().save(qEnvironmentVariable("OPENGATE_NATIVE_FILL_TRACE_LOG")+".after.png");});
+                parent->grab().save(qEnvironmentVariable("OPENGATE_NATIVE_SKIN_PROBE_LOG")+".after.png");});
         });
     }
 };
 }
 extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets() {
     if(!qApp || qApp->findChild<QObject *>("openGateNativeFillProbe"))return;
-    if(qEnvironmentVariable("OPENGATE_NATIVE_FILL_TRACE_LOG").isEmpty())return;
+    if(qEnvironmentVariable("OPENGATE_NATIVE_SKIN_PROBE_LOG").isEmpty())return;
     new NativeFillProbe;
 }

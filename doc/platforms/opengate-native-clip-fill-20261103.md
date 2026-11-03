@@ -93,3 +93,51 @@ and repainting; then implement checkmarks, saved palette/picker, verified per-cl
 association, native fallback and interchange. Subtle independent track-lane tint
 remains lower priority and must not overwrite clip colors. No new installation,
 main merge, package publication or native color-model write is claimed here.
+
+## Jordan's mode-switch discovery and skin candidate
+
+Exact user sequence: choose Clip Color > Red in OpenGate, then choose Use Original
+Resolve UI to see whether the command affected that presentation. Jordan did not
+disable thumbnails or change the clip display style. His screenshots show Red in
+Original UI with foreground thumbnails absent while OpenGate retains its different
+presentation. Treat this as a successful diagnostic discovery of a native paint
+effect, not complete custom-color acceptance. Do not attribute the display change
+to a user setting or infer its mechanism from the screenshots alone.
+
+Process 82246 / session dc1644c5-4852-4d7a-b7eb-25388ff7ff13 recorded the assignments
+and later managed -> native -> managed transitions. The probe changed the rectangle
+under the thumbnails, but changed zero skin pixmaps. Detailed raster evidence
+identifies a shared 244x164 physical-pixel background at DPR 2, drawn as nine pieces,
+and a separate 226x228 selection skin. The former exceeded the experimental 128px
+guard. A preceding clip's right-shadow pieces also entered the selected clip's
+three-pixel margin. These are concrete candidate matcher gaps, not proof of why
+the two complete presentation paths differ. Logs/images remain local under
+`build/native-clip-skin-proof`.
+
+The source now separately recognizes nine-piece geometry (`clipninepatch.h`),
+recolors a verified skin palette while retaining alpha/neutral shading
+(`clipskinpalette.h`), and caches source-key/color variants (`clipskinpaint.h`).
+The paint-device pixmap callback passes all unrecognized images through. Native
+geometry is tested explicitly at DPR 2, including preceding shadow fragments.
+Only tiles whose centers belong to the selected clip can enter its group. Cache
+limits are eight source images, four variants each, and 512px per image dimension;
+there is no repeated pixel recoloring for a cached source/color pair. This is not
+a native playback performance guarantee or complete support for every native skin.
+
+Optimized ASAN Timeline, proxy-probe and shared Media Pool fixtures pass. Latest
+exact-geometry result: `clip-skin-native-geometry-tests.log`; developer bootstrap
+singleton/order/shutdown checks: `development-entry-tests.log`, both zero failures.
+No native skin success is claimed. The production candidate changes no clip effects;
+the diagnostic proxy effect is confined to the test helper.
+
+Jordan closed the probe process. Normal reopening restored installed 7b191f8 in
+process 82307 / session 9d9939e4-86fc-497c-afdb-6d8b48625f97, without the developer
+probe or experimental Red launch flags. No installation changed.
+
+The next proposed proof must use the actual OpenGate renderer. A compile-time
+development entry reserves the existing startup singleton name before constructing
+the real candidate ControlService after the ordinary delay. The installed entry
+yields through its existing singleton check; if it already owns a service, the
+developer entry refuses to start. The same production controller and renderer run,
+with no proxy effect and no concurrent controllers. This candidate is not yet loaded
+or live accepted; a one-session launch requires Jordan's explicit go-ahead.

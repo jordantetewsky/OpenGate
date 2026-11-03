@@ -15,10 +15,11 @@ class ClipFillPaintDevice : public QPaintDevice {
 public:
     using FillMapper=std::function<QColor(const QRectF &,QColor,const QTransform &)>;
     using RasterObserver=std::function<void(const QRectF &,const QTransform &,const char *)>;
+    using PixmapMapper=std::function<QPixmap(const QRectF &,const QPixmap &,const QRectF &,const QTransform &)>;
     struct Fill {QColor color;double area=0.;};
     struct Trace {int paths=0,rounded=0,rects=0,images=0,pixmaps=0,gradients=0,textures=0;QVector<int> pathElements;};
-    ClipFillPaintDevice(QPainter *output,QColor source={},QColor replacement={},QPaintDevice *reference=nullptr,FillMapper mapper={},RasterObserver rasterObserver={})
-        : engine(output,source,replacement,std::move(mapper),std::move(rasterObserver)),reference(reference?reference:output?output->device():nullptr) {}
+    ClipFillPaintDevice(QPainter *output,QColor source={},QColor replacement={},QPaintDevice *reference=nullptr,FillMapper mapper={},RasterObserver rasterObserver={},PixmapMapper pixmapMapper={})
+        : engine(output,source,replacement,std::move(mapper),std::move(rasterObserver),std::move(pixmapMapper)),reference(reference?reference:output?output->device():nullptr) {}
     QPaintEngine *paintEngine() const override {return const_cast<Engine *>(&engine);}
     Fill largestFill() const {return engine.largest;}
     int changedFillCommands() const {return engine.changed;}
@@ -36,11 +37,11 @@ public:
             p.setOpacity(opacity);p.setCompositionMode(composition);if(clipped)p.setClipPath(clip);
         }
     };
-    struct Result {Fill source;int changed=0;Trace trace;};
-    static Result mapRectangularFills(QPainter *target,FillMapper mapper,const std::function<void(QPainter *)> &source,RasterObserver observer={}) {
-        const State state(*target);ClipFillPaintDevice device(target,{},{},nullptr,std::move(mapper),std::move(observer));device.nativeMetrics=true;
+    struct Result {Fill source;int changed=0;Trace trace;int changedPixmaps=0;};
+    static Result mapRectangularFills(QPainter *target,FillMapper mapper,const std::function<void(QPainter *)> &source,RasterObserver observer={},PixmapMapper pixmaps={}) {
+        const State state(*target);ClipFillPaintDevice device(target,{},{},nullptr,std::move(mapper),std::move(observer),std::move(pixmaps));device.nativeMetrics=true;
         {QPainter output(&device);state.apply(output);source(&output);}
-        return {device.largestFill(),device.changedFillCommands(),device.engine.trace};
+        return {device.largestFill(),device.changedFillCommands(),device.engine.trace,device.engine.changedPixmaps};
     }
     static Result render(QPainter *target,QColor color,const std::function<void(QPainter *)> &source,
                          const std::function<void(QPainter *)> &inspectSource={}) {
@@ -70,9 +71,9 @@ protected:
 private:
     class Engine : public QPaintEngine {
     public:
-        Engine(QPainter *output,QColor source,QColor replacement,FillMapper mapper,RasterObserver observer)
-            :QPaintEngine(AllFeatures),out(output),source(source),replacement(replacement),mapper(std::move(mapper)),rasterObserver(std::move(observer)) {}
-        Fill largest;int changed=0;Trace trace;
+        Engine(QPainter *output,QColor source,QColor replacement,FillMapper mapper,RasterObserver observer,PixmapMapper pixmaps)
+            :QPaintEngine(AllFeatures),out(output),source(source),replacement(replacement),mapper(std::move(mapper)),rasterObserver(std::move(observer)),pixmapMapper(std::move(pixmaps)) {}
+        Fill largest;int changed=0,changedPixmaps=0;Trace trace;
         bool begin(QPaintDevice *) override {
             if(out){if(mapper)replayBasis=out->deviceTransform().inverted()*out->worldTransform();out->save();}
             return true;
@@ -133,12 +134,16 @@ private:
             QVector<QPointF> points;points.reserve(n);for(int i=0;i<n;++i)points.append(p[i]);
             drawPolygon(points.constData(),n,mode);
         }
-        void drawPixmap(const QRectF &r,const QPixmap &p,const QRectF &s) override {++trace.pixmaps;observeRaster(r,"pixmap");if(out)out->drawPixmap(r,p,s);}
+        void drawPixmap(const QRectF &r,const QPixmap &p,const QRectF &s) override {
+            ++trace.pixmaps;observeRaster(r,"pixmap");if(!out)return;
+            const auto replacement=pixmapMapper?pixmapMapper(r,p,s,painter()->deviceTransform()):QPixmap();
+            if(!replacement.isNull()){++changedPixmaps;out->drawPixmap(r,replacement,s);}else out->drawPixmap(r,p,s);
+        }
         void drawTiledPixmap(const QRectF &r,const QPixmap &p,const QPointF &s) override {++trace.pixmaps;observeRaster(r,"tiled-pixmap");if(out)out->drawTiledPixmap(r,p,s);}
         void drawImage(const QRectF &r,const QImage &p,const QRectF &s,Qt::ImageConversionFlags f) override {++trace.images;observeRaster(r,"image");if(out)out->drawImage(r,p,s,f);}
         void drawTextItem(const QPointF &p,const QTextItem &t) override {if(out)out->drawTextItem(p,t);}
     private:
-        QPainter *out;QColor source,replacement;QBrush brush;FillMapper mapper;RasterObserver rasterObserver;QTransform replayBasis;
+        QPainter *out;QColor source,replacement;QBrush brush;FillMapper mapper;RasterObserver rasterObserver;PixmapMapper pixmapMapper;QTransform replayBasis;
         void observeRaster(const QRectF &rect,const char *kind) {if(rasterObserver)rasterObserver(rect,painter()->deviceTransform(),kind);}
         static bool roundedRectangle(const QPainterPath &path) {
             if(path.elementCount()!=17)return false;

@@ -44,14 +44,26 @@ protected:
 class BatchedClipSceneView : public QGraphicsView {
 public:
     using QGraphicsView::QGraphicsView;
-    bool clipBackground=false,clipBatchToExposure=false;
+    bool clipBackground=false,clipBatchToExposure=false,clipSkins=false;QPixmap skin;
+    static QVector<QPair<QRectF,QRectF>> skinTiles(QRectF target,QSize size) {
+        const double tx[]{target.left(),target.left()+4,target.right()-4,target.right()};
+        const double ty[]{target.top(),target.top()+4,target.bottom()-4,target.bottom()};
+        const double sx[]{0,4,double(size.width()-4),double(size.width())};
+        const double sy[]{0,4,double(size.height()-4),double(size.height())};
+        QVector<QPair<QRectF,QRectF>> tiles;
+        for(int cell:{0,2,6,8,1,7,3,5,4}){const int x=cell%3,y=cell/3;
+            tiles.append({QRectF(QPointF(tx[x],ty[y]),QPointF(tx[x+1],ty[y+1])),QRectF(QPointF(sx[x],sy[y]),QPointF(sx[x+1],sy[y+1]))});}
+        return tiles;
+    }
 protected:
     void drawBackground(QPainter *p,const QRectF &area) override {
         QGraphicsView::drawBackground(p,area);if(!clipBackground || !scene())return;
         QMap<QRgb,QVector<QRectF>> batches;
         for(auto item:scene()->items())if(!item->parentItem() && item->flags().testFlag(QGraphicsItem::ItemHasNoContents))
-            if(auto clip=dynamic_cast<UiTiClipContainer *>(item))if(clip->isVisible())
-                batches[clip->fill.rgba()].append(clipBatchToExposure?clip->sceneBoundingRect().intersected(area):clip->sceneBoundingRect());
+            if(auto clip=dynamic_cast<UiTiClipContainer *>(item))if(clip->isVisible()) {
+                if(clipSkins){for(const auto &tile:skinTiles(clip->sceneBoundingRect(),skin.size()))p->drawPixmap(tile.first,skin,tile.second);}
+                else batches[clip->fill.rgba()].append(clipBatchToExposure?clip->sceneBoundingRect().intersected(area):clip->sceneBoundingRect());
+            }
         p->save();p->setPen(Qt::NoPen);
         for(auto it=batches.cbegin();it!=batches.cend();++it){p->setBrush(QColor::fromRgba(it.key()));p->drawRects(it.value());}
         p->restore();

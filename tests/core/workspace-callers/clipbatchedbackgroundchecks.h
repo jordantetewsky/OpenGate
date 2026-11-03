@@ -47,7 +47,7 @@ template<class Check> void clipBatchedBackgroundChecks(Check check) {
             check(frame().pixelColor(at({200,20},after))==QColor(Qt::red),"a long clip still paints when the native batch contains only its exposed portion");
             clip->setWidth(240);tracks->clipBatchToExposure=false;
         }
-        preview.clear();check(frame()==before && !tracks->viewport()->graphicsEffect(),"clear removes the owned viewport effect and restores exact native pixels");
+        preview.clear();check(frame()==before && !tracks->viewport()->graphicsEffect(),"clear removes the color binding and restores exact native pixels without a viewport effect");
     }
 }
 }

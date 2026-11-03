@@ -7,10 +7,11 @@
 int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir tmp;qputenv("UNBOUND_DIAGNOSTICS_DIR",tmp.path().toUtf8());
     int failures=0;
-    for(double factor:{.7,1.,1.47,2.13,3.}) {
+    for(bool skinned:{false,true})for(double factor:{.7,1.,1.47,2.13,3.}) {
         OpenGateTest::TimelineViewportFixture fixture;fixture.view->clip->hide();
         auto proxy=fixture.view->tracksProxy;
         auto tracks=dynamic_cast<BatchedClipSceneView *>(proxy->widget());tracks->clipBackground=true;
+        tracks->clipSkins=skinned;tracks->skin=QPixmap(12,12);tracks->skin.fill(QColor(30,130,180));
         auto clip=new UiTiClipContainer;clip->setFlag(QGraphicsItem::ItemHasNoContents);clip->setSelected(true);
         fixture.view->tracksScene->addItem(clip);
         auto details=new UiTiClipContainer;details->paintBody=false;details->setParentItem(clip);
@@ -25,7 +26,7 @@ int main(int argc,char **argv) {
         const auto before=frame();Unbound::TimelineClipColorPreview preview(fixture.view,&fixture.timeline);
         preview.applySelected(Qt::red);int changed=0;
         proxy->setGraphicsEffect(new OpenGateTest::ClipNativeFillProbe(fixture.view,proxy,
-            [&](const Unbound::ClipFillPaintDevice::Result &result){changed=result.changed;}));
+            [&](const Unbound::ClipFillPaintDevice::Result &result){changed=result.changed+result.changedPixmaps;}));
         const auto after=frame();
         auto pixel=[&](const QImage &image,QPointF pos){return image.pixelColor((proxy->mapToScene(pos)*factor*2).toPoint());};
         auto check=[&](bool good,const char *why){if(!good){++failures;std::fprintf(stderr,"FAIL %.2f %s\n",factor,why);}};
