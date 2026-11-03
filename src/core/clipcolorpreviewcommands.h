@@ -24,12 +24,12 @@ public:
         new NativeClipColorMenus(this,[this](QMenu *menu,QWidget *origin){prepare(menu,origin);});
     }
     ~ClipColorPreviewCommands() override {
-        for(const auto &entry:menus)for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
+        for(const auto &entry:menus)for(auto action:{entry.separator,entry.red})if(action)delete action;
         for(auto adapter:timelines)if(adapter)delete adapter;
     }
 private:
     struct Surface {QString key,label,panel;};
-    struct Menu {QPointer<QWidget> origin;QPointer<QAction> separator,red,clear;};
+    struct Menu {QPointer<QWidget> origin;QPointer<QAction> separator,red;};
     QPointer<PanelCommands> commands;MediaPoolClipColorPreview pool;QPointer<QWidget> explicitFocus;
     QHash<QGraphicsView *,QPointer<TimelineClipColorPreview>> timelines;QHash<QMenu *,Menu> menus;
     static QList<Surface> surfaces(){
@@ -87,7 +87,7 @@ private:
         if(!supported) {
             if(menus.contains(menu)) {
                 auto &entry=menus[menu];entry.origin=nullptr;
-                for(auto action:{entry.separator,entry.red,entry.clear})if(action)action->setVisible(false);
+                for(auto action:{entry.separator,entry.red})if(action)action->setVisible(false);
             }
             return;
         }
@@ -98,24 +98,22 @@ private:
             });
             connect(menu,&QObject::destroyed,this,[this,menu]{
                 const auto entry=menus.take(menu);
-                for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
+                for(auto action:{entry.separator,entry.red})if(action)delete action;
             });menus.insert(menu,{});
         }
         auto &entry=menus[menu];
-        if(!entry.red || !entry.clear || !menu->actions().contains(entry.red) || !menu->actions().contains(entry.clear)) {
-            for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
+        if(!entry.red || !menu->actions().contains(entry.red)) {
+            for(auto action:{entry.separator,entry.red})if(action)delete action;
             entry.separator=menu->addSeparator();
             entry.red=IsolatedNativeAction::create("Red",this,[this,menu]{queue(menu,"red");});
             entry.red->setToolTip("Temporary color preview; clears when Resolve closes");
             entry.red->setObjectName("openGateRedClipPreview");menu->addAction(entry.red);
             new MenuActionColorSwatch(menu,entry.red,Qt::red);
-            entry.clear=IsolatedNativeAction::create("Clear Temporary Clip Color Preview",this,[this,menu]{queue(menu,"clear");});
-            menu->addAction(entry.clear);
         }
         entry.origin=origin;
-        for(auto action:{entry.separator,entry.red,entry.clear})if(action)action->setVisible(true);
-        entry.red->setProperty("openGateCommandId",id(origin,"red"));entry.clear->setProperty("openGateCommandId",id(origin,"clear"));
-        entry.red->setEnabled(available(origin,"red"));entry.clear->setEnabled(available(origin,"clear"));
+        for(auto action:{entry.separator,entry.red})if(action)action->setVisible(true);
+        entry.red->setProperty("openGateCommandId",id(origin,"red"));
+        entry.red->setEnabled(available(origin,"red"));
         logEvent("clip-color.menu.prepared",{{"panel",target(origin).panel},{"red_enabled",entry.red->isEnabled()},
             {"native_name",menu->objectName()},{"temporary",true}});
     }

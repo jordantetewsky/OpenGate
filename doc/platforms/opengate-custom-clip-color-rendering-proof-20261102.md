@@ -1,5 +1,9 @@
 # Custom clip colors: native rendering experiment
 
+Historical first proof below. The latest native failures, removed paint paths,
+current module boundaries and installation hold are tracked in
+[the November 3 native fill investigation](opengate-native-clip-fill-20261103.md).
+
 Branch: experiment/timeline-red-clip-rendering. No merge or publication.
 Installed baseline: 503a969, preserved in its install staging/transaction records.
 This experiment is not installed or live accepted by this source note.

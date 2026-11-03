@@ -14,18 +14,19 @@
 #include <QPushButton>
 #include <QScrollBar>
 #include <functional>
+#include <QMap>
 #include "nativepaintfixtures.h"
 
 class UiTiClipContainer : public QGraphicsObject {
     Q_OBJECT
 public:
-    QRectF bounds{0,0,240,95};QColor fill{30,130,180};int presses=0;bool rounded=false,rasterOnly=false;
+    QRectF bounds{0,0,240,95};QColor fill{30,130,180};int presses=0;bool rounded=false,rasterOnly=false,paintBody=true;
     UiTiClipContainer(){setFlags(ItemIsSelectable|ItemIsFocusable);}
     QRectF boundingRect() const override {return bounds;}
     void setWidth(double w){prepareGeometryChange();bounds.setWidth(w);update();}
     void paint(QPainter *p,const QStyleOptionGraphicsItem *,QWidget *) override {
         if(rasterOnly){QImage image(bounds.size().toSize(),QImage::Format_RGB32);image.fill(fill);p->drawImage(bounds,image);return;}
-        if(rounded){p->setPen(Qt::NoPen);p->setBrush(fill);p->drawRoundedRect(bounds,5,5);}else p->fillRect(bounds,fill);
+        if(paintBody){if(rounded){p->setPen(Qt::NoPen);p->setBrush(fill);p->drawRoundedRect(bounds,5,5);}else p->fillRect(bounds,fill);}
         QImage image(40,25,QImage::Format_RGB32);image.fill(fill);image.setPixelColor(15,15,Qt::yellow);
         p->drawImage(QPointF(10,5),image);
         p->fillRect(QRectF(5,35,170,55),Qt::black);
@@ -37,6 +38,24 @@ public:
     }
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e) override {++presses;QGraphicsObject::mousePressEvent(e);}
+};
+
+// Native capture shows body batches in drawBackground, outside clip-item paint.
+class BatchedClipSceneView : public QGraphicsView {
+public:
+    using QGraphicsView::QGraphicsView;
+    bool clipBackground=false,clipBatchToExposure=false;
+protected:
+    void drawBackground(QPainter *p,const QRectF &area) override {
+        QGraphicsView::drawBackground(p,area);if(!clipBackground || !scene())return;
+        QMap<QRgb,QVector<QRectF>> batches;
+        for(auto item:scene()->items())if(!item->parentItem() && item->flags().testFlag(QGraphicsItem::ItemHasNoContents))
+            if(auto clip=dynamic_cast<UiTiClipContainer *>(item))if(clip->isVisible())
+                batches[clip->fill.rgba()].append(clipBatchToExposure?clip->sceneBoundingRect().intersected(area):clip->sceneBoundingRect());
+        p->save();p->setPen(Qt::NoPen);
+        for(auto it=batches.cbegin();it!=batches.cend();++it){p->setBrush(QColor::fromRgba(it.key()));p->drawRects(it.value());}
+        p->restore();
+    }
 };
 
 // Native semantic types use real Qt metadata, rather than production test flags.
@@ -120,7 +139,7 @@ public:
         tracksScene->setSceneRect(0, 0, 4000, 400);
         auto controls = new QGraphicsView(controlsScene);
         controls->setObjectName("VideoTrackControlsView"); setup(controls);
-        auto tracks = new QGraphicsView(tracksScene);
+        auto tracks = new BatchedClipSceneView(tracksScene);
         tracks->setObjectName("VideoTracksView"); setup(tracks);
         controlsProxy = sequence->addWidget(controls);
         tracksProxy = sequence->addWidget(tracks);

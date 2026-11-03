@@ -12,6 +12,7 @@
 #include <QtMath>
 #include <algorithm>
 #include <cstring>
+#include <functional>
 
 namespace Unbound {
 // Reuse presentation pixels and section raster devices. Each paint keeps the
@@ -19,6 +20,7 @@ namespace Unbound {
 // Scene/model ownership stays native; exposure flags are reversible leases.
 class TimelineSceneRenderer {
 public:
+    std::function<void(QPainter *,const std::function<void(QPainter *)> &)> paintNative;
     TimelineSceneRenderer()=default;
     TimelineSceneRenderer(const TimelineSceneRenderer &)=delete;
     TimelineSceneRenderer &operator=(const TimelineSceneRenderer &)=delete;
@@ -94,7 +96,8 @@ public:
                     native.translate(-source.x(),-source.y()-band.pixelTop/backing);
                     const auto area=hit.adjusted(-2,-2,2,2)
                         .intersected(band.rect).translated(source.topLeft());
-                    scene->render(&native,area,area,Qt::IgnoreAspectRatio);
+                    const auto capture=[this,area](QPainter *target){scene->render(target,area,area,Qt::IgnoreAspectRatio);};
+                    if(paintNative)paintNative(&native,capture);else capture(&native);
                     }
                     engine->setSystemClip(previous);
                 }

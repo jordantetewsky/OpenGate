@@ -4,6 +4,7 @@
 #include <QScopedValueRollback>
 #include <QtCore/qscopeguard.h>
 #include "timelinescenerenderer.h"
+#include "timelineclipcolorpaint.h"
 #include "timelinetrackheaderlayout.h"
 #include "timelinetrackheadercontrols.h"
 #include "timelineinputrouter.h"
@@ -51,6 +52,7 @@ public:
             if(value!=0. && (!qIsFinite(value) || value<.7 || value>factor))return;
             requestedHeaderScale=value;arrange();notify();
         };
+        renderer.paintNative=[this](QPainter *p,const std::function<void(QPainter *)> &native){clipPaint.render(view,p,native);};
         updates=new TimelineSceneUpdates(view,this);
         updates->suspended=[this]{if(!rendering)renderer.releasePixels();};
         updates->capturing=[this]{return rendering;};
@@ -199,6 +201,7 @@ private:
     }
     QPointer<QGraphicsView> view;
     TimelineSceneRenderer renderer;
+    TimelineClipColorPaint clipPaint;
     TimelineCommandPaintEvidence evidence;
     TimelineSceneUpdates *updates = nullptr;
     Layer *layer;

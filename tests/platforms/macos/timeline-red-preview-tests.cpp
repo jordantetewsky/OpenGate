@@ -11,7 +11,7 @@
 #include "../../../src/core/panelcontentscale.h"
 #include "../../../src/core/timelineclipcolorpreview.h"
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
-#include "../../core/workspace-callers/clipcachedpaintchecks.h"
+#include "../../core/workspace-callers/clipbatchedbackgroundchecks.h"
 
 using namespace OpenGateTest;
 class MoveClip : public QUndoCommand {
@@ -25,9 +25,9 @@ int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir tmp;qputenv("UNBOUND_DIAGNOSTICS_DIR",tmp.path().toUtf8());
     int failures=0;auto check=[&](bool good,const char *why){if(!good){++failures;std::fprintf(stderr,"FAIL: %s\n",why);}};
     for(bool rounded:{false,true})for(double factor:{.7,1.,1.47,2.13,3.}) {
+        if(qEnvironmentVariableIsSet("OPENGATE_TEST_ONE_SCALE") && factor!=1.)continue;
         TimelineViewportFixture fixture;fixture.view->clip->hide();
         auto clip=new UiTiClipContainer;clip->rounded=rounded;clip->setPos(0,2);fixture.view->tracksScene->addItem(clip);clip->setSelected(true);
-        clip->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
         Unbound::PanelContentScale scale;scale.restoreState({{"interface_scale",factor},{"timeline_header_width",160.},{"timeline_header_scale",.7}});
         scale.apply(&fixture.timeline);TimelineViewportFixture::settle();
         auto content=dynamic_cast<Unbound::TimelineContentViewport *>(fixture.timeline.findChild<QWidget *>("openGateTimelineContentViewport"));
@@ -76,7 +76,7 @@ int main(int argc,char **argv) {
         check(clip->graphicsEffect()==replacement,"clearing an old lease preserves a subsequently installed native effect");
         clip->setGraphicsEffect(nullptr);preview.applySelected(Qt::red);delete clip;preview.clear();
     }
-    clipCachedPaintChecks(check);
+    clipBatchedBackgroundChecks(check);
     {
         TimelineViewportFixture fixture;fixture.view->clip->hide();auto clip=new UiTiClipContainer;
         clip->rasterOnly=true;clip->setCacheMode(QGraphicsItem::DeviceCoordinateCache);fixture.view->tracksScene->addItem(clip);clip->setSelected(true);
@@ -89,5 +89,6 @@ int main(int argc,char **argv) {
             image.pixelColor((QPointF(content->headerWidth()+200,60)*image.devicePixelRatioF()).toPoint())==clip->fill,
             "unsupported raster-only source restores native painting and never tints thumbnail/image pixels or changes native color");
     }
+    if(failures){QFile::remove("build/view-fill-fail-events.jsonl");QFile::copy(tmp.path()+"/events.jsonl","build/view-fill-fail-events.jsonl");}
     std::printf("timeline red preview failures=%d\n",failures);return failures?1:0;
 }

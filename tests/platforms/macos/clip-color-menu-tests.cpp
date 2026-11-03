@@ -57,6 +57,8 @@ int main(int argc,char **argv) {
         check(palette.isVisible() && red && red->isEnabled(),"real unnamed nested submenu gets Red after native Show population and popup focus changes");
         auto swatch=palette.findChild<QWidget *>("openGateMenuColorSwatch");
         check(red && red->text()=="Red" && swatch && swatch->testAttribute(Qt::WA_TransparentForMouseEvents),"Red uses the native row label and a non-interactive right-side swatch");
+        bool extraClear=false;for(auto action:palette.actions())extraClear|=action->text().contains("Clear Temporary");
+        check(!extraClear,"existing native Clear Color is retained without a second temporary-clear menu row");
         auto scroll=palette.findChild<QScrollBar *>("openGateMenuOverflowScroll");
         check(scroll && scroll->isVisible(),"late-populated overflowing Clip Color submenu exposes a visible scrollbar");
         if(scroll){scroll->setValue(scroll->maximum());TimelineViewportFixture::settle();}
@@ -68,10 +70,10 @@ int main(int argc,char **argv) {
         check(nativePaletteCalls==0 && nativeRootCalls==0 && clip->fill==QColor(30,130,180),
             "OpenGate action never reaches native palette/root handlers or changes native model color");
         check(!palette.signalsBlocked() && !root.signalsBlocked(),"native menu signals restore after the OpenGate action");
-        if(!expectPool)check(clip->graphicsEffect()!=nullptr,"Timeline context-menu gesture reaches its actual native clip adapter");
+        if(!expectPool)check(!Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"Timeline context-menu gesture reaches its actual native clip adapter");
         auto native=palette.actions().front();native->trigger();
         check(nativePaletteCalls==1,"ordinary native palette actions still reach their original handler once");
-        if(!expectPool)check(!clip->graphicsEffect(),"choosing a native palette color clears the selected clip's preview");
+        if(!expectPool)check(Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"choosing a native palette color clears the selected clip's preview");
         clip->fill=QColor(30,130,180);clip->update();
     };
     popup(timeline.view,false);
@@ -80,7 +82,7 @@ int main(int argc,char **argv) {
         QKeyEvent over(QEvent::ShortcutOverride,Qt::Key_F6,Qt::NoModifier);QApplication::sendEvent(focus,&over);
         QKeyEvent key(QEvent::KeyPress,Qt::Key_F6,Qt::NoModifier);QApplication::sendEvent(focus,&key);TimelineViewportFixture::settle();};
     timeline.view->setFocus();TimelineViewportFixture::settle();commands.invoke("clip-color.timeline.clear","fixture");
-    press(timeline.view);check(clip->graphicsEffect()!=nullptr,"native preset assignment maps Red in Timeline");
+    press(timeline.view);check(!Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"native preset assignment maps Red in Timeline");
     {
         QMenu reused;reused.setAttribute(Qt::WA_DontShowOnScreen);reused.setObjectName("markSetClipColor");
         auto native=reused.addAction("Orange");
@@ -91,7 +93,7 @@ int main(int argc,char **argv) {
         showFrom(timeline.view);reused.hide();TimelineViewportFixture::settle();
         QWidget unsupported(&edit);unsupported.setFocusPolicy(Qt::StrongFocus);unsupported.show();
         showFrom(&unsupported);native->trigger();TimelineViewportFixture::settle();
-        check(clip->graphicsEffect()!=nullptr,"native palette reused outside supported panels cannot clear an old Timeline preview");
+        check(!Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"native palette reused outside supported panels cannot clear an old Timeline preview");
         reused.hide();
     }
     pool.view.setFocus();TimelineViewportFixture::settle();commands.invoke("clip-color.media-pool.clear","fixture");
