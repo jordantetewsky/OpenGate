@@ -2216,3 +2216,16 @@ Timeline Red enabled, Media Pool disabled. Prior installation-hold statements
 are superseded for this requested trial. Native painting/input/playback remain
 live acceptance; persistent palette/picker are unfinished. Full evidence:
 `opengate-rea-color-investigation-20261102.md`.
+
+### Native clip-background renderer candidate installed — November 3
+
+At Jordan's explicit request after the afternoon pause, normal runtime `660cdfd`
+is built, installed, hash/signature verified and loaded. All 23 managed hashes
+verify; 197 protected paths stayed unchanged before launch. Rollback transaction
+`FB425AC4-6D8E-4719-82B2-0E2364CAF993` preserves 7b191f8. The development proxy
+probe is absent from this normal installation. Timeline Red is enabled for the
+trial; Media Pool colors remain disabled. Native Red in OpenGate, foreground
+integrity, editing, Original UI comparison and playback await live acceptance.
+Checkmarks, saved palette/picker and portability remain unfinished. Evidence and
+the exact mode-switch discovery:
+`opengate-native-clip-fill-20261103.md`. No main merge or package publication.

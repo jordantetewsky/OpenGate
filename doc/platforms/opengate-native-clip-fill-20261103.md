@@ -156,3 +156,35 @@ Next live acceptance actions: confirm exactly one helper.start and loaded build
 entry; verify the visible body beneath unchanged foreground content, neighboring
 clips, displayed pixels after edits/Undo/Redo, and Original UI return. Checkmarks,
 saved palette/picker and portability remain separate unfinished feature work.
+
+## Authorized normal installation — November 3, 13:45 UTC
+
+After pausing, Jordan explicitly requested installation and testing, superseding
+the prior hold for this trial. The normal (non-development-entry) clean-source
+`660cdfd` universal O2 runtime was built and its native bootstrap checks passed.
+The staged installation and exact rollback rehearsal passed. All 23 installed
+managed-file hashes and the strict/deep signature verify; all 197 protected paths
+were unchanged before launch. Transaction
+`FB425AC4-6D8E-4719-82B2-0E2364CAF993` preserves the previous `7b191f8`; earlier
+best-known/fractured rollback checkpoints remain available.
+
+Fresh Resolve process 83799 / session d12bbcf5-cd83-495c-9d04-7ca9a65d2dbb reports
+loaded build `660cdfd`, with a single helper.start. Launch enables Timeline Red
+and leaves Media Pool colors disabled. No development OFX path, proxy effect or
+development singleton reservation is used. Receipt:
+`build/timeline-clip-skin-install/installation-receipt.json`.
+
+Numbered native-entry contract was reread before installation. Existing normal
+startup, workspace/native return, title dragging, flat Panels, bands, maximize,
+persistence and page entry points remain the inherited assembled paths. No new
+live acceptance for those flows is inferred. The changed color action enters via
+the native Clip Color submenu / existing mapped command, resolves native selection,
+and paints through TimelineContentViewport -> TimelineSceneRenderer ->
+TimelineClipColorPaint. Scale, foreground, command/Undo/Redo and native-geometry
+fixtures are recorded above. Original UI comparison, real OpenGate Red pixels,
+editing/playback, checkmarks and saved custom colors remain unaccepted.
+
+Jordan was told ready only after installation and the loaded build were verified.
+First test: choose Red on one Timeline clip in OpenGate and inspect its background
+while preserving thumbnails, text and waveforms. Installation is complete; native
+Red success is not yet claimed. No main merge or package publication.
