@@ -2183,3 +2183,23 @@ Independent timecode scaling is explicitly queued at Jordan's lower priority.
 Pinned-left artifacts/full-extent scale bump and actual Red painting remain live
 acceptance checks. Details and current test distinctions:
 `opengate-timeline-menu-followup-20261102.md`.
+
+### a494785 installation, native color failure and REA investigation
+
+The menu follow-up was built, installed and loaded at Jordan's request. Managed
+hashes/signature verify; the exact protected-path comparison and rollback receipt
+are recorded in the follow-up note. The final idle-pointer Timeline run passes.
+The source branch is pushed to Jordan's personal GitHub; no package/main merge.
+
+Actual Red selection still fails: session 728700b4 records the correct request
+but ten cached pixmaps and zero changed fill commands. Native fallback restores
+painting. Installation is now on hold. Jordan authorized REA installation and
+native color tracing. REA/Ghidra readiness and a real local MCP connection pass;
+the initial native analysis timed out and is being retried with the supported
+longer startup budget. This is not a native paint fix or performance proof.
+
+An isolated cache candidate passes optimized ASAN paint/menu regressions, including
+the newly reproduced opacity defect and stale-menu-origin repair. Responsibility
+boundaries, evidence and remaining gates are documented in
+`opengate-rea-color-investigation-20261102.md`. Clip colors remain first priority;
+independent subtle track-lane tints are deferred and must never overwrite clips.

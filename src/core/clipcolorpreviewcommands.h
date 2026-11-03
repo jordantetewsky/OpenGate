@@ -7,6 +7,7 @@
 #include "timelineclipcolorpreview.h"
 #include "mediapoolclipcolorpreview.h"
 #include "isolatednativeaction.h"
+#include "menuactioncolorswatch.h"
 namespace Unbound {
 // Wire the existing command registry and native menus to surface adapters.
 // This coordinator implements no painting, scene mutation or delegate lifecycle.
@@ -83,8 +84,18 @@ private:
     }
     void prepare(QMenu *menu,QWidget *origin) {
         const bool supported=!id(origin,"red").isEmpty();
-        if(!supported){if(menus.contains(menu))for(auto action:{menus[menu].separator,menus[menu].red,menus[menu].clear})if(action)action->setVisible(false);return;}
+        if(!supported) {
+            if(menus.contains(menu)) {
+                auto &entry=menus[menu];entry.origin=nullptr;
+                for(auto action:{entry.separator,entry.red,entry.clear})if(action)action->setVisible(false);
+            }
+            return;
+        }
         if(!menus.contains(menu)) {
+            connect(menu,&QMenu::triggered,this,[this,menu](QAction *action){
+                if(action && action->property("openGateCommandId").isValid())return;
+                if(auto adapter=timeline(menus.value(menu).origin))adapter->clearSelected();
+            });
             connect(menu,&QObject::destroyed,this,[this,menu]{
                 const auto entry=menus.take(menu);
                 for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
@@ -94,8 +105,10 @@ private:
         if(!entry.red || !entry.clear || !menu->actions().contains(entry.red) || !menu->actions().contains(entry.clear)) {
             for(auto action:{entry.separator,entry.red,entry.clear})if(action)delete action;
             entry.separator=menu->addSeparator();
-            entry.red=IsolatedNativeAction::create("Preview Red (Temporary)",this,[this,menu]{queue(menu,"red");});
+            entry.red=IsolatedNativeAction::create("Red",this,[this,menu]{queue(menu,"red");});
+            entry.red->setToolTip("Temporary color preview; clears when Resolve closes");
             entry.red->setObjectName("openGateRedClipPreview");menu->addAction(entry.red);
+            new MenuActionColorSwatch(menu,entry.red,Qt::red);
             entry.clear=IsolatedNativeAction::create("Clear Temporary Clip Color Preview",this,[this,menu]{queue(menu,"clear");});
             menu->addAction(entry.clear);
         }

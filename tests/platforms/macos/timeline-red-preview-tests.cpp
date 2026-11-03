@@ -11,6 +11,7 @@
 #include "../../../src/core/panelcontentscale.h"
 #include "../../../src/core/timelineclipcolorpreview.h"
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
+#include "../../core/workspace-callers/clipcachedpaintchecks.h"
 
 using namespace OpenGateTest;
 class MoveClip : public QUndoCommand {
@@ -26,6 +27,7 @@ int main(int argc,char **argv) {
     for(bool rounded:{false,true})for(double factor:{.7,1.,1.47,2.13,3.}) {
         TimelineViewportFixture fixture;fixture.view->clip->hide();
         auto clip=new UiTiClipContainer;clip->rounded=rounded;clip->setPos(0,2);fixture.view->tracksScene->addItem(clip);clip->setSelected(true);
+        clip->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
         Unbound::PanelContentScale scale;scale.restoreState({{"interface_scale",factor},{"timeline_header_width",160.},{"timeline_header_scale",.7}});
         scale.apply(&fixture.timeline);TimelineViewportFixture::settle();
         auto content=dynamic_cast<Unbound::TimelineContentViewport *>(fixture.timeline.findChild<QWidget *>("openGateTimelineContentViewport"));
@@ -74,28 +76,16 @@ int main(int argc,char **argv) {
         check(clip->graphicsEffect()==replacement,"clearing an old lease preserves a subsequently installed native effect");
         clip->setGraphicsEffect(nullptr);preview.applySelected(Qt::red);delete clip;preview.clear();
     }
-    {
-        TimelineViewportFixture fixture;fixture.view->clip->hide();
-        auto container=new UiTiClipContainer;container->setFlag(QGraphicsItem::ItemHasNoContents);
-        fixture.view->tracksScene->addItem(container);container->setSelected(true);
-        auto child=new UiTiClipContainer;child->setParentItem(container);child->setFlag(QGraphicsItem::ItemIsSelectable,false);
-        Unbound::PanelContentScale scale;scale.restoreState({{"timeline_header_width",160.}});scale.apply(&fixture.timeline);
-        TimelineViewportFixture::settle();auto content=dynamic_cast<Unbound::TimelineContentViewport *>(fixture.timeline.findChild<QWidget *>("openGateTimelineContentViewport"));
-        Unbound::TimelineClipColorPreview preview(fixture.view,content);
-        check(preview.applySelected(Qt::red)==1,"captured native no-contents/selectable container topology is supported");
-        TimelineViewportFixture::settle();const auto image=content->presentation()->grab().toImage();
-        check(image.pixelColor((QPointF(content->headerWidth()+200,60)*image.devicePixelRatioF()).toPoint())==QColor(Qt::red),
-              "a real child paint source is recolored through its selected no-contents container");
-    }
+    clipCachedPaintChecks(check);
     {
         TimelineViewportFixture fixture;fixture.view->clip->hide();auto clip=new UiTiClipContainer;
-        clip->rasterOnly=true;fixture.view->tracksScene->addItem(clip);clip->setSelected(true);
+        clip->rasterOnly=true;clip->setCacheMode(QGraphicsItem::DeviceCoordinateCache);fixture.view->tracksScene->addItem(clip);clip->setSelected(true);
         Unbound::PanelContentScale scale;scale.restoreState({{"timeline_header_width",160.}});scale.apply(&fixture.timeline);
         TimelineViewportFixture::settle();auto content=dynamic_cast<Unbound::TimelineContentViewport *>(fixture.timeline.findChild<QWidget *>("openGateTimelineContentViewport"));
         Unbound::TimelineClipColorPreview preview(fixture.view,content);preview.applySelected(Qt::red);
         content->presentation()->grab();TimelineViewportFixture::settle();
         const auto image=content->presentation()->grab().toImage();
-        check(!clip->graphicsEffect() && clip->fill==QColor(30,130,180) &&
+        check(!clip->graphicsEffect() && clip->cacheMode()==QGraphicsItem::DeviceCoordinateCache && clip->fill==QColor(30,130,180) &&
             image.pixelColor((QPointF(content->headerWidth()+200,60)*image.devicePixelRatioF()).toPoint())==clip->fill,
             "unsupported raster-only source restores native painting and never tints thumbnail/image pixels or changes native color");
     }

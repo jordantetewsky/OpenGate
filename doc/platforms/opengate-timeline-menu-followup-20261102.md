@@ -53,12 +53,14 @@ reopening/returning to the first item. Initial spacing failure was fixed by
 reserving an actual strip rather than changing the native menu stylesheet.
 The clip-color menu/isolation fixture passes; an added stress case exercises
 scrolling the actual late-populated submenu to Red before selection. Its final
-run is pending alongside the final assembled native-navigation and broader
-Timeline regressions.
+optimized ASAN run passes, as do assembled native-navigation and Source drop
+checks. The broader Timeline suite passes in the idle-pointer run recorded at
+`build/source-drop-repaint-review/followup-viewport-idle.log`; earlier failures
+while the physical pointer moved remain preserved.
 
 Optimized ASAN header checks pass for explicit click focus after Source/text
 focus, immediate horizontal wheel response and layout-before-paint ordering.
-Final-source source-drop and full Timeline checks remain required before install.
+Final-source Source-drop and full Timeline checks passed before installation.
 
 Organization review: fitting/scrolling moved into one reusable presentation
 module; the palette coordinator contains no scroll implementation. Header input,
@@ -74,3 +76,24 @@ retained placement (11) and separate assembled/live acceptance (12). Actual
 Resolve Red paint and stored-color integrity remain unproven until Jordan can
 reach and select the trial entry. Persistent arbitrary colors and the shared
 picker are not claimed complete by this temporary trial.
+
+## Installation and actual native outcome
+
+Jordan subsequently authorized installation. Installed runtime is `a494785`;
+23 managed hashes and strict deep signature verify. Transaction
+`9B351BD4-3179-45C0-8148-6E0D2FD903D4` preserves the previous installation.
+The protected-path comparison is specifically 194 unchanged of 197: Workspace,
+UI.preset and recentprojects.conf changed after Resolve started during the
+verification window. A complete clean prelaunch comparison is unavailable;
+those user saves were not reverted. Source branches were pushed to Jordan's
+personal repository, without a package upload or main merge.
+
+Session `728700b4-8948-44e8-843c-66c2721a2e6a`, PID 68614, confirms loaded
+`a494785`. At 23:03:22 and 23:03:38 UTC, Red reaches one selected clip with
+target `#ff0000`, but native paint supplies 10 pixmaps, zero paths/rectangles,
+zero candidate fill area and zero changed fill commands. Unsupported fallback
+restores native painting. Red therefore fails native acceptance despite the
+reachable menu. Subsequent installation is on hold at Jordan's request.
+
+The isolated follow-up and REA evidence are tracked in
+`opengate-rea-color-investigation-20261102.md`.

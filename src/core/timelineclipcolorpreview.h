@@ -23,19 +23,19 @@ public:
     }
     int applySelected(QColor color) {
         if(!color.isValid())return 0;
-        for(int i=clips.size()-1;i>=0;--i)if(!clips[i].clip || !clips[i].effect)clips.removeAt(i);
+        for(int i=clips.size()-1;i>=0;--i)if(!clips[i].clip || !clips[i].effect)release(i);
         int count=0;QSet<QGraphicsObject *> seen;
         for(auto scene:scenes())for(auto item:scene->selectedItems()) {
             auto clip=container(item);
             if(!clip || seen.contains(clip))continue;seen.insert(clip);
             auto effect=dynamic_cast<ClipFillGraphicsEffect *>(clip->graphicsEffect());
             if(clip->graphicsEffect() && (!effect || effect->owner()!=this))continue;
-            if(!effect){effect=new ClipFillGraphicsEffect(this);
+            if(!effect){auto cache=new ClipDeviceCacheLease(this,clip);effect=new ClipFillGraphicsEffect(this,cache);cache->bind(effect);
                 const QPointer<QGraphicsObject> alive=clip;const QPointer<ClipFillGraphicsEffect> paint=effect;
                 effect->unsupported=[alive,paint]{if(alive && paint && alive->graphicsEffect()==paint) {
                     logEvent("clip-color.preview.unsupported",{{"native_restored",true},{"project_writes",false}});
                     alive->setGraphicsEffect(nullptr);}};
-                clip->setGraphicsEffect(effect);clips.append({clip,effect});}
+                clip->setGraphicsEffect(effect);clips.append({clip,effect,cache});}
             effect->setColor(color);++count;
         }
         logEvent("clip-color.preview.requested",{{"clips",count},{"color",color.name()},
@@ -43,13 +43,21 @@ public:
         return count;
     }
     void clear() {
-        for(const auto &lease:clips)if(lease.clip && lease.effect && lease.clip->graphicsEffect()==lease.effect)
-            lease.clip->setGraphicsEffect(nullptr);
-        clips.clear();
+        while(!clips.isEmpty())release(clips.size()-1);
+    }
+    void clearSelected() {
+        QSet<QGraphicsObject *> selected;
+        for(auto scene:scenes())for(auto item:scene->selectedItems())if(auto clip=container(item))selected.insert(clip);
+        for(int i=clips.size()-1;i>=0;--i)if(selected.contains(clips[i].clip))release(i);
     }
 private:
-    struct Lease {QPointer<QGraphicsObject> clip;QPointer<ClipFillGraphicsEffect> effect;};
+    struct Lease {QPointer<QGraphicsObject> clip;QPointer<ClipFillGraphicsEffect> effect;QPointer<ClipDeviceCacheLease> cache;};
     QPointer<QGraphicsView> view;QVector<Lease> clips;
+    void release(int index) {
+        const auto lease=clips.takeAt(index);
+        if(lease.clip && lease.effect && lease.clip->graphicsEffect()==lease.effect)lease.clip->setGraphicsEffect(nullptr);
+        delete lease.cache;
+    }
     static QGraphicsObject *container(QGraphicsItem *item) {
         for(auto p=item;p;p=p->parentItem())if(auto object=p->toGraphicsObject())
             if(object->inherits("UiTiClipContainer"))return object;
