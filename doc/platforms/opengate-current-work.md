@@ -6,6 +6,19 @@ completed feature.** This page brings the current discussion together. The
 [full task list and evidence ledger](opengate-repair-checklist-20261024.md) retains
 the detailed reports, historical results and other outstanding work.
 
+## November 3 color workflow
+
+The [consolidated color task list](opengate-color-system-plan-20261103.md) records
+the agreed expanded palette, shared Color Manager, editable categories and
+swatches, gradients, texture design, command/Undo integration, saved project
+state and native fallback interchange. It includes the shared Color Manager /
+Timeline-toolbar texture toggle, which preserves saved appearance settings, and
+a separate proposed Resolve-compatible-color preview. Track lane tint remains a
+later priority and must not overwrite clip colors. Jordan has demonstrated Red
+paint in OpenGate; persistence, checkmarks, native shortcut replacement and
+cross-UI parity remain open. The HTML builder is a preview, not implementation
+acceptance. Existing non-color task-list work remains open.
+
 ## One native UI enhanced by OpenGate
 
 Jordan's intended experience is one native Resolve workspace with OpenGate's

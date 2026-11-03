@@ -1,5 +1,21 @@
 # OpenGate repair checklist
 
+## Color workflow clarification — November 3, 2026
+
+The [consolidated color task list](opengate-color-system-plan-20261103.md) is the
+current color-workflow contract: saved clip paint and parity first; shared palette
+and manager, commands/Undo, portable project metadata/native fallbacks, gradients
+and textures; independent subtle track tint later. It records the requested
+toolbar texture toggle and preserves the distinction between working Red paint,
+unfinished runtime behavior and the standalone HTML design preview. This adds to
+the existing task list without closing other reported issues.
+
+- [ ] Preserve native playhead painting: investigate Jordan's November 3,
+  10:37:39 screenshot showing a red head with a dark/doubled-looking Timeline
+  line. Guard custom paint boundaries and repaint invalidation; require no
+  trails, duplicate lines, wrong color or positional mismatch during playback,
+  seeking, scrolling and scaling. Root cause is not yet established.
+
 ## Timeline clarification and branch plan — October 30, 2026
 
 See the [agreed Timeline/content/focused-command plan](opengate-timeline-content-plan-20261030.md)
