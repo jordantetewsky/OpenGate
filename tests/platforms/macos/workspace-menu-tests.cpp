@@ -151,6 +151,12 @@ int main(int argc, char **argv)
         menus.wire();
         manager->trigger(); QApplication::processEvents();
         check(managerCalls == 1, "Workspace UI opens the panel manager through its owner callback");
+        int colorManagerCalls=0;menus.showColorManager=[&]{++colorManagerCalls;};menus.wire();menus.wire();
+        auto colorManager=root->findChild<QAction *>("openGateShowColorManager");
+        auto nativeRecovery=root->findChild<QAction *>("unboundRestoreNativeWorkspace");
+        check(colorManager&&root->actions().indexOf(colorManager)+1==root->actions().indexOf(nativeRecovery),"color manager is immediately above Original Resolve UI");
+        if(colorManager)colorManager->trigger();QApplication::processEvents();
+        check(colorManagerCalls==1,"repeated menu synchronization retains one color manager dispatch");
         int shortcutsCalls=0;
         menus.showPanelShortcuts=[&] { ++shortcutsCalls; }; menus.wire(); menus.wire();
         auto panelShortcuts=root->findChild<QAction *>("unboundPanelShortcuts");

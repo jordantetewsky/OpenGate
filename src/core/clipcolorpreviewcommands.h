@@ -13,9 +13,9 @@ namespace Unbound {
 // This coordinator implements no painting, scene mutation or delegate lifecycle.
 class ClipColorPreviewCommands : public QObject {
 public:
-    ClipColorPreviewCommands(QObject *owner,PanelCommands *commands):QObject(owner),commands(commands),pool(this) {
+    ClipColorPreviewCommands(QObject *owner,PanelCommands *commands,std::function<void()> manager={},bool preview=true):QObject(owner),commands(commands),pool(this),openManager(std::move(manager)),previewEnabled(preview) {
         QPointer<ClipColorPreviewCommands> alive=this;
-        for(const auto &surface:surfaces())for(const QString &operation:{QString("red"),QString("clear")}) {
+        if(previewEnabled)for(const auto &surface:surfaces())for(const QString &operation:{QString("red"),QString("clear")}) {
             const auto id="clip-color."+surface.key+"."+operation;
             commands->add({id,surface.label+" Clip Color / "+(operation=="red"?"Preview Red (Temporary)":"Clear Temporary Preview"),
                 [alive,operation]{return alive && alive->available(alive->focus(),operation);},
@@ -24,13 +24,14 @@ public:
         new NativeClipColorMenus(this,[this](QMenu *menu,QWidget *origin){prepare(menu,origin);});
     }
     ~ClipColorPreviewCommands() override {
-        for(const auto &entry:menus)for(auto action:{entry.separator,entry.red})if(action)delete action;
+        for(const auto &entry:menus)for(auto action:{entry.separator,entry.red,entry.manager})if(action)delete action;
         for(auto adapter:timelines)if(adapter)delete adapter;
     }
 private:
     struct Surface {QString key,label,panel;};
-    struct Menu {QPointer<QWidget> origin;QPointer<QAction> separator,red;};
+    struct Menu {QPointer<QWidget> origin;QPointer<QAction> separator,red,manager;};
     QPointer<PanelCommands> commands;MediaPoolClipColorPreview pool;QPointer<QWidget> explicitFocus;
+    std::function<void()> openManager;bool previewEnabled=true;
     QHash<QGraphicsView *,QPointer<TimelineClipColorPreview>> timelines;QHash<QMenu *,Menu> menus;
     static QList<Surface> surfaces(){
         QList<Surface> result{{"timeline","Timeline","frameConformTimelines"}};
@@ -83,11 +84,14 @@ private:
         });
     }
     void prepare(QMenu *menu,QWidget *origin) {
-        const bool supported=!id(origin,"red").isEmpty();
+        const auto panel=target(origin).panel;
+        const bool managerSupported=openManager&&(panel=="frameConformTimelines"||panel=="frameEditPageMediaPool");
+        const bool redSupported=previewEnabled&&!id(origin,"red").isEmpty();
+        const bool supported=managerSupported||redSupported;
         if(!supported) {
             if(menus.contains(menu)) {
                 auto &entry=menus[menu];entry.origin=nullptr;
-                for(auto action:{entry.separator,entry.red})if(action)action->setVisible(false);
+                for(auto action:{entry.separator,entry.red,entry.manager})if(action)action->setVisible(false);
             }
             return;
         }
@@ -98,10 +102,16 @@ private:
             });
             connect(menu,&QObject::destroyed,this,[this,menu]{
                 const auto entry=menus.take(menu);
-                for(auto action:{entry.separator,entry.red})if(action)delete action;
+                for(auto action:{entry.separator,entry.red,entry.manager})if(action)delete action;
             });menus.insert(menu,{});
         }
         auto &entry=menus[menu];
+        if(managerSupported){
+            if(!entry.manager){entry.manager=IsolatedNativeAction::create("Color Manager…",this,[this]{MenuTrackingCommand::queue(this,[this]{if(openManager)openManager();});});entry.manager->setObjectName("openGateClipColorManager");entry.manager->setProperty("openGateCommandId","color-manager.open");}
+            if(!menu->actions().contains(entry.manager))menu->insertAction(menu->actions().isEmpty()?nullptr:menu->actions().front(),entry.manager);
+        }
+        if(entry.manager)entry.manager->setVisible(managerSupported);
+        if(!redSupported){for(auto action:{entry.separator,entry.red})if(action)action->setVisible(false);entry.origin=origin;return;}
         if(!entry.red || !menu->actions().contains(entry.red)) {
             for(auto action:{entry.separator,entry.red})if(action)delete action;
             entry.separator=menu->addSeparator();

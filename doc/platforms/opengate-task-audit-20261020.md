@@ -1,3 +1,14 @@
+## Native Color Manager development — November 3, 2026
+
+Jordan confirmed visible Red paint in OpenGate, but reports project-reopen loss,
+incorrect checkmarks, native shortcut replacement and UI-mode parity gaps. The
+installed `660cdfd` is retained. The new `feat/color-manager-paint` branch contains
+a native Qt preset editor, generic preview, safety policies and existing-panel
+integration; it is not a finished project-color transaction or installation.
+See [the implementation/evidence checkpoint](opengate-color-manager-implementation-20261103.md)
+and [agreed color task list](opengate-color-system-plan-20261103.md). All existing
+non-color issues remain open. No merge to main or package publication.
+
 ## Persistence extraction review — 2026-10-25
 
 Active worktree: `workspace-persistence-owner`, branch

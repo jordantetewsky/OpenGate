@@ -19,6 +19,11 @@ paint in OpenGate; persistence, checkmarks, native shortcut replacement and
 cross-UI parity remain open. The HTML builder is a preview, not implementation
 acceptance. Existing non-color task-list work remains open.
 
+The [native Qt manager implementation checkpoint](opengate-color-manager-implementation-20261103.md)
+records the editor, generic preview, shared panel entry points, responsibility
+review and fixture evidence on `feat/color-manager-paint`. Native project color
+assignment/history/portability remain open; this is not installed.
+
 ## One native UI enhanced by OpenGate
 
 Jordan's intended experience is one native Resolve workspace with OpenGate's

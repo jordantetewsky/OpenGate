@@ -53,6 +53,7 @@
 #include "panelcommandcatalog.h"
 #include "focusedpanelscalecommands.h"
 #include "clipcolorpreviewcommands.h"
+#include "colormanagerpanel.h"
 #include "panelcommandmenu.h"
 #include "nativeeditcommands.h"
 #include "nativepaneltoggles.h"
@@ -191,6 +192,7 @@ public:
                 save();
             });
         }
+        const bool colorManagerEnabled=qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1;
         panels = {
             {"Inspector", "widgetEditInspector", "Inspector", false},
             {"Timeline", "frameConformTimelines", "", false},
@@ -206,6 +208,8 @@ public:
             {"Timeline Toolbar", "frameEditToolbarTop", "", false},
             {"Workspace Toolbar", "unboundWorkspaceToolbar", "", false}
         };
+        if(colorManagerEnabled)
+            panels.append(Panel{Unbound::ColorManagerPanel::label(),Unbound::ColorManagerPanel::id(),"",false});
         settings.data=Unbound::migrateWorkspaceHeader(settings.data);
         const QJsonObject savedPanels = settings.data["panels"].toObject();
         pendingGroups = settings.data["groups"].toArray();
@@ -395,9 +399,14 @@ public:
         editCommands->editActive=[] { return Unbound::currentWorkspacePage(Unbound::resolveMainWindow())=="edit"; };
         editCommands->report=[this](QString message) { status->setText(message); };
         editCommands->addTo(commands);
-        if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_RED_PREVIEW")==1)
-            new Unbound::ClipColorPreviewCommands(this,commands);
+        const bool redPreviewEnabled=qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_RED_PREVIEW")==1;
+        if(redPreviewEnabled||colorManagerEnabled)
+            new Unbound::ClipColorPreviewCommands(this,commands,colorManagerEnabled?std::function<void()>([this]{commands->invoke("color-manager.open","opengate-command-menu");}):std::function<void()>{},redPreviewEnabled);
         workspaceMenu = new Unbound::WorkspaceArrangements(this);
+        if(colorManagerEnabled){
+            workspaceMenu->showColorManager=[this]{revealColorManager();};
+            commands->add({"color-manager.open","Clips & Tracks Color Manager",[this]{return page()&&page()->isVisible();},[this]{revealColorManager();},"*"});
+        }
         auto commandMenu=new Unbound::PanelCommandMenu(this,commands);
         workspaceMenu->commandsMenu=[commandMenu](QMenu *root) {return commandMenu->menu(root);};
         workspaceMenu->showPanelShortcuts=[this] { commands->showEditor(); };
@@ -593,6 +602,18 @@ protected:
         return false;
     }
 private:
+    void revealColorManager() {
+        if (quitting || !page() || !page()->isVisible()) return;
+        for (int i=0;i<panels.size();++i) if (panels[i].name==Unbound::ColorManagerPanel::id()) {
+            if (!panels[i].session->active()) requestUndock(i);
+            if (panels[i].session->active()) {
+                showPanel(i,true);
+                auto host=panels[i].session->window();
+                host->raise(); host->activateWindow();
+            }
+            return;
+        }
+    }
     int hoveredExpansionTarget() const {
         if (expansionController->index()>=0) return expansionController->index();
         QList<Unbound::PanelHoverSurface> surfaces;
@@ -602,6 +623,7 @@ private:
     }
     void showPanel(int i,bool visible,bool activate=true)
     {
+        if(visible&&panels[i].name==Unbound::ColorManagerPanel::id()&&!panels[i].session->active()){requestUndock(i);return;}
         if(workspaceHeader && panels[i].name=="unboundWorkspaceToolbar"){workspaceHeader->setShown(visible);return;}
         if (visible) if (auto group=groupFor(i)) if (group->windowHidden()) group->setWindowHidden(false,activate);
         if (!panels[i].session->active()) {
@@ -870,6 +892,7 @@ private:
         if (p.pending || p.session->active()) return;
         if (!restoring) { enterManagedFromGesture(p.name);p.saved["hidden"] = false; }
         QWidget *root = page();
+        if(p.name==Unbound::ColorManagerPanel::id())colorManagerPanel.ensure(root);
         QWidget *target = Unbound::panelSurface(root, p.name);
         if (!restoring && p.name=="frameEditToolbarTop" && panels[1].session->active() && target && !target->isVisible()) {
             showPanel(1,true);
@@ -941,7 +964,7 @@ private:
         Unbound::logEvent("panel.undock.scope",{{"panel",p.name},{"managed_owner",Unbound::widgetState(managedOwner)},
             {"accepted",Unbound::panelInManagedScope(target,root,managedOwner)}});
         const QString error = p.contents ? p.session->undockContents(target, root, p.label,managedOwner) :
-            p.session->undock(target, root, p.label, p.name == QLatin1String("widgetEditSourcePlayer"),false,managedOwner);
+            p.session->undock(target, root, p.label, p.name == QLatin1String("widgetEditSourcePlayer")||p.name==Unbound::ColorManagerPanel::id(),false,managedOwner);
         if (error.isEmpty()) {
             groupReserve->request(p.session->nativeOwnerWindow());
             p.session->window()->setObjectName(QStringLiteral("unboundFloating_") + p.name);
@@ -1262,6 +1285,7 @@ private:
     Unbound::NativePanelTitleDrags *titleDrags=nullptr;
     Unbound::PanelMenus *nativeMenus = nullptr;
     QList<Panel> panels;
+    Unbound::ColorManagerPanel colorManagerPanel;
     Unbound::NativeSurfaceDoors nativeSurfaceDoors;
     Unbound::NativePanelToggles *nativeToggles=nullptr;
     Unbound::NativePanelNavigation *nativeNavigation=nullptr;

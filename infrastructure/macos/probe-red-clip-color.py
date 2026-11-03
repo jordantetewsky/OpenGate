@@ -11,14 +11,16 @@ import wave
 
 MODULES = '/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules'
 
-def run(resolve, output, execute=False, metadata=False):
+def run(resolve, output, execute=False, metadata=False, roundtrip=False):
     manager = resolve.GetProjectManager()
     receipt = {'schema': 1, 'component': 'OpenGate', 'experiment': 'clip-color-metadata' if metadata else 'red-clip-color',
                'time': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                'mutated_existing_project': False, 'status': 'not-run'}
     output.mkdir(parents=True, exist_ok=True)
     def record():
-        (output/'receipt.json').write_text(json.dumps(receipt, indent=2)+'\n')
+        pending = output/'receipt.pending'
+        pending.write_text(json.dumps(receipt, indent=2)+'\n')
+        pending.replace(output/'receipt.json')
     if not execute:
         receipt['reason'] = 'Read-only connectivity check; use --run with no project open.'
         receipt['project_open'] = bool(manager.GetCurrentProject()); record(); return receipt
@@ -79,7 +81,23 @@ def run(resolve, output, execute=False, metadata=False):
             receipt['attempts'].append(result); record()
         # Leave a supported native color on the real clip, independent of Unbound.
         if not item.SetClipColor('Orange') or not manager.SaveProject(): raise RuntimeError('Cannot restore native control color')
-        receipt['exported'] = bool(manager.ExportProject(name,str(output/'disposable-project.drp')))
+        archive = output/'disposable-project.drp'
+        receipt['exported'] = bool(manager.ExportProject(name,str(archive)))
+        if roundtrip:
+            if not metadata or not receipt['exported']:
+                raise RuntimeError('DRP round trip requires a successful metadata scratch export')
+            expected = snapshot(item)
+            expected['timeline_id'] = project.GetCurrentTimeline().GetUniqueId()
+            if not manager.CloseProject(project):
+                raise RuntimeError('Cannot close scratch project before DRP import')
+            project = None
+            receipt['drp_import_requested'] = True; record()
+            from clipcolorroundtripprobe import inspect_import
+            def import_observation(value):
+                receipt['drp_roundtrip'] = value
+                record()
+            receipt['drp_roundtrip'] = inspect_import(manager, archive, expected,
+                receipt['metadata']['key'], receipt['metadata']['payload'], import_observation)
         receipt['status'] = 'completed'
         receipt['red_storage_verified'] = any(x['accepted'] and x['immediate']=='Red' and x['reopened']=='Red'
             and x['structure_unchanged_after_reopen'] for x in receipt['attempts'])
@@ -94,12 +112,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--metadata', action='store_true', help='Probe namespaced hue metadata instead of native Red values')
+    parser.add_argument('--drp-roundtrip', action='store_true', help='Reimport only the generated scratch DRP and compare IDs/metadata; requires --metadata')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.drp_roundtrip and not args.metadata:
+        parser.error('--drp-roundtrip requires --metadata')
     if not args.worker:
         try:
-            completed = subprocess.run([sys.executable, __file__, '--worker', '--output', str(args.output)] + (['--run'] if args.run else []) + (['--metadata'] if args.metadata else []), timeout=30)
+            completed = subprocess.run([sys.executable, __file__, '--worker', '--output', str(args.output)] + (['--run'] if args.run else []) + (['--metadata'] if args.metadata else []) + (['--drp-roundtrip'] if args.drp_roundtrip else []), timeout=30)
             sys.exit(completed.returncode)
         except subprocess.TimeoutExpired:
             args.output.mkdir(parents=True, exist_ok=True)
@@ -109,6 +130,6 @@ if __name__ == '__main__':
     import DaVinciResolveScript
     resolve = DaVinciResolveScript.scriptapp('Resolve')
     if not resolve: sys.exit('Resolve scripting is unavailable')
-    result = run(resolve,args.output,args.run,args.metadata)
+    result = run(resolve,args.output,args.run,args.metadata,args.drp_roundtrip)
     print(json.dumps(result,indent=2))
     sys.exit(1 if result['status']=='failed' else 0)

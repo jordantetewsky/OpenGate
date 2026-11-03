@@ -33,6 +33,7 @@ public:
     std::function<void(QString, QString)> invoke;
     std::function<void(QString)> nativeWorkspace;
     std::function<void()> showPanelManager;
+    std::function<void()> showColorManager;
     std::function<void()> showPanelShortcuts;
     std::function<QMenu *(QMenu *)> panelMenu;
     std::function<QMenu *(QMenu *)> commandsMenu;
@@ -110,6 +111,10 @@ private:
                     }
                     if (currentPage() != page) { logEvent("workspace.menu.cancelled",{{"reason","page-changed"},{"page",page}}); return; }
                     if (operation != "Native" && !supportedPage(page)) { logEvent("workspace.menu.cancelled",{{"reason","unsupported-page"},{"page",page}}); return; }
+                    if (operation == "ColorManager") {
+                        if (showColorManager) showColorManager();
+                        return;
+                    }
                     logEvent(QStringLiteral("workspace.menu.command"), {{"operation", operation}, {"id", id},{"page",page}});
                     if (operation == "Native") nativeWorkspace(page); else invoke(operation, id);
                     wire();
@@ -140,6 +145,8 @@ private:
         shortcuts->setToolTip("Open Resolve’s native Keyboard Customization, filtered to OpenGate commands; native presets and assignments are authoritative");
         auto manager = action(root,"unboundShowPanelManager",QString::fromUtf8("OpenGate Panel Manager…"),"PanelManager");
         manager->setEnabled(bool(showPanelManager));
+        auto colors=showColorManager?action(root,"openGateShowColorManager",QString::fromUtf8("Clips & Tracks Color Manager…"),"ColorManager"):nullptr;
+        if(colors)colors->setEnabled(supportedPage(currentPage()));
         const bool nativeSelected = nativeActive(); native->setCheckable(true); native->setChecked(nativeSelected);
         auto menu = root->findChild<QMenu *>("unboundWorkspaceArrangements", Qt::FindDirectChildrenOnly);
         bool created = !menu;
@@ -162,7 +169,7 @@ private:
         if(!advanced){advanced=new QMenu("Advanced",root);advanced->setObjectName("openGateAdvanced");advanced->setProperty("unboundOwnMenu",true);}
         advanced->menuAction()->setVisible(true);
         action(advanced,"openGateShowHiddenArrangements","Show Hidden Arrangements","Show Hidden Arrangements")->setEnabled(hidden);
-        const QJsonObject model{{"hidden_arrangements",hidden},{"page",page},{"native",nativeSelected},{"supported",supported},{"selected",current},{"entries",labels}};
+        const QJsonObject model{{"hidden_arrangements",hidden},{"page",page},{"native",nativeSelected},{"supported",supported},{"selected",current},{"entries",labels},{"color_manager",bool(showColorManager)}};
         if (!created && rendered.value(root) == model && (!callers || root->actions().contains(callers->menuAction())) &&
             (!commands || root->actions().contains(commands->menuAction()))) return;
         auto saveAs=action(menu, "unboundSaveWorkspaceAs", QString::fromUtf8("Save as New Workspace…"), QString::fromUtf8("Save As…"),{},false);saveAs->setEnabled(supported);
@@ -215,7 +222,7 @@ private:
         auto manageDivider = root->findChild<QAction *>("unboundWorkspaceManagementSeparator",Qt::FindDirectChildrenOnly);
         if (!manageDivider) { manageDivider = root->addSeparator(); manageDivider->setObjectName("unboundWorkspaceManagementSeparator"); }
         if(!advanced->actions().contains(menu->menuAction()))advanced->addMenu(menu);
-        QList<QAction *> topOrder{browser->menuAction(),update,saveAs,divider,native,manageDivider};
+        QList<QAction *> topOrder{browser->menuAction(),update,saveAs,divider};if(colors)topOrder.append(colors);topOrder.append(native);topOrder.append(manageDivider);
         if (callers) topOrder.append(callers->menuAction());topOrder.append(manager);topOrder.append(commands?commands->menuAction():shortcuts);topOrder.append(advanced->menuAction());topOrder.append(about);
         divider->setVisible(true);
         if (root->actions() != topOrder) { for (auto item : root->actions()) root->removeAction(item); for (auto item : topOrder) root->addAction(item); }

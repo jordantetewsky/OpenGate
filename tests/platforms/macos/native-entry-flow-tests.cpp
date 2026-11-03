@@ -10,6 +10,7 @@
 #include <QThread>
 #include <cstdio>
 #include "panelcontrols.h"
+#include "../../core/colors/colormanagerentrychecks.h"
 static void settle(int ms=250){QElapsedTimer timer;timer.start();while(timer.elapsed()<ms){QApplication::processEvents();QThread::msleep(1);}QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);}
 class HiddenDialogs : public QObject {
  bool eventFilter(QObject *object,QEvent *event) override {
@@ -22,6 +23,7 @@ int main(int argc,char **argv) {
  QApplication app(argc,argv);HiddenDialogs hiddenDialogs;app.installEventFilter(&hiddenDialogs);app.setQuitOnLastWindowClosed(false);qputenv("UNBOUND_TEST_HIDDEN_HOSTS","1");
  const bool restart=app.arguments().contains("--restart-check");QTemporaryDir files(OpenGateTest::evidenceTemplate("native-entry-flow-tests"));OpenGateTest::retainEvidence(files);
  if(!restart){qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());qputenv("UNBOUND_WORKSPACE_FILE",(files.path()+"/Workspace.json").toUtf8());qputenv("UNBOUND_ARRANGEMENTS_FILE",(files.path()+"/Arrangements.json").toUtf8());}
+ if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1&&!restart)qputenv("OPENGATE_COLOR_PALETTE_FILE",(files.path()+"/Colors.json").toUtf8());
  int errors=0;auto check=[&](bool ok,const char *why){if(!ok){++errors;std::fprintf(stderr,"FAIL %s\n",why);}};
  QWidget main;main.setObjectName("UiMainWindow");main.setAttribute(Qt::WA_DontShowOnScreen);main.resize(1300,800);auto outer=new QVBoxLayout(&main);
  auto bar=new QMenuBar(&main);bar->setNativeMenuBar(false);auto workspace=bar->addMenu("Workspace");workspace->setObjectName("workspace");outer->setMenuBar(bar);
@@ -129,6 +131,7 @@ int main(int argc,char **argv) {
 
  if(nativeReturn)nativeReturn->trigger();settle(650);
  check(timeline->parentWidget()==page&&source->parentWidget()==page&&program->parentWidget()==page&&toolbar->parentWidget()==&main&&footer->parentWidget()==&main,"Native Edit restores native panel and band slots after full rearrangement");
+ if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1)OpenGateTest::colorManagerEntryChecks(controls,ui,registry,&main,page,timeline,source,program,check,settle);
  auto reveal=ui->findChild<QAction *>("openGateShowHiddenArrangements");check(reveal&&reveal->isEnabled(),"Advanced can recover hidden arrangements");
  if(reveal)reveal->trigger();settle(350);check(initialPresets->count()==5&&source->parentWidget()==page,"revealing saved arrangements preserves current native layout and new preset");
  trigger("Source Monitor");trigger("Workspace Toolbar");trigger("Page Navigation");settle(500);
