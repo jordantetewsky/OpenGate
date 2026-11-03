@@ -2204,3 +2204,15 @@ the newly reproduced opacity defect and stale-menu-origin repair. Responsibility
 boundaries, evidence and remaining gates are documented in
 `opengate-rea-color-investigation-20261102.md`. Clip colors remain first priority;
 independent subtle track-lane tints are deferred and must never overwrite clips.
+
+### Red cache candidate installed at Jordan's explicit request
+
+Clean-source `7b191f8` is now built, installed, verified and loaded. Both Mac
+architectures and bootstrap checks pass; exact rollback rehearsal passes.
+All 23 managed hashes/signature and 197 unchanged protected paths verify before
+launch. Rollback transaction: `4F798841-F6C0-46B0-ACBF-16603699017D`.
+Fresh session `2e8a71ad-1841-4207-9872-dffdb7300405` confirms loaded build with
+Timeline Red enabled, Media Pool disabled. Prior installation-hold statements
+are superseded for this requested trial. Native painting/input/playback remain
+live acceptance; persistent palette/picker are unfinished. Full evidence:
+`opengate-rea-color-investigation-20261102.md`.

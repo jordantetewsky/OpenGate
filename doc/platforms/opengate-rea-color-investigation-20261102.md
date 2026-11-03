@@ -109,3 +109,20 @@ cost, persistence, shared picker and interchange remain unverified. Windows
 compilation/runtime are unverified. Review found focused responsibility boundaries
 and no new persistent state writer; passing fixtures are not native acceptance.
 No installation or main merge is proposed by this source checkpoint.
+
+## Authorized live trial installed
+
+Jordan subsequently explicitly requested build and installation. Clean-source
+`7b191f8` was built universal arm64/x86_64 at O2. Bootstrap lifecycle checks,
+strict deep signature and exact install/rollback rehearsal pass. All 23 installed
+managed hashes verify; all 197 protected paths are unchanged before launch.
+Rollback transaction `4F798841-F6C0-46B0-ACBF-16603699017D` preserves the prior
+installation. Earlier accepted/fractured checkpoints remain intact.
+
+Resolve reopened with Timeline Red enabled and Media Pool colors disabled.
+Session `2e8a71ad-1841-4207-9872-dffdb7300405`, PID 77961, confirms loaded
+build `7b191f8`. Select a Timeline clip, then Clip Color > Red to exercise the
+candidate. Actual native color/edit/playback acceptance still belongs to this
+live trial. This remains a temporary paint preview, without saved custom palettes
+or the picker. Receipt: `build/timeline-red-cache-install/installation-receipt.json`.
+No main merge or package publication.
