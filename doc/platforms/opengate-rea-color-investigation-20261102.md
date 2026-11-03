@@ -3,7 +3,7 @@
 Branch: `fix/timeline-red-native-cache`. Installed OpenGate remains `a494785`.
 Jordan authorized installing REA and investigating Resolve; OpenGate replacement
 remains on hold. No live project, clip color, native executable or settings were
-changed by this analysis.
+changed by this analysis; REA's own Codex configuration was changed as authorized.
 
 ## Priority and visual contract
 
@@ -43,10 +43,21 @@ seeds for investigation; they do not establish arbitrary RGB storage/rendering.
 The first targeted string query reached Ghidra's 330-second import/analysis
 deadline. REA reports incomplete output, no confirmed out-of-memory error, and
 supports a longer startup budget. Session readback confirms cleanup_pending=false;
-close succeeds. A second local analysis uses a 1,200-second provider deadline
-and a longer client deadline. No completed native handler/decompilation finding
-is claimed at this checkpoint. Raw proprietary binary/decompile output stays
-in ignored local evidence, not in Git.
+close succeeds. A second local analysis reached its enlarged 1,200-second
+deadline too. A Java thread sample places its running main thread in Ghidra's
+CallFixupAnalyzer/ClearFlowAndRepairCmd. This is an analysis bottleneck, not a
+Resolve performance measurement or proof of a Resolve bug.
+
+REA's supported reduced-analysis setting disabled `Call-Fixup Installer` for a
+third, 330-second attempt. The native pre-script confirms that exact analyzer
+was disabled, but this run also timed out before the string query could return.
+No completed native handler/decompilation finding is claimed. Each session
+reports cleanup_pending=false and closes; no analysis is left running. Further
+whole-program retries without a changed analysis strategy are not justified by
+these results. Native handler tracing is currently blocked by provider import
+completion; the installed color failure is established by logs, not by REA
+decompilation. Raw proprietary binary/decompile output stays in ignored local
+evidence, not in Git.
 
 ## Cached-paint candidate responsibilities
 

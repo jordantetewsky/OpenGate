@@ -2195,8 +2195,9 @@ Actual Red selection still fails: session 728700b4 records the correct request
 but ten cached pixmaps and zero changed fill commands. Native fallback restores
 painting. Installation is now on hold. Jordan authorized REA installation and
 native color tracing. REA/Ghidra readiness and a real local MCP connection pass;
-the initial native analysis timed out and is being retried with the supported
-longer startup budget. This is not a native paint fix or performance proof.
+the native query remains blocked by import timeouts at 330 and 1,200 seconds,
+including a reduced-analysis attempt with the identified call-fixup pass disabled.
+All sessions close cleanly. This is not a native paint fix or performance proof.
 
 An isolated cache candidate passes optimized ASAN paint/menu regressions, including
 the newly reproduced opacity defect and stale-menu-origin repair. Responsibility
