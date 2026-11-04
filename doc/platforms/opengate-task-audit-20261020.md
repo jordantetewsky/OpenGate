@@ -2243,6 +2243,15 @@ the exact mode-switch discovery:
 
 ### November 4 continuation: palette candidate and current regressions
 
+Superseding install status: Jordan explicitly requested a temporary color/texture
+visual trial. Corrected local runtime `035838e` is now installed and loaded;
+ordinary-start activation verifies manager/paint enabled and the separate sample
+palette. Both architectures/signature, 25 managed hashes, exact rollback rehearsal
+and 197 unchanged protected paths pass. Current transaction `DF31A110-3AAE-4D8A-B485-87B2A503176F`
+restores the initial 6634ee9 trial; `BB6FF56C-3755-4F08-83A8-A698ECB5B0CD`
+restores 660cdfd. Persistence/Undo/native parity remain unfinished and were disclosed
+before this limited trial. See `opengate-color-texture-visual-trial-20261104.md`.
+
 The Color Manager and separately gated gradient/texture rendering trial are on
 `feat/color-manager-paint`; the live installation remains `660cdfd`. Source
 checkpoints `a7c1228`, `ed92e49` and `827c965` distinguish editor/rendering work,
