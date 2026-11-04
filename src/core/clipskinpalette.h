@@ -10,7 +10,7 @@ namespace Unbound {
 inline QImage clipSkinPalette(const QImage &input,QColor target) {
     if(input.isNull() || !target.isValid() || input.width()>512 || input.height()>512)return {};
     const auto base=input.pixelColor(input.width()/2,input.height()/2);
-    if(base.alpha()==0 || base.hslSaturationF()<.25 || base.lightnessF()<.1)return {};
+    if(base.alpha()==0 || base.hslSaturationF()<.1 || base.lightnessF()<.1)return {};
     auto result=input.convertToFormat(QImage::Format_ARGB32);int colored=0;
     for(int y=0;y<result.height();++y)for(int x=0;x<result.width();++x) {
         auto color=result.pixelColor(x,y);if(!color.alpha() || color.hslSaturationF()<.1)continue;

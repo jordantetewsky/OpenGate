@@ -13,6 +13,7 @@
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
 #include "../../core/workspace-callers/clipbatchedbackgroundchecks.h"
 #include "../../core/workspace-callers/clipskinpaintchecks.h"
+#include "../../core/workspace-callers/clipstylepaintchecks.h"
 
 using namespace OpenGateTest;
 class MoveClip : public QUndoCommand {
@@ -79,6 +80,7 @@ int main(int argc,char **argv) {
     }
     clipBatchedBackgroundChecks(check);
     clipSkinPaintChecks(check);
+    clipStylePaintChecks(check);
     {
         TimelineViewportFixture fixture;fixture.view->clip->hide();auto clip=new UiTiClipContainer;
         clip->rasterOnly=true;clip->setCacheMode(QGraphicsItem::DeviceCoordinateCache);fixture.view->tracksScene->addItem(clip);clip->setSelected(true);

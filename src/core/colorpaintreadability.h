@@ -20,6 +20,14 @@ inline double colorContrast(QColor a, QColor b) {
     const auto x = colorLuminance(a), y = colorLuminance(b);
     return (qMax(x, y) + .05) / (qMin(x, y) + .05);
 }
+inline ColorLabelStyle colorBackingForInk(QColor ink) {
+    const QColor dark(24, 24, 29);
+    if (colorContrast(ink, dark) >= 4.5)
+        return {ink, dark, colorContrast(ink, dark)};
+    const auto white = colorContrast(ink, Qt::white), black = colorContrast(ink, Qt::black);
+    return white >= black ? ColorLabelStyle{ink, Qt::white, white}
+                          : ColorLabelStyle{ink, Qt::black, black};
+}
 inline ColorLabelStyle colorLabelStyle(const QVector<QColor> &backgrounds, bool patterned = false) {
     double black = 21, white = 21;
     for (auto c : backgrounds) {

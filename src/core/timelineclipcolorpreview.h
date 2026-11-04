@@ -1,51 +1,127 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include "diagnostics.h"
+#include "timelineclipcolorbindings.h"
 #include <QApplication>
 #include <QGraphicsProxyWidget>
 #include <QSet>
-#include "timelineclipcolorbindings.h"
-#include "diagnostics.h"
 namespace Unbound {
 // Resolve native Timeline selection to per-view color sessions; no paint logic.
 // Persistent project association remains outside this temporary proof adapter.
 class TimelineClipColorPreview : public QObject {
-public:
-    TimelineClipColorPreview(QGraphicsView *view,QObject *owner):QObject(owner),view(view),bindings(view?TimelineClipColorBindings::ensure(view):nullptr){}
-    ~TimelineClipColorPreview() override {clear();}
+  public:
+    TimelineClipColorPreview(QGraphicsView *view, QObject *owner)
+        : QObject(owner), view(view),
+          bindings(view ? TimelineClipColorBindings::ensure(view) : nullptr) {}
+    ~TimelineClipColorPreview() override {
+        clear();
+    }
     bool hasSelection() const {
-        for(auto surface:views())if(surface->scene())for(auto item:surface->scene()->selectedItems())if(container(item))return true;
+        for (auto surface : views())
+            if (surface->scene())
+                for (auto item : surface->scene()->selectedItems())
+                    if (container(item))
+                        return true;
         return false;
     }
     int applySelected(QColor color) {
-        if(!color.isValid())return 0;
-        int count=0;QSet<QGraphicsObject *> seen;
-        for(auto surface:views())if(surface->scene())for(auto item:surface->scene()->selectedItems()) {
-            auto clip=container(item);if(!clip || seen.contains(clip))continue;seen.insert(clip);
-            if(bindings)count+=bindings->apply(surface,clip,color);
-        }
-        logEvent("clip-color.preview.requested",{{"clips",count},{"color",color.name()},{"temporary",true},{"project_writes",false}});
+        if (!color.isValid())
+            return 0;
+        int count = 0;
+        QSet<QGraphicsObject *> seen;
+        for (auto surface : views())
+            if (surface->scene())
+                for (auto item : surface->scene()->selectedItems()) {
+                    auto clip = container(item);
+                    if (!clip || seen.contains(clip))
+                        continue;
+                    seen.insert(clip);
+                    if (bindings)
+                        count += bindings->apply(surface, clip, color);
+                }
+        logEvent("clip-color.preview.requested", {{"clips", count},
+                                                  {"color", color.name()},
+                                                  {"temporary", true},
+                                                  {"project_writes", false}});
         return count;
     }
-    void clear(){if(bindings)bindings->clear();}
+    int applySelected(const ColorPreset &style) {
+        int count = 0;
+        QSet<QGraphicsObject *> seen;
+        for (auto surface : views())
+            if (surface->scene())
+                for (auto item : surface->scene()->selectedItems()) {
+                    auto clip = container(item);
+                    if (!clip || seen.contains(clip))
+                        continue;
+                    seen.insert(clip);
+                    if (bindings)
+                        count += bindings->apply(surface, clip, style);
+                }
+        logEvent("clip-color.style.requested", {{"clips", count},
+                                                {"preset", style.id},
+                                                {"texture", style.texture},
+                                                {"stops", style.stops.size()},
+                                                {"temporary", true},
+                                                {"project_writes", false}});
+        return count;
+    }
+    QString selectedPresetId() const {
+        QString id;
+        bool found = false;
+        for (auto surface : views())
+            if (surface->scene())
+                for (auto item : surface->scene()->selectedItems())
+                    if (auto clip = container(item)) {
+                        const auto next = bindings ? bindings->presetId(clip) : QString();
+                        if (next.isEmpty() || (found && id != next))
+                            return {};
+                        id = next;
+                        found = true;
+                    }
+        return id;
+    }
+    void clear() {
+        if (bindings)
+            bindings->clear();
+    }
     void clearSelected() {
         QSet<QGraphicsObject *> selected;
-        for(auto surface:views())if(surface->scene())for(auto item:surface->scene()->selectedItems())if(auto clip=container(item))selected.insert(clip);
-        if(bindings && !selected.isEmpty())bindings->clear(selected);
+        for (auto surface : views())
+            if (surface->scene())
+                for (auto item : surface->scene()->selectedItems())
+                    if (auto clip = container(item))
+                        selected.insert(clip);
+        if (bindings && !selected.isEmpty())
+            bindings->clear(selected);
     }
-private:
-    QPointer<QGraphicsView> view;QPointer<TimelineClipColorBindings> bindings;
+
+  private:
+    QPointer<QGraphicsView> view;
+    QPointer<TimelineClipColorBindings> bindings;
     static QGraphicsObject *container(QGraphicsItem *item) {
-        for(auto p=item;p;p=p->parentItem())if(auto object=p->toGraphicsObject())if(object->inherits("UiTiClipContainer"))return object;
+        for (auto p = item; p; p = p->parentItem())
+            if (auto object = p->toGraphicsObject())
+                if (object->inherits("UiTiClipContainer"))
+                    return object;
         return nullptr;
     }
     QList<QGraphicsView *> views() const {
-        QList<QGraphicsView *> result,pending;if(view)pending.append(view);
-        while(!pending.isEmpty() && result.size()<32) {
-            auto next=pending.takeFirst();if(!next || result.contains(next))continue;result.append(next);
-            if(auto scene=next->scene())for(auto item:scene->items())if(auto proxy=qgraphicsitem_cast<QGraphicsProxyWidget *>(item))
-                if(auto nested=qobject_cast<QGraphicsView *>(proxy->widget()))pending.append(nested);
+        QList<QGraphicsView *> result, pending;
+        if (view)
+            pending.append(view);
+        while (!pending.isEmpty() && result.size() < 32) {
+            auto next = pending.takeFirst();
+            if (!next || result.contains(next))
+                continue;
+            result.append(next);
+            if (auto scene = next->scene())
+                for (auto item : scene->items())
+                    if (auto proxy = qgraphicsitem_cast<QGraphicsProxyWidget *>(item))
+                        if (auto nested = qobject_cast<QGraphicsView *>(proxy->widget()))
+                            pending.append(nested);
         }
         return result;
     }
 };
-}
+} // namespace Unbound

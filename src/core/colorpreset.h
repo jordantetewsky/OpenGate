@@ -20,6 +20,12 @@ struct ColorPreset {
     QColor color = Qt::red;
     QVector<ColorStop> stops;
     double opacity = 1, strength = .45, angle = 90;
+    bool opaque() const {
+        return opacity == 1 && color.alpha() == 255 &&
+               std::all_of(stops.cbegin(), stops.cend(), [](const ColorStop &stop) {
+                   return stop.opacity == 1 && stop.color.alpha() == 255;
+               });
+    }
     bool operator==(const ColorPreset &other) const {
         return json() == other.json();
     }

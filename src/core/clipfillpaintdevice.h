@@ -9,17 +9,23 @@
 #include <functional>
 
 namespace Unbound {
-// Experimental paint-command adapter. Only rectangular solid fills can change;
-// image pixels, text pens, waveform paths and every input/model operation pass through.
+// Forward native paint commands; optional hooks replace explicitly identified
+// backgrounds/labels. This device knows no clip, preset, input or project model.
 class ClipFillPaintDevice : public QPaintDevice {
 public:
     using FillMapper=std::function<QColor(const QRectF &,QColor,const QTransform &)>;
     using RasterObserver=std::function<void(const QRectF &,const QTransform &,const char *)>;
     using PixmapMapper=std::function<QPixmap(const QRectF &,const QPixmap &,const QRectF &,const QTransform &)>;
+    struct PaintHooks {
+        std::function<QBrush(const QRectF &,QColor,const QTransform &)> brush;
+        std::function<void(QPainter *,const QRectF &,const QTransform &)> afterBody;
+        std::function<bool(QPainter *,const QRectF &,const QPixmap &,const QRectF &,const QTransform &)> pixmap;
+        std::function<bool(QPainter *,const QPointF &,const QTextItem &,const QTransform &)> text;
+    };
     struct Fill {QColor color;double area=0.;};
     struct Trace {int paths=0,rounded=0,rects=0,images=0,pixmaps=0,gradients=0,textures=0;QVector<int> pathElements;};
-    ClipFillPaintDevice(QPainter *output,QColor source={},QColor replacement={},QPaintDevice *reference=nullptr,FillMapper mapper={},RasterObserver rasterObserver={},PixmapMapper pixmapMapper={})
-        : engine(output,source,replacement,std::move(mapper),std::move(rasterObserver),std::move(pixmapMapper)),reference(reference?reference:output?output->device():nullptr) {}
+    ClipFillPaintDevice(QPainter *output,QColor source={},QColor replacement={},QPaintDevice *reference=nullptr,FillMapper mapper={},RasterObserver rasterObserver={},PixmapMapper pixmapMapper={},PaintHooks hooks={})
+        : engine(output,source,replacement,std::move(mapper),std::move(rasterObserver),std::move(pixmapMapper),std::move(hooks)),reference(reference?reference:output?output->device():nullptr) {}
     QPaintEngine *paintEngine() const override {return const_cast<Engine *>(&engine);}
     Fill largestFill() const {return engine.largest;}
     int changedFillCommands() const {return engine.changed;}
@@ -38,8 +44,8 @@ public:
         }
     };
     struct Result {Fill source;int changed=0;Trace trace;int changedPixmaps=0;};
-    static Result mapRectangularFills(QPainter *target,FillMapper mapper,const std::function<void(QPainter *)> &source,RasterObserver observer={},PixmapMapper pixmaps={}) {
-        const State state(*target);ClipFillPaintDevice device(target,{},{},nullptr,std::move(mapper),std::move(observer),std::move(pixmaps));device.nativeMetrics=true;
+    static Result mapRectangularFills(QPainter *target,FillMapper mapper,const std::function<void(QPainter *)> &source,RasterObserver observer={},PixmapMapper pixmaps={},PaintHooks hooks={}) {
+        const State state(*target);ClipFillPaintDevice device(target,{},{},nullptr,std::move(mapper),std::move(observer),std::move(pixmaps),std::move(hooks));device.nativeMetrics=true;
         {QPainter output(&device);state.apply(output);source(&output);}
         return {device.largestFill(),device.changedFillCommands(),device.engine.trace,device.engine.changedPixmaps};
     }
@@ -71,8 +77,8 @@ protected:
 private:
     class Engine : public QPaintEngine {
     public:
-        Engine(QPainter *output,QColor source,QColor replacement,FillMapper mapper,RasterObserver observer,PixmapMapper pixmaps)
-            :QPaintEngine(AllFeatures),out(output),source(source),replacement(replacement),mapper(std::move(mapper)),rasterObserver(std::move(observer)),pixmapMapper(std::move(pixmaps)) {}
+        Engine(QPainter *output,QColor source,QColor replacement,FillMapper mapper,RasterObserver observer,PixmapMapper pixmaps,PaintHooks hooks)
+            :QPaintEngine(AllFeatures),out(output),source(source),replacement(replacement),mapper(std::move(mapper)),rasterObserver(std::move(observer)),pixmapMapper(std::move(pixmaps)),hooks(std::move(hooks)) {}
         Fill largest;int changed=0,changedPixmaps=0;Trace trace;
         bool begin(QPaintDevice *) override {
             if(out){if(mapper)replayBasis=out->deviceTransform().inverted()*out->worldTransform();out->save();}
@@ -100,13 +106,13 @@ private:
             const bool rounded=roundedRectangle(path);trace.rounded+=rounded;
             const bool rectangular=rectangle(path)||rounded;
             if(rectangular)consider(path.boundingRect());
-            if(out){out->setBrush(mapped(rectangular,path.boundingRect()));out->drawPath(path);out->setBrush(brush);}
+            if(out){out->setBrush(mapped(rectangular,path.boundingRect()));out->drawPath(path);if(styled){out->save();out->setClipPath(path,Qt::IntersectClip);after(path.boundingRect());out->restore();}out->setBrush(brush);}
         }
         void drawRects(const QRectF *r,int count) override {
             trace.rects+=count;
             for(int i=0;i<count;++i)consider(r[i]);
             if(out){
-                if(mapper)for(int i=0;i<count;++i){out->setBrush(mapped(true,r[i]));out->drawRects(r+i,1);}
+                if(mapper)for(int i=0;i<count;++i){out->setBrush(mapped(true,r[i]));out->drawRects(r+i,1);after(r[i]);}
                 else {out->setBrush(mapped(true,{}));out->drawRects(r,count);}
                 out->setBrush(brush);
             }
@@ -128,6 +134,7 @@ private:
             if(mode==PolylineMode)out->drawPolyline(p,n);
             else if(mode==ConvexMode)out->drawConvexPolygon(p,n);
             else out->drawPolygon(p,n,mode==WindingMode?Qt::WindingFill:Qt::OddEvenFill);
+            after(path.boundingRect());
             out->setBrush(brush);
         }
         void drawPolygon(const QPoint *p,int n,PolygonDrawMode mode) override {
@@ -136,14 +143,17 @@ private:
         }
         void drawPixmap(const QRectF &r,const QPixmap &p,const QRectF &s) override {
             ++trace.pixmaps;observeRaster(r,"pixmap");if(!out)return;
+            if(hooks.pixmap&&hooks.pixmap(out,r,p,s,painter()->deviceTransform())){++changedPixmaps;return;}
             const auto replacement=pixmapMapper?pixmapMapper(r,p,s,painter()->deviceTransform()):QPixmap();
             if(!replacement.isNull()){++changedPixmaps;out->drawPixmap(r,replacement,s);}else out->drawPixmap(r,p,s);
         }
         void drawTiledPixmap(const QRectF &r,const QPixmap &p,const QPointF &s) override {++trace.pixmaps;observeRaster(r,"tiled-pixmap");if(out)out->drawTiledPixmap(r,p,s);}
         void drawImage(const QRectF &r,const QImage &p,const QRectF &s,Qt::ImageConversionFlags f) override {++trace.images;observeRaster(r,"image");if(out)out->drawImage(r,p,s,f);}
-        void drawTextItem(const QPointF &p,const QTextItem &t) override {if(out)out->drawTextItem(p,t);}
+        void drawTextItem(const QPointF &p,const QTextItem &t) override {if(out&&!(hooks.text&&hooks.text(out,p,t,painter()->deviceTransform())))out->drawTextItem(p,t);}
     private:
         QPainter *out;QColor source,replacement;QBrush brush;FillMapper mapper;RasterObserver rasterObserver;PixmapMapper pixmapMapper;QTransform replayBasis;
+        PaintHooks hooks;bool styled=false;
+        void after(const QRectF &rect){if(styled&&hooks.afterBody){out->save();out->setClipRect(rect.adjusted(.5,.5,-.5,-.5),Qt::IntersectClip);hooks.afterBody(out,rect,painter()->deviceTransform());out->restore();}}
         void observeRaster(const QRectF &rect,const char *kind) {if(rasterObserver)rasterObserver(rect,painter()->deviceTransform(),kind);}
         static bool roundedRectangle(const QPainterPath &path) {
             if(path.elementCount()!=17)return false;
@@ -171,6 +181,8 @@ private:
                c.valueF()>.2 && area>largest.area)largest={c,area};
         }
         QBrush mapped(bool rectangular,const QRectF &rect) {
+            styled=false;
+            if(rectangular&&hooks.brush&&brush.style()==Qt::SolidPattern){auto result=hooks.brush(rect,brush.color(),painter()->deviceTransform());if(result.style()!=Qt::NoBrush){styled=true;++changed;return result;}}
             if(rectangular && mapper && brush.style()==Qt::SolidPattern) {
                 auto color=mapper(rect,brush.color(),painter()->deviceTransform());
                 if(color.isValid()){++changed;color.setAlpha(brush.color().alpha());return QBrush(color);}

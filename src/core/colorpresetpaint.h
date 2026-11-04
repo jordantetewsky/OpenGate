@@ -27,18 +27,30 @@ class ColorPresetPaint {
         return QBrush(g);
     }
     void fill(QPainter &p, QRectF rect, const ColorPreset &style, QRectF basis = {},
-              bool textures = true) {
+              bool textures = true, QTransform basisToPainter = {}) {
         if (basis.isEmpty())
             basis = rect;
-        p.fillRect(rect, brush(style, basis));
-        if (textures) {
-            const auto image = tiles.tile(style.texture, style.strength);
-            if (!image.isNull()) {
-                p.save();
-                p.setBrushOrigin(basis.topLeft());
-                p.fillRect(rect, QBrush(image));
-                p.restore();
-            }
+        p.save();
+        p.setBrushOrigin(QPointF());
+        auto background = brush(style, basis);
+        background.setTransform(basisToPainter);
+        p.fillRect(rect, background);
+        p.restore();
+        if (textures)
+            texture(p, rect, style, basis, basisToPainter);
+    }
+    void texture(QPainter &p, QRectF rect, const ColorPreset &style, QRectF basis,
+                 QTransform basisToPainter = {}) {
+        const auto image = tiles.tile(style.texture, style.strength);
+        if (!image.isNull()) {
+            p.save();
+            p.setBrushOrigin(QPointF());
+            p.setOpacity(p.opacity() * style.opacity);
+            QBrush pattern(image);
+            pattern.setTransform(QTransform::fromTranslate(basis.left(), basis.top()) *
+                                 basisToPainter);
+            p.fillRect(rect, pattern);
+            p.restore();
         }
     }
     ColorLabelStyle label(const ColorPreset &style, QColor under = QColor(40, 40, 46),
