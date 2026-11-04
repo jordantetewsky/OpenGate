@@ -96,10 +96,19 @@ template <class Check> void scaledContextMenuChecks(Check check)
                     observer.point.x(),observer.point.y(),observer.screen.x(),observer.screen.y(),source->mapFromGlobal(observer.screen).x(),source->mapFromGlobal(observer.screen).y(),clips->mapFromScene(item->rect().center()).x(),clips->mapFromScene(item->rect().center()).y(),clips->itemAt(local)==item,view->itemAt(hit)==proxy);
             check(received == 1 && menu.isVisible(),
                   "right click opens one native menu from another editor at every content scale");
-            if (nestedScene)
-                check((observer.point-item->rect().center()).manhattanLength() < 2 &&
-                      (observer.screen-global).manhattanLength() < 2,
+            if (nestedScene) {
+                // Both QWidget context events use integer pixels. Downscaling
+                // can round one native pixel on each axis without a hit error.
+                const auto delta = observer.point-item->rect().center();
+                const auto tolerance = qMax(1.,1./factor);
+                const bool correct = qAbs(delta.x()) <= tolerance && qAbs(delta.y()) <= tolerance &&
+                                     (observer.screen-global).manhattanLength() < 2;
+                if (!correct)
+                    std::fprintf(stderr,"nested position scale=%.2f scene=%.2f,%.2f expected=%.2f,%.2f screen delta=%d,%d\n",
+                        factor,observer.point.x(),observer.point.y(),item->rect().center().x(),item->rect().center().y(),observer.screen.x()-global.x(),observer.screen.y()-global.y());
+                check(correct,
                       "nested scene receives the correct item and physical screen coordinates");
+            }
             check(!menu.graphicsProxyWidget() && QApplication::activePopupWidget() == &menu,
                   "scaled native menu remains a tracked popup window outside the canvas");
             if (auto screen = QGuiApplication::screenAt(global))
