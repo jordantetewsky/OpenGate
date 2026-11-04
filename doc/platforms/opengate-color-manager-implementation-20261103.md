@@ -70,8 +70,8 @@ Normal feature-off registration preserves the existing panel inventory.
 | `colorpreseteditor.h` | Edit one transient appearance draft and expose Update/Revert |
 | `colorcategoryeditor.h` | Present category/swatch selection and proposed ordering |
 | `colormanagerfiles.h` | Bound explicit import/export/thumbnail file I/O |
-| `colormanagerwidget.h` | Wire the editor components to their owners |
-| `colormanagerpanel.h` | Own/park one content widget for existing panel sessions |
+| `colormanagerwidget.h` | Wire editor components to the supplied palette/draft owners |
+| `colormanagerpanel.h` | Own the feature lifetime and wire one shared palette to the parked widget |
 
 File/thumbnail I/O was extracted from the coordinator, gradient gestures from the
 appearance editor, and draft persistence from its transient widget map. Those
@@ -81,6 +81,13 @@ registration/reveal wiring only. `WorkspaceArrangements` adds presentation and
 its existing queued action route only. Existing native menu isolation and menu
 origin tracking are reused. No new native scene, clip replacement/deletion,
 project writer, global key filter, polling timer or private Undo stack is added.
+
+The feature owner lazily creates the shared palette independently of the editor
+window. The editor receives references; its former palette/draft construction and
+owned fields are removed. Opening the manager cannot create a second definition
+store, and future Timeline/Media Pool callers can use the same owner while the
+manager is closed. Fixture coverage checks that palette identity survives editor
+creation. The owned widget is destroyed before its referenced models.
 
 ## Verification and remaining gates
 

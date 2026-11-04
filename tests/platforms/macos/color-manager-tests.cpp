@@ -84,7 +84,8 @@ int main(int argc, char **argv) {
         gradient.stops = {
             {"left", Qt::red, 0, 1}, {"middle", Qt::green, .5, 1}, {"right", Qt::blue, 1, 1}};
         editor.setPreset(gradient);
-        auto bar = dynamic_cast<Unbound::ColorGradientStopBar *>(editor.findChild<QWidget *>("openGateGradientStopBar"));
+        auto bar = dynamic_cast<Unbound::ColorGradientStopBar *>(
+            editor.findChild<QWidget *>("openGateGradientStopBar"));
         bar->resize(400, 64);
         QMouseEvent press(QEvent::MouseButtonPress, QPointF(200, 45), Qt::LeftButton,
                           Qt::LeftButton, Qt::NoModifier);
@@ -143,8 +144,11 @@ int main(int argc, char **argv) {
     main.show();
     qputenv("OPENGATE_COLOR_PALETTE_FILE", path.toUtf8());
     Unbound::ColorManagerPanel panel;
+    const auto sharedPalette = &panel.palette();
     auto widget = panel.ensure(&page);
     check(widget == panel.ensure(&page), "entry points share one color manager widget");
+    check(sharedPalette == &panel.palette(),
+          "opening manager retains the palette already available to other surfaces");
     Unbound::ManagedPanelSession session;
     const auto error = session.undock(widget, &page, Unbound::ColorManagerPanel::label(), true);
     check(error.isEmpty() && session.active(),
@@ -236,7 +240,9 @@ int main(int argc, char **argv) {
                       {"end", QColor("#e6b123"), 1, 1}};
         demo.texture = "grain-medium";
         palette.update(demo);
-        Unbound::ColorManagerWidget view(nullptr, path);
+        Unbound::ColorPalette previewPalette(path);
+        Unbound::ColorPaletteDrafts previewDrafts(nullptr, path + ".drafts");
+        Unbound::ColorManagerWidget view(previewPalette, previewDrafts);
         QPalette dark;
         dark.setColor(QPalette::Window, QColor(39, 39, 45));
         dark.setColor(QPalette::WindowText, QColor(220, 220, 225));
@@ -262,7 +268,15 @@ int main(int argc, char **argv) {
         QApplication::processEvents();
         view.resize(360, 1000);
         QApplication::processEvents();
-        if(view.width()>360){std::fprintf(stderr,"NARROW actual=%d minimum=%d hint=%d\n",view.width(),view.minimumWidth(),view.minimumSizeHint().width());for(auto child:view.findChildren<QWidget *>())if(child->minimumSizeHint().width()>310)std::fprintf(stderr,"NARROW child=%s/%s min=%d hint=%d\n",child->metaObject()->className(),qPrintable(child->objectName()),child->minimumWidth(),child->minimumSizeHint().width());}
+        if (view.width() > 360) {
+            std::fprintf(stderr, "NARROW actual=%d minimum=%d hint=%d\n", view.width(),
+                         view.minimumWidth(), view.minimumSizeHint().width());
+            for (auto child : view.findChildren<QWidget *>())
+                if (child->minimumSizeHint().width() > 310)
+                    std::fprintf(stderr, "NARROW child=%s/%s min=%d hint=%d\n",
+                                 child->metaObject()->className(), qPrintable(child->objectName()),
+                                 child->minimumWidth(), child->minimumSizeHint().width());
+        }
         check(view.width() <= 360,
               "manager reflows to a narrow dock rather than forcing an oversized panel");
         check(view.grab().save(snapshot + ".narrow.png"),

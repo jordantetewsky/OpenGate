@@ -2,8 +2,9 @@
 #pragma once
 #include "colormanagerwidget.h"
 #include <QPointer>
+#include <memory>
 namespace Unbound {
-// Provide one owned/parked content widget to the existing managed panel session.
+// Own the feature lifetime and wire its one shared palette to a parked widget.
 // No second floating host, docking engine, input filter or workspace writer.
 class ColorManagerPanel {
   public:
@@ -20,6 +21,12 @@ class ColorManagerPanel {
     static QString label() {
         return "Clips & Tracks Color Manager";
     }
+    ColorPalette &palette() {
+        if (!colors)
+            colors =
+                std::make_unique<ColorPalette>(qEnvironmentVariable("OPENGATE_COLOR_PALETTE_FILE"));
+        return *colors;
+    }
     ColorManagerWidget *ensure(QWidget *page) {
         if (content)
             return content;
@@ -28,13 +35,17 @@ class ColorManagerPanel {
         parking = new QWidget(page);
         parking->setObjectName("openGateColorManagerParking");
         parking->hide();
-        content =
-            new ColorManagerWidget(parking, qEnvironmentVariable("OPENGATE_COLOR_PALETTE_FILE"));
+        if (!drafts)
+            drafts =
+                std::make_unique<ColorPaletteDrafts>(nullptr, palette().location() + ".drafts");
+        content = new ColorManagerWidget(palette(), *drafts, parking);
         content->hide();
         return content;
     }
 
   private:
+    std::unique_ptr<ColorPalette> colors;
+    std::unique_ptr<ColorPaletteDrafts> drafts;
     QPointer<ColorManagerWidget> content;
     QPointer<QWidget> parking;
 };

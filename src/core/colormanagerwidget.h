@@ -16,8 +16,8 @@ namespace Unbound {
 // preview. Hosting/docking, native clip assignment and history live elsewhere.
 class ColorManagerWidget : public QWidget {
   public:
-    explicit ColorManagerWidget(QWidget *owner = nullptr, QString path = {})
-        : QWidget(owner), palette(std::move(path)), drafts(this, palette.location() + ".drafts") {
+    ColorManagerWidget(ColorPalette &sharedPalette, ColorPaletteDrafts &recoveredDrafts, QWidget *owner = nullptr)
+        : QWidget(owner), palette(sharedPalette), drafts(recoveredDrafts) {
         setObjectName("openGateColorManagerPanel");
         setWindowTitle("Clips & Tracks Color Manager");
         resize(1000, 780);
@@ -154,9 +154,6 @@ class ColorManagerWidget : public QWidget {
         else if (!drafts.error().isEmpty())
             report(drafts.error());
     }
-    ColorPalette &store() {
-        return palette;
-    }
     ~ColorManagerWidget() override {
         editor->preview = {};
         editor->commit = {};
@@ -182,7 +179,7 @@ class ColorManagerWidget : public QWidget {
     }
 
   private:
-    ColorPalette palette;
+    ColorPalette &palette;
     ColorCategoryEditor *categories;
     ColorPresetEditor *editor;
     ColorPresetPreview *sample;
@@ -193,7 +190,7 @@ class ColorManagerWidget : public QWidget {
     QList<QWidget *> headerActions;
     bool headerStacked = false;
     QString selected;
-    ColorPaletteDrafts drafts;
+    ColorPaletteDrafts &drafts;
     bool report(const QString &error) {
         status->setText(error);
         return error.isEmpty();
