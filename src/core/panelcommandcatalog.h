@@ -27,6 +27,13 @@ public:
             preset=new NativePresetBindings(this,qEnvironmentVariable("OPENGATE_PRESET_DIRECTORY",
                 nativePresetDirectory()));
             nativeMatch=[this](const QKeySequence &pressed) { return matchPreset(pressed); };
+            nativeOwnedShortcut=[this](const QKeySequence &pressed) {
+                const auto &snapshot=preset->snapshot();
+                if (!snapshot.error.isEmpty()) return false;
+                for (const auto &owner:snapshot.owners.value(pressed.toString(QKeySequence::PortableText)))
+                    if (owner.startsWith("OpenGate - ")) return true;
+                return false;
+            };
             legacyBacktickAllowed=[this] {
                 const auto &snapshot=preset->snapshot();
                 // An explicitly present native command row is authoritative,
