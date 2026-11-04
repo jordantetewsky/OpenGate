@@ -9,6 +9,7 @@
 #include <QSet>
 #include <QScopedValueRollback>
 #include "diagnostics.h"
+#include "workflowcommandidentity.h"
 namespace Unbound {
 // Observe Resolve-owned commands without changing menus, ownership, shortcuts or
 // associated widgets. In particular, never mutate menus during native tracking.
@@ -30,7 +31,7 @@ public:
             QList<QPointer<QAction>> actions;
             for (auto action:menu->actions()) actions.append(action);
             for (const auto &action:actions) {
-                if (!action || !isCommand(action)) continue;
+                if (!action || !nativeOpenGateWorkflowAction(action)) continue;
                 if (!observed.contains(action)) {
                     observed.insert(action);
                     connect(action,&QAction::changed,this,[this,action] { if (action) recordBinding(action); });
@@ -62,7 +63,7 @@ protected:
                 if(!owned)dirty=true;
             }
         if (event->type()==QEvent::Shortcut)
-            if (auto action=qobject_cast<QAction *>(object)) if (isCommand(action))
+            if (auto action=qobject_cast<QAction *>(object)) if (nativeOpenGateWorkflowAction(action))
                 logEvent("command.native.shortcut",{{"action",action->objectName()},{"label",action->text()}});
         return false;
     }
@@ -79,9 +80,6 @@ private:
         logEvent("command.native.binding",{{"action",action->objectName()},{"label",action->text()},
             {"keys",QJsonArray::fromStringList(keys)},{"hosts",QJsonArray::fromStringList(hosts)},
             {"context",int(action->shortcutContext())},{"binding_store","resolve-native"}});
-    }
-    static bool isCommand(QAction *action) {
-        return action->objectName().startsWith("workspaceWIPlugins_") && action->text().startsWith("OpenGate - ");
     }
     QSet<QAction *> observed;
     QHash<QAction *,QString> bindingStates;

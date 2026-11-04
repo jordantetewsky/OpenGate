@@ -20,6 +20,8 @@
 #include "commandbindingconflicts.h"
 #include "settingsprofile.h"
 #include "nativecommandactivity.h"
+#include "commandtextcontext.h"
+#include "workflowcommandidentity.h"
 namespace Unbound {
 // Unbound-owned bindings. This is not registration in Resolve's command database.
 class PanelCommands : public QObject {
@@ -30,6 +32,7 @@ public:
         QFile f(path); if (f.open(QIODevice::ReadOnly)) bindings=QJsonDocument::fromJson(f.readAll()).object();
         refresh.setSingleShot(true);
         connect(&refresh,&QTimer::timeout,this,[this] { conflicts=bindingErrors(bindings); });
+        CommandTextContext::shared();
         refresh.start(0); qApp->installEventFilter(this);
     }
     ~PanelCommands() override { if (qApp) qApp->removeEventFilter(this); }
@@ -88,6 +91,8 @@ public:
     struct NativeMatch { QString command,error; };
     // Optional read-only adapter. Assignment remains owned by Resolve.
     std::function<NativeMatch(const QKeySequence &)> nativeMatch;
+    // Read-only ownership check independent of current focus/availability.
+    std::function<bool(const QKeySequence &)> nativeOwnedShortcut;
     // Adapt an already-selected native Qt shortcut, without registering a
     // second binding or executing its handler twice.
     std::function<bool(QObject *,QShortcutEvent *)> nativeShortcutDispatch;
@@ -95,6 +100,23 @@ public:
     std::function<bool()> context;
 protected:
     bool eventFilter(QObject *receiver,QEvent *event) override {
+        CommandTextContext::shared()->observeInput(event->type());
+        if ((event->type()==QEvent::Shortcut || event->type()==QEvent::ShortcutOverride) &&
+            textEditor(QApplication::focusWidget())) {
+            if (event->type()==QEvent::Shortcut) {
+                if (nativeOpenGateWorkflowAction(receiver) ||
+                    !receiver->property("openGateCommandId").toString().isEmpty()) {
+                    event->accept(); return true;
+                }
+            }
+            if (event->type()==QEvent::ShortcutOverride) {
+                const auto key=static_cast<QKeyEvent *>(event);
+                const QKeySequence pressed(key->key() | int(key->modifiers() & ~Qt::KeypadModifier));
+                if (CommandTextContext::plainTextKey(key) || ownsShortcut(pressed)) {
+                    event->accept(); return true;
+                }
+            }
+        }
         if(event->type()==QEvent::Shortcut)NativeCommandActivity::shared()->delivered(receiver,static_cast<QShortcutEvent *>(event));
         if(event->type()==QEvent::Shortcut && nativeShortcutDispatch && !routingNativeShortcut &&
            PanelCommandContext::blocked().isEmpty() && context && context()) {
@@ -169,6 +191,15 @@ private:
     QHash<QString,QString> conflicts;
     QTimer refresh;
     bool routingNativeShortcut = false;
+    bool ownsShortcut(const QKeySequence &key) const {
+        if (nativeOwnedShortcut && nativeOwnedShortcut(key)) return true;
+        if (nativeMatch) return false; // Native assignments supersede legacy bindings.
+        for (const auto &command:commands) {
+            const auto configured=QKeySequence::fromString(bindings.value(command.id).toString(),QKeySequence::PortableText);
+            if (!configured.isEmpty() && configured==key) return true;
+        }
+        return false;
+    }
     QHash<QString,QString> bindingErrors(const QJsonObject &proposed) const {
         QList<CommandBindingConflicts::Binding> scopes;
         for (const auto &command:commands) scopes.append({command.id,command.scope});

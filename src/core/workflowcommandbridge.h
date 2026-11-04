@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <functional>
 #include "diagnostics.h"
+#include "commandtextcontext.h"
 #include "../platform/nativewindowcontract.h"
 namespace Unbound {
 // Workflow Integration scripts are native shortcut targets. Their single-use
@@ -16,6 +17,7 @@ class WorkflowCommandBridge : public QObject {
 public:
     WorkflowCommandBridge(QObject *owner,const QString &launchDirectory,std::function<bool(QString)> invoke)
         : QObject(owner),directory(launchDirectory+"/command-requests"),dispatch(std::move(invoke)),watcher(this) {
+        CommandTextContext::shared();
         QDir().mkpath(directory); watcher.addPath(directory);
         connect(&watcher,&QFileSystemWatcher::directoryChanged,this,[this] { queue(); });
         auto wake=watchNativeCommandRequests(this,[this] { queue(); });
@@ -42,10 +44,11 @@ private:
             const auto issued=object["issued_ms"].toDouble(-1);
             const auto age=QDateTime::currentMSecsSinceEpoch()-issued;
             const bool valid=bytes.size()<=4096 && !id.isEmpty() && qIsFinite(age) && age>=0 && age<=15000;
+            const bool editing=valid && CommandTextContext::shared()->blocks(qint64(issued));
             // Native workflow handlers can publish inside AppKit's menu-tracking
             // loop. Retain the request until the popup closes, rather than reject
             // a valid command or mutate/close the user's native menu ourselves.
-            if(valid && QApplication::activePopupWidget()) {
+            if(valid && !editing && QApplication::activePopupWidget()) {
                 if(!deferred.contains(info.absoluteFilePath())) {
                     deferred.insert(info.absoluteFilePath());
                     logEvent("command.workflow.deferred",{{"command",id},{"reason","menu-tracking"}});
@@ -55,8 +58,9 @@ private:
             // Claim only when eligible for dispatch (or expired/invalid).
             if(!file.remove())continue;
             deferred.remove(info.absoluteFilePath());
-            const bool accepted=valid && dispatch && dispatch(id);
-            logEvent("command.workflow.request",{{"command",id},{"valid",valid},{"accepted",accepted},{"age_ms",age}});
+            const bool accepted=valid && !editing && dispatch && dispatch(id);
+            logEvent("command.workflow.request",{{"command",id},{"valid",valid},{"accepted",accepted},{"age_ms",age},
+                {"text_context_blocked",editing}});
         }
     }
 };

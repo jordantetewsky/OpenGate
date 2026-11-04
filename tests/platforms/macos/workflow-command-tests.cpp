@@ -11,6 +11,7 @@
 #include "workflowcommandresults.h"
 #include "workflowcommandmenu.h"
 #include "panelcommands.h"
+#include "../../core/workspace-callers/renamecommandcontextchecks.h"
 int main(int argc,char **argv) {
     QApplication app(argc,argv); QTemporaryDir files; qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());
     int failures=0; auto check=[&](bool ok,const char *why) { if (!ok) { ++failures; std::fprintf(stderr,"FAIL: %s\n",why); } };
@@ -82,6 +83,14 @@ int main(int argc,char **argv) {
         check(QApplication::focusWidget()==&typing,"typing guard fixture owns keyboard focus");
         action->trigger();settle();
         check(registryCalls==1,"native-assigned OpenGate command cannot run while editing text");
+        typing.hide();main.setFocus();settle();
+        renameCommandContextChecks(main,action,commands,nativeCalls,registryCalls,check,settle,
+            [&](const QString &name,qint64 issued) {
+                QSaveFile out(directory+"/command-requests/"+name);
+                out.open(QIODevice::WriteOnly);
+                out.write(json("panel.toggle.widgetEditSourcePlayer",issued));out.commit();
+                Unbound::postNativeCommandRequestForTest();
+            });
     }
     std::printf("workflow command failures=%d\n",failures); return failures ? 1 : 0;
 }
