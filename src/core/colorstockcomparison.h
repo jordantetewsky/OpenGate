@@ -19,9 +19,12 @@ class ColorStockComparison : public QWidget {
         auto layout = new QHBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->setSpacing(8);
-        layout->addWidget(new QLabel("Stock color"));
+        layout->addWidget(new QLabel("Resolve (locked)"));
         colors = new QComboBox;
         colors->setObjectName("openGateStockColorComparison");
+        colors->setEditable(false);
+        colors->setToolTip("Built-in Resolve swatches cannot be edited or removed. Select one to "
+                           "compare it with your custom preset.");
         layout->addWidget(colors, 1);
         closest = new QPushButton("Closest");
         closest->setToolTip(

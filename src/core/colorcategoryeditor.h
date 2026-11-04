@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "colorpalette.h"
+#include "colorpresetpaint.h"
 #include <QDropEvent>
 #include <QInputDialog>
 #include <QPushButton>
@@ -19,6 +20,8 @@ class ColorCategoryEditor : public QWidget {
         box->setSpacing(8);
         tree = new Tree(this);
         tree->setHeaderHidden(true);
+        tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        tree->setIconSize(QSize(34, 14));
         tree->setDragDropMode(QAbstractItemView::InternalMove);
         tree->setDefaultDropAction(Qt::MoveAction);
         tree->setObjectName("openGatePaletteCategories");
@@ -130,6 +133,8 @@ class ColorCategoryEditor : public QWidget {
         tree->clear();
         for (const auto &c : data.categories) {
             auto group = new QTreeWidgetItem(tree, {c.name});
+            group->setIcon(0, gripIcon());
+            group->setToolTip(0, "Drag to reorder this category and its swatches");
             group->setData(0, Qt::UserRole, c.id);
             group->setFlags(group->flags() | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled);
             for (const auto &p : data.presets)
@@ -137,9 +142,8 @@ class ColorCategoryEditor : public QWidget {
                     auto row = new QTreeWidgetItem(group, {p.name});
                     row->setData(0, Qt::UserRole, p.id);
                     row->setFlags((row->flags() | Qt::ItemIsDragEnabled) & ~Qt::ItemIsDropEnabled);
-                    QPixmap dot(18, 12);
-                    dot.fill(p.color);
-                    row->setIcon(0, QIcon(dot));
+                    row->setIcon(0, gripIcon(&p));
+                    row->setToolTip(0, "Drag to reorder or move this swatch to another category");
                     if (p.id == selection)
                         tree->setCurrentItem(row);
                 }
@@ -161,6 +165,21 @@ class ColorCategoryEditor : public QWidget {
         }
     };
     Tree *tree;
+    ColorPresetPaint paint;
+    QIcon gripIcon(const ColorPreset *preset = nullptr) {
+        QPixmap icon(34, 14);
+        icon.fill(Qt::transparent);
+        QPainter painter(&icon);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(142, 142, 150));
+        for (int x : {3, 7})
+            for (int y : {3, 7, 11})
+                painter.drawEllipse(QPointF(x, y), .8, .8);
+        if (preset)
+            paint.fill(painter, QRectF(13, 1, 20, 12), *preset);
+        return QIcon(icon);
+    }
     ColorPalette::Data model;
     QString currentId() const {
         auto item = tree->currentItem();

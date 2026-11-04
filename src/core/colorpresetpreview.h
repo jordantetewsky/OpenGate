@@ -56,13 +56,20 @@ class ColorPresetPreview : public QWidget {
             } else {
                 p.fillRect(film, QColor(55, 59, 67));
                 p.setPen(QColor(157, 164, 177));
-                p.drawText(film, Qt::AlignCenter, "Sample video");
+                p.drawText(film, Qt::AlignCenter,
+                           p.fontMetrics().elidedText("Sample video", Qt::ElideRight,
+                                                      qMax(0, int(film.width() - 8))));
             }
         }
         const auto stockText = colorLabelStyle({reference});
         p.setPen(stockText.text);
-        p.drawText(stock.adjusted(7, stock.height() - 23, -4, 0), Qt::AlignVCenter | Qt::AlignLeft,
-                   QString("Stock %1").arg(referenceName));
+        const auto stockBand = stock.adjusted(7, stock.height() - 23, -4, 0);
+        auto stockName = QString("Stock %1").arg(referenceName);
+        if (p.fontMetrics().horizontalAdvance(stockName) > stockBand.width())
+            stockName = referenceName;
+        p.drawText(
+            stockBand, Qt::AlignVCenter | Qt::AlignLeft,
+            p.fontMetrics().elidedText(stockName, Qt::ElideRight, qMax(0, int(stockBand.width()))));
         QPainterPath waveform;
         for (int x = 0; x < int(audio.width()); ++x) {
             const auto h = (audio.height() - 30) *
@@ -83,7 +90,9 @@ class ColorPresetPreview : public QWidget {
                 p.fillRect(QRectF(band.left(), band.top(), width, band.height()), label.scrim);
             }
             p.setPen(label.text);
-            p.drawText(band.adjusted(7, 0, -7, 0), Qt::AlignVCenter | Qt::AlignLeft, text);
+            p.drawText(
+                band.adjusted(7, 0, -7, 0), Qt::AlignVCenter | Qt::AlignLeft,
+                p.fontMetrics().elidedText(text, Qt::ElideRight, qMax(0, int(band.width() - 14))));
         }
     }
 

@@ -1,131 +1,258 @@
 // SPDX-License-Identifier: MIT
 #pragma once
-#include <QScopedValueRollback>
-#include "panelcommands.h"
-#include "nativeclipcolormenus.h"
-#include "menutrackingcommand.h"
-#include "timelineclipcolorpreview.h"
-#include "mediapoolclipcolorpreview.h"
+#include "clipcolorpresetcommands.h"
 #include "isolatednativeaction.h"
+#include "mediapoolclipcolorpreview.h"
 #include "menuactioncolorswatch.h"
+#include "menutrackingcommand.h"
+#include "nativeclipcoloractions.h"
+#include "nativeclipcolormenus.h"
+#include "panelcommands.h"
+#include "timelineclipcolorpreview.h"
+#include <QScopedValueRollback>
 namespace Unbound {
 // Wire the existing command registry and native menus to surface adapters.
 // This coordinator implements no painting, scene mutation or delegate lifecycle.
 class ClipColorPreviewCommands : public QObject {
-public:
-    ClipColorPreviewCommands(QObject *owner,PanelCommands *commands,std::function<void()> manager={},bool preview=true):QObject(owner),commands(commands),pool(this),openManager(std::move(manager)),previewEnabled(preview) {
-        QPointer<ClipColorPreviewCommands> alive=this;
-        if(previewEnabled)for(const auto &surface:surfaces())for(const QString &operation:{QString("red"),QString("clear")}) {
-            const auto id="clip-color."+surface.key+"."+operation;
-            commands->add({id,surface.label+" Clip Color / "+(operation=="red"?"Preview Red (Temporary)":"Clear Temporary Preview"),
-                [alive,operation]{return alive && alive->available(alive->focus(),operation);},
-                [alive,operation]{if(alive)alive->apply(alive->focus(),operation);},surface.panel});
-        }
-        new NativeClipColorMenus(this,[this](QMenu *menu,QWidget *origin){prepare(menu,origin);});
+  public:
+    ClipColorPreviewCommands(QObject *owner, PanelCommands *commands,
+                             std::function<void()> manager = {}, bool preview = true,
+                             ColorPalette *palette = nullptr)
+        : QObject(owner), commands(commands), pool(this), openManager(std::move(manager)),
+          previewEnabled(preview) {
+        QPointer<ClipColorPreviewCommands> alive = this;
+        if (previewEnabled)
+            for (const auto &surface : surfaces())
+                for (const QString &operation : {QString("red"), QString("clear")}) {
+                    const auto id = "clip-color." + surface.key + "." + operation;
+                    commands->add({id,
+                                   surface.label + " Clip Color / " +
+                                       (operation == "red" ? "Preview Red (Temporary)"
+                                                           : "Clear Temporary Preview"),
+                                   [alive, operation] {
+                                       return alive && alive->available(alive->focus(), operation);
+                                   },
+                                   [alive, operation] {
+                                       if (alive)
+                                           alive->apply(alive->focus(), operation);
+                                   },
+                                   surface.panel});
+                }
+        if (palette)
+            presets = new ClipColorPresetCommands(
+                this, commands, *palette, [this](QWidget *origin) { return timeline(origin); });
+        nativeColors = new NativeClipColorActions(
+            this, [this](QAction *action) { nativeColorTriggered(action); });
+        new NativeClipColorMenus(this,
+                                 [this](QMenu *menu, QWidget *origin) { prepare(menu, origin); });
     }
     ~ClipColorPreviewCommands() override {
-        for(const auto &entry:menus)for(auto action:{entry.separator,entry.red,entry.manager})if(action)delete action;
-        for(auto adapter:timelines)if(adapter)delete adapter;
+        for (const auto &entry : menus)
+            for (auto action : {entry.separator, entry.red, entry.manager})
+                if (action)
+                    delete action;
+        for (auto adapter : timelines)
+            if (adapter)
+                delete adapter;
     }
-private:
-    struct Surface {QString key,label,panel;};
-    struct Menu {QPointer<QWidget> origin;QPointer<QAction> separator,red,manager;};
-    QPointer<PanelCommands> commands;MediaPoolClipColorPreview pool;QPointer<QWidget> explicitFocus;
-    std::function<void()> openManager;bool previewEnabled=true;
-    QHash<QGraphicsView *,QPointer<TimelineClipColorPreview>> timelines;QHash<QMenu *,Menu> menus;
-    static QList<Surface> surfaces(){
-        QList<Surface> result{{"timeline","Timeline","frameConformTimelines"}};
-        if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS")==1)
-            result.append({"media-pool","Media Pool","frameEditPageMediaPool"});
+
+  private:
+    struct Surface {
+        QString key, label, panel;
+    };
+    struct Menu {
+        QPointer<QWidget> origin;
+        QPointer<QAction> separator, red, manager;
+    };
+    QPointer<PanelCommands> commands;
+    MediaPoolClipColorPreview pool;
+    QPointer<QWidget> explicitFocus;
+    std::function<void()> openManager;
+    bool previewEnabled = true;
+    ClipColorPresetCommands *presets = nullptr;
+    NativeClipColorActions *nativeColors = nullptr;
+    QHash<QGraphicsView *, QPointer<TimelineClipColorPreview>> timelines;
+    QHash<QMenu *, Menu> menus;
+    static QList<Surface> surfaces() {
+        QList<Surface> result{{"timeline", "Timeline", "frameConformTimelines"}};
+        if (qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS") == 1)
+            result.append({"media-pool", "Media Pool", "frameEditPageMediaPool"});
         return result;
     }
     static PanelCommandContext::Target target(QWidget *widget) {
-        return PanelCommandContext::capture(widget,{"frameConformTimelines","frameEditPageMediaPool"});
+        return PanelCommandContext::capture(widget,
+                                            {"frameConformTimelines", "frameEditPageMediaPool"});
     }
-    QWidget *focus() const {return explicitFocus?explicitFocus.data():QApplication::focusWidget();}
+    QWidget *focus() const {
+        return explicitFocus ? explicitFocus.data() : QApplication::focusWidget();
+    }
     TimelineClipColorPreview *timeline(QWidget *widget) {
-        const auto panel=target(widget);if(panel.panel!="frameConformTimelines")return nullptr;
-        QGraphicsView *view=nullptr;
-        for(auto p=widget;p;p=panelParent(p))if(p->objectName()=="m_TiTimelineView")view=qobject_cast<QGraphicsView *>(p);
-        if(!view)for(auto candidate:QApplication::allWidgets())if(candidate->objectName()=="m_TiTimelineView" &&
-            candidate->isVisible() && panelContains(panel.surface,candidate)) {
-            auto found=qobject_cast<QGraphicsView *>(candidate);if(!found)continue;if(view)return nullptr;view=found;
-        }
-        if(!view)return nullptr;
-        if(!timelines.value(view)) {
-            timelines[view]=new TimelineClipColorPreview(view,view);
-            connect(view,&QObject::destroyed,this,[this,view]{timelines.remove(view);});
+        const auto panel = target(widget);
+        if (panel.panel != "frameConformTimelines")
+            return nullptr;
+        QGraphicsView *view = nullptr;
+        for (auto p = widget; p; p = panelParent(p))
+            if (p->objectName() == "m_TiTimelineView")
+                view = qobject_cast<QGraphicsView *>(p);
+        if (!view)
+            for (auto candidate : QApplication::allWidgets())
+                if (candidate->objectName() == "m_TiTimelineView" && candidate->isVisible() &&
+                    panelContains(panel.surface, candidate)) {
+                    auto found = qobject_cast<QGraphicsView *>(candidate);
+                    if (!found)
+                        continue;
+                    if (view)
+                        return nullptr;
+                    view = found;
+                }
+        if (!view)
+            return nullptr;
+        if (!timelines.value(view)) {
+            timelines[view] = new TimelineClipColorPreview(view, view);
+            connect(view, &QObject::destroyed, this, [this, view] { timelines.remove(view); });
         }
         return timelines.value(view);
     }
-    bool available(QWidget *widget,const QString &operation) {
-        if(!widget || textEditor(widget))return false;
-        const auto panel=target(widget);if(!panel.surface)return false;
-        if(panel.panel=="frameConformTimelines") {auto adapter=timeline(widget);return adapter && (operation=="clear" || adapter->hasSelection());}
-        return qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS")==1 &&
-            panel.panel=="frameEditPageMediaPool" && (operation=="clear" || pool.hasSelection(panel.surface));
+    bool available(QWidget *widget, const QString &operation) {
+        if (!widget || textEditor(widget))
+            return false;
+        const auto panel = target(widget);
+        if (!panel.surface)
+            return false;
+        if (panel.panel == "frameConformTimelines") {
+            auto adapter = timeline(widget);
+            return adapter && (operation == "clear" || adapter->hasSelection());
+        }
+        return qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS") == 1 &&
+               panel.panel == "frameEditPageMediaPool" &&
+               (operation == "clear" || pool.hasSelection(panel.surface));
     }
-    void apply(QWidget *widget,const QString &operation) {
-        if(!available(widget,operation))return;
-        const auto panel=target(widget);
-        if(panel.panel=="frameConformTimelines") {auto adapter=timeline(widget);if(operation=="clear")adapter->clear();else adapter->applySelected(Qt::red);}
-        else if(operation=="clear")pool.clear(panel.surface);else pool.applySelected(panel.surface,Qt::red);
+    void apply(QWidget *widget, const QString &operation) {
+        if (!available(widget, operation))
+            return;
+        const auto panel = target(widget);
+        if (panel.panel == "frameConformTimelines") {
+            auto adapter = timeline(widget);
+            if (operation == "clear")
+                adapter->clear();
+            else
+                adapter->applySelected(Qt::red);
+        } else if (operation == "clear")
+            pool.clear(panel.surface);
+        else
+            pool.applySelected(panel.surface, Qt::red);
     }
-    QString id(QWidget *origin,const QString &operation) const {
-        const auto panel=target(origin);for(const auto &surface:surfaces())if(surface.panel==panel.panel)return "clip-color."+surface.key+"."+operation;
+    QString id(QWidget *origin, const QString &operation) const {
+        const auto panel = target(origin);
+        for (const auto &surface : surfaces())
+            if (surface.panel == panel.panel)
+                return "clip-color." + surface.key + "." + operation;
         return {};
     }
-    void queue(QMenu *menu,const QString &operation) {
-        const auto origin=menus.value(menu).origin;const auto command=id(origin,operation);
-        MenuTrackingCommand::queue(this,[this,origin,command]{
-            if(!origin || command.isEmpty() || !commands)return;
-            QScopedValueRollback<QPointer<QWidget>> guard(explicitFocus,origin);
-            commands->invoke(command,"opengate-command-menu");
+    void queue(QMenu *menu, const QString &operation) {
+        const auto origin = menus.value(menu).origin;
+        const auto command = id(origin, operation);
+        MenuTrackingCommand::queue(this, [this, origin, command] {
+            if (!origin || command.isEmpty() || !commands)
+                return;
+            QScopedValueRollback<QPointer<QWidget>> guard(explicitFocus, origin);
+            commands->invoke(command, "opengate-command-menu");
         });
     }
-    void prepare(QMenu *menu,QWidget *origin) {
-        const auto panel=target(origin).panel;
-        const bool managerSupported=openManager&&(panel=="frameConformTimelines"||panel=="frameEditPageMediaPool");
-        const bool redSupported=previewEnabled&&!id(origin,"red").isEmpty();
-        const bool supported=managerSupported||redSupported;
-        if(!supported) {
-            if(menus.contains(menu)) {
-                auto &entry=menus[menu];entry.origin=nullptr;
-                for(auto action:{entry.separator,entry.red,entry.manager})if(action)action->setVisible(false);
+    void nativeColorTriggered(QAction *action) {
+        QWidget *origin = focus();
+        if (qobject_cast<QMenu *>(origin) || QApplication::activePopupWidget())
+            for (auto it = menus.cbegin(); it != menus.cend(); ++it)
+                if (it.key()->isVisible() && it.key()->actions().contains(action)) {
+                    origin = it.value().origin;
+                    break;
+                }
+        if (!origin || textEditor(origin))
+            return;
+        const auto panel = target(origin);
+        if (panel.panel == "frameConformTimelines") {
+            if (auto adapter = timeline(origin))
+                adapter->clearSelected();
+        } else if (panel.panel == "frameEditPageMediaPool")
+            pool.clearSelected(panel.surface);
+    }
+    void prepare(QMenu *menu, QWidget *origin) {
+        const auto panel = target(origin).panel;
+        if (presets)
+            presets->prepare(menu, origin);
+        const bool managerSupported =
+            openManager && (panel == "frameConformTimelines" || panel == "frameEditPageMediaPool");
+        const bool presetSupported = presets && panel == "frameConformTimelines";
+        const bool redSupported =
+            previewEnabled && !id(origin, "red").isEmpty() && !presetSupported;
+        const bool supported = managerSupported || redSupported || presetSupported;
+        if (!supported) {
+            if (menus.contains(menu)) {
+                auto &entry = menus[menu];
+                entry.origin = nullptr;
+                for (auto action : {entry.separator, entry.red, entry.manager})
+                    if (action)
+                        action->setVisible(false);
             }
             return;
         }
-        if(!menus.contains(menu)) {
-            connect(menu,&QMenu::triggered,this,[this,menu](QAction *action){
-                if(action && action->property("openGateCommandId").isValid())return;
-                if(auto adapter=timeline(menus.value(menu).origin))adapter->clearSelected();
+        if (!menus.contains(menu)) {
+            connect(menu, &QObject::destroyed, this, [this, menu] {
+                const auto entry = menus.take(menu);
+                for (auto action : {entry.separator, entry.red, entry.manager})
+                    if (action)
+                        delete action;
             });
-            connect(menu,&QObject::destroyed,this,[this,menu]{
-                const auto entry=menus.take(menu);
-                for(auto action:{entry.separator,entry.red,entry.manager})if(action)delete action;
-            });menus.insert(menu,{});
+            menus.insert(menu, {});
         }
-        auto &entry=menus[menu];
-        if(managerSupported){
-            if(!entry.manager){entry.manager=IsolatedNativeAction::create("Color Manager…",this,[this]{MenuTrackingCommand::queue(this,[this]{if(openManager)openManager();});});entry.manager->setObjectName("openGateClipColorManager");entry.manager->setProperty("openGateCommandId","color-manager.open");}
-            if(!menu->actions().contains(entry.manager))menu->insertAction(menu->actions().isEmpty()?nullptr:menu->actions().front(),entry.manager);
+        nativeColors->watch(menu);
+        auto &entry = menus[menu];
+        if (managerSupported) {
+            if (!entry.manager) {
+                entry.manager = IsolatedNativeAction::create("Color Manager…", this, [this] {
+                    MenuTrackingCommand::queue(this, [this] {
+                        if (openManager)
+                            openManager();
+                    });
+                });
+                entry.manager->setObjectName("openGateClipColorManager");
+                entry.manager->setProperty("openGateCommandId", "color-manager.open");
+            }
+            if (!menu->actions().contains(entry.manager))
+                menu->insertAction(menu->actions().isEmpty() ? nullptr : menu->actions().front(),
+                                   entry.manager);
         }
-        if(entry.manager)entry.manager->setVisible(managerSupported);
-        if(!redSupported){for(auto action:{entry.separator,entry.red})if(action)action->setVisible(false);entry.origin=origin;return;}
-        if(!entry.red || !menu->actions().contains(entry.red)) {
-            for(auto action:{entry.separator,entry.red})if(action)delete action;
-            entry.separator=menu->addSeparator();
-            entry.red=IsolatedNativeAction::create("Red",this,[this,menu]{queue(menu,"red");});
+        if (entry.manager)
+            entry.manager->setVisible(managerSupported);
+        if (!redSupported) {
+            for (auto action : {entry.separator, entry.red})
+                if (action)
+                    action->setVisible(false);
+            entry.origin = origin;
+            return;
+        }
+        if (!entry.red || !menu->actions().contains(entry.red)) {
+            for (auto action : {entry.separator, entry.red})
+                if (action)
+                    delete action;
+            entry.separator = menu->addSeparator();
+            entry.red =
+                IsolatedNativeAction::create("Red", this, [this, menu] { queue(menu, "red"); });
             entry.red->setToolTip("Temporary color preview; clears when Resolve closes");
-            entry.red->setObjectName("openGateRedClipPreview");menu->addAction(entry.red);
-            new MenuActionColorSwatch(menu,entry.red,Qt::red);
+            entry.red->setObjectName("openGateRedClipPreview");
+            menu->addAction(entry.red);
+            new MenuActionColorSwatch(menu, entry.red, Qt::red);
         }
-        entry.origin=origin;
-        for(auto action:{entry.separator,entry.red})if(action)action->setVisible(true);
-        entry.red->setProperty("openGateCommandId",id(origin,"red"));
-        entry.red->setEnabled(available(origin,"red"));
-        logEvent("clip-color.menu.prepared",{{"panel",target(origin).panel},{"red_enabled",entry.red->isEnabled()},
-            {"native_name",menu->objectName()},{"temporary",true}});
+        entry.origin = origin;
+        for (auto action : {entry.separator, entry.red})
+            if (action)
+                action->setVisible(true);
+        entry.red->setProperty("openGateCommandId", id(origin, "red"));
+        entry.red->setEnabled(available(origin, "red"));
+        logEvent("clip-color.menu.prepared", {{"panel", target(origin).panel},
+                                              {"red_enabled", entry.red->isEnabled()},
+                                              {"native_name", menu->objectName()},
+                                              {"temporary", true}});
     }
 };
-}
+} // namespace Unbound

@@ -40,6 +40,7 @@
 #include "panelhovertarget.h"
 #include "workspacecallers.h"
 #include "toolbars.h"
+#include "colortexturetoolbar.h"
 #include "toolbardoors.h"
 #include "nativepanelvisibility.h"
 #include "nativesurfacedoors.h"
@@ -401,11 +402,15 @@ public:
         editCommands->addTo(commands);
         const bool redPreviewEnabled=qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_RED_PREVIEW")==1;
         if(redPreviewEnabled||colorManagerEnabled)
-            new Unbound::ClipColorPreviewCommands(this,commands,colorManagerEnabled?std::function<void()>([this]{commands->invoke("color-manager.open","opengate-command-menu");}):std::function<void()>{},redPreviewEnabled);
+            new Unbound::ClipColorPreviewCommands(this,commands,colorManagerEnabled?std::function<void()>([this]{commands->invoke("color-manager.open","opengate-command-menu");}):std::function<void()>{},redPreviewEnabled,
+                colorManagerEnabled&&qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_PAINT")==1?&colorManagerPanel.palette():nullptr);
         workspaceMenu = new Unbound::WorkspaceArrangements(this);
         if(colorManagerEnabled){
             workspaceMenu->showColorManager=[this]{revealColorManager();};
             commands->add({"color-manager.open","Clips & Tracks Color Manager",[this]{return page()&&page()->isVisible();},[this]{revealColorManager();},"*"});
+            auto display=Unbound::ColorDisplaySettings::shared();
+            commands->add({"color-display.toggle-textures","Toggle Clip Textures",[this]{return page()&&page()->isVisible();},[this,display]{status->setText(display->setTexturesEnabled(!display->texturesEnabled()));},"*"});
+            colorTextures=new Unbound::ColorTextureToolbar(this,*display,[this]{commands->invoke("color-display.toggle-textures","opengate-command-toolbar");});
         }
         auto commandMenu=new Unbound::PanelCommandMenu(this,commands);
         workspaceMenu->commandsMenu=[commandMenu](QMenu *root) {return commandMenu->menu(root);};
@@ -1174,6 +1179,7 @@ private:
                 [this,i](QPoint) {beginPanelDrag(i);});
         }
         if (workspaceMenu) workspaceMenu->wire();
+        if(colorTextures)colorTextures->wire(Unbound::panelSurface(page(),"frameEditToolbarTop"));
         if (toolbarDoors) toolbarDoors->wire(Unbound::panelSurface(page(),"unboundWorkspaceToolbar"));
         if(titleDrags)for(int i=0;i<panels.size();++i)if(panels[i].name!="unboundWorkspaceToolbar")
             titleDrags->wire(Unbound::panelSurface(page(),"unboundWorkspaceToolbar"),panels[i].name,panels[i].label,[this,i](QPoint){beginPanelDrag(i);});
@@ -1300,6 +1306,7 @@ private:
     Unbound::PanelExpansionController *expansionController=nullptr;
     Unbound::ViewerModeCommand *viewerMode = nullptr;
     Unbound::ToolbarDecoration *toolbarDecoration = nullptr;
+    Unbound::ColorTextureToolbar *colorTextures = nullptr;
     Unbound::NativePanelDecoration *nativeDecoration = nullptr;
     Unbound::TimelineControl *timelineControl = nullptr;
     Unbound::NativePanelDrag *nativeDrag = nullptr;

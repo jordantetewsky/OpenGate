@@ -5,8 +5,10 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QPointer>
 #include <QSaveFile>
 #include <QUuid>
+#include <functional>
 namespace Unbound {
 // One owner of the personal palette, category ordering and validated interchange.
 // This is deliberately not clip assignment or project-portable metadata storage.
@@ -40,6 +42,14 @@ class ColorPalette {
     }
     const Data &state() const {
         return data;
+    }
+    quint64 revision() const {
+        return version;
+    }
+    // Consumers observe committed definitions only. Weak owners make the
+    // feature's model/widget destruction order independent of subscriptions.
+    void subscribe(QObject *owner, std::function<void()> changed) {
+        listeners.append({owner, std::move(changed)});
     }
     QString location() const {
         return path;
@@ -131,6 +141,14 @@ class ColorPalette {
         if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit())
             return "Cannot save palette; existing data retained.";
         data = validated;
+        ++version;
+        const auto current = listeners;
+        for (const auto &entry : current)
+            if (entry.owner && entry.changed)
+                entry.changed();
+        for (int i = listeners.size() - 1; i >= 0; --i)
+            if (!listeners[i].owner)
+                listeners.removeAt(i);
         return {};
     }
     QString update(const ColorPreset &preset) {
@@ -184,5 +202,11 @@ class ColorPalette {
   private:
     QString path, lastError;
     Data data;
+    struct Listener {
+        QPointer<QObject> owner;
+        std::function<void()> changed;
+    };
+    QVector<Listener> listeners;
+    quint64 version = 0;
 };
 } // namespace Unbound

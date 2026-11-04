@@ -7,6 +7,7 @@ root=Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--platform',choices=('macos','windows'),default='macos')
 parser.add_argument('--output',type=Path)
+parser.add_argument('--color-manager',action='store_true',help='Include experimental Color Manager and texture-display shortcut targets')
 args=parser.parse_args()
 output=args.output or root/('build/'+args.platform+'/workflow-commands')
 output.mkdir(parents=True,exist_ok=True)
@@ -24,6 +25,9 @@ commands += [('panel.scale.'+operation.lower(),'Panel Content Scale-'+operation)
 commands += [('clip-color.'+surface+'.'+operation,label+' Clip Color-'+title)
              for surface,label in [('timeline','Timeline'),('media-pool','Media Pool')]
              for operation,title in [('red','Preview Red (Temporary)'),('clear','Clear Temporary Preview')]]
+if args.color_manager:
+    commands += [('color-manager.open','Clips & Tracks Color Manager'),
+                 ('color-display.toggle-textures','Toggle Clip Textures')]
 manifest=[]
 for command,label in commands:
     filename='OpenGate - '+label+'.py'

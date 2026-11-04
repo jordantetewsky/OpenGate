@@ -3,6 +3,7 @@
 #include "colorpaintreadability.h"
 #include "colorpainttexture.h"
 #include <QLinearGradient>
+#include <QSharedPointer>
 namespace Unbound {
 // Compile/draw preset paint and its label safety policy. No scene, input,
 // assignment, storage or command mutation occurs during drawing.
@@ -26,18 +27,46 @@ class ColorPresetPaint {
             }
         return QBrush(g);
     }
+    QBrush brush(const QSharedPointer<const ColorPreset> &style, QRectF bounds,
+                 QTransform basisToPainter = {}) {
+        if (!style)
+            return {};
+        const auto key = reinterpret_cast<quintptr>(style.data());
+        auto compiled = brushes.object(key);
+        if (!compiled) {
+            auto unit = *style;
+            unit.angle = 90;
+            const auto radians = (style->angle - 90) * 3.14159265358979323846 / 180.;
+            compiled = new Compiled{style, brush(unit, QRectF(0, 0, 1, 1)), std::cos(radians),
+                                    std::sin(radians)};
+            brushes.insert(key, compiled);
+        }
+        auto result = compiled->normalized;
+        const QPointF vector(compiled->x * bounds.width(), compiled->y * bounds.height());
+        const auto start = bounds.center() - vector / 2;
+        // Uniform scale/rotation preserves the preview's gradient projection,
+        // including diagonal gradients on wide, shallow clip footers.
+        const QTransform placement(vector.x(), vector.y(), -vector.y(), vector.x(), start.x(),
+                                   start.y());
+        result.setTransform(placement * basisToPainter);
+        return result;
+    }
     void fill(QPainter &p, QRectF rect, const ColorPreset &style, QRectF basis = {},
               bool textures = true, QTransform basisToPainter = {}) {
         if (basis.isEmpty())
             basis = rect;
-        p.save();
-        p.setBrushOrigin(QPointF());
         auto background = brush(style, basis);
         background.setTransform(basisToPainter);
-        p.fillRect(rect, background);
-        p.restore();
-        if (textures)
-            texture(p, rect, style, basis, basisToPainter);
+        fillBrush(p, rect, style, basis, textures, basisToPainter, background);
+    }
+    void fill(QPainter &p, QRectF rect, const QSharedPointer<const ColorPreset> &style,
+              QRectF basis = {}, bool textures = true, QTransform basisToPainter = {}) {
+        if (!style)
+            return;
+        if (basis.isEmpty())
+            basis = rect;
+        fillBrush(p, rect, *style, basis, textures, basisToPainter,
+                  brush(style, basis, basisToPainter));
     }
     void texture(QPainter &p, QRectF rect, const ColorPreset &style, QRectF basis,
                  QTransform basisToPainter = {}) {
@@ -68,6 +97,23 @@ class ColorPresetPaint {
     }
 
   private:
+    struct Compiled {
+        QSharedPointer<const ColorPreset> definition;
+        QBrush normalized;
+        double x = 1, y = 0;
+    };
+    // Retaining the immutable definition prevents address reuse from colliding
+    // with cached paint. Clip position/size is a transform, not another gradient.
+    QCache<quintptr, Compiled> brushes{128};
     ColorPaintTexture tiles;
+    void fillBrush(QPainter &p, QRectF rect, const ColorPreset &style, QRectF basis, bool textures,
+                   QTransform basisToPainter, const QBrush &background) {
+        p.save();
+        p.setBrushOrigin(QPointF());
+        p.fillRect(rect, background);
+        p.restore();
+        if (textures)
+            texture(p, rect, style, basis, basisToPainter);
+    }
 };
 } // namespace Unbound

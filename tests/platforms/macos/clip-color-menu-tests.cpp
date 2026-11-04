@@ -12,6 +12,8 @@
 #include "../../core/workspace-callers/timelineviewportfixtures.h"
 #include "../../core/workspace-callers/clipcolorpoolfixture.h"
 #include "../../core/workspace-callers/nativepresetfixture.h"
+#include "../../core/colors/presetcommandchecks.h"
+#include <memory>
 using namespace OpenGateTest;
 class DynamicPalette : public QMenu {
 public:
@@ -25,6 +27,7 @@ protected:
 };
 int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir files;qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());
+    qputenv("OPENGATE_COLOR_DISPLAY_FILE",(files.path()+"/ColorDisplay.json").toUtf8());
     qputenv("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS","1");
     qputenv("OPENGATE_PRESET_DIRECTORY",files.path().toUtf8());qputenv("UNBOUND_SHORTCUTS_FILE",(files.path()+"/shortcuts.json").toUtf8());
     auto write=[&](const char *name,const QByteArray &b){QFile f(files.path()+"/"+name);f.open(QIODevice::WriteOnly);f.write(b);};
@@ -39,7 +42,7 @@ int main(int argc,char **argv) {
     timeline.view->tracksScene->addItem(clip);clip->setSelected(true);
     Unbound::PanelContentScale scale;scale.restoreState({{"timeline_header_width",160.}});scale.apply(&timeline.timeline);
     ClipColorPoolFixture pool(&edit);pool.root.move(920,0);pool.root.show();main.show();
-    Unbound::PanelCommandCatalog commands(&main,[]{return true;});Unbound::ClipColorPreviewCommands colors(&main,&commands);
+    Unbound::PanelCommandCatalog commands(&main,[]{return true;});auto colors=std::make_unique<Unbound::ClipColorPreviewCommands>(&main,&commands);
     TimelineViewportFixture::settle();
     auto popup=[&](QWidget *focus,bool expectPool) {
         QApplication::setActiveWindow(&main);focus->setFocus();TimelineViewportFixture::settle();
@@ -71,13 +74,15 @@ int main(int argc,char **argv) {
             "OpenGate action never reaches native palette/root handlers or changes native model color");
         check(!palette.signalsBlocked() && !root.signalsBlocked(),"native menu signals restore after the OpenGate action");
         if(!expectPool)check(!Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"Timeline context-menu gesture reaches its actual native clip adapter");
+        else check(pool.view.itemDelegateForRow(0)!=nullptr,"Media Pool context-menu gesture reaches its actual model delegate adapter");
         auto native=palette.actions().front();native->trigger();
         check(nativePaletteCalls==1,"ordinary native palette actions still reach their original handler once");
         if(!expectPool)check(Unbound::TimelineClipColorBindings::find(timeline.view)->regions().isEmpty(),"choosing a native palette color clears the selected clip's preview");
+        else check(pool.view.itemDelegateForRow(0)==nullptr,"choosing native Clear Color releases selected Media Pool preview paint");
         clip->fill=QColor(30,130,180);clip->update();
     };
     popup(timeline.view,false);
-    popup(&pool.view,true);check(pool.view.itemDelegateForRow(0)!=nullptr,"Media Pool context-menu gesture reaches its model delegate adapter");
+    popup(&pool.view,true);
     auto press=[&](QWidget *focus){QApplication::setActiveWindow(&main);focus->setFocus();TimelineViewportFixture::settle();
         QKeyEvent over(QEvent::ShortcutOverride,Qt::Key_F6,Qt::NoModifier);QApplication::sendEvent(focus,&over);
         QKeyEvent key(QEvent::KeyPress,Qt::Key_F6,Qt::NoModifier);QApplication::sendEvent(focus,&key);TimelineViewportFixture::settle();};
@@ -99,5 +104,16 @@ int main(int argc,char **argv) {
     pool.view.setFocus();TimelineViewportFixture::settle();commands.invoke("clip-color.media-pool.clear","fixture");
     press(&pool.view);check(pool.view.itemDelegateForRow(0)!=nullptr,"same assigned key maps Red independently in Media Pool");
     check(commands.commandScope("clip-color.timeline.red")!=commands.commandScope("clip-color.media-pool.red"),"mapping scopes are disjoint, not global");
+    {
+        QApplication::setActiveWindow(&main);pool.view.setFocus();
+        auto selection=pool.view.selectionModel();
+        for(int row=0;row<2;++row){selection->setCurrentIndex(pool.model.index(row,0),QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);TimelineViewportFixture::settle();commands.invoke("clip-color.media-pool.red","fixture");}
+        check(pool.view.itemDelegateForRow(0)&&pool.view.itemDelegateForRow(1),"two Media Pool rows can retain independent preview bindings");
+        QAction nativeClear("Native Clear Color",&main);nativeClear.setObjectName("markSetClipColorDefault");nativeClear.setShortcut(QKeySequence(Qt::Key_F10));main.addAction(&nativeClear);
+        int nativeClears=0;QObject::connect(&nativeClear,&QAction::triggered,&main,[&]{++nativeClears;});TimelineViewportFixture::settle();
+        QShortcutEvent event(QKeySequence(Qt::Key_F10),0,false);QApplication::sendEvent(&nativeClear,&event);TimelineViewportFixture::settle();
+        check(nativeClears==1&&pool.view.itemDelegateForRow(0)&&!pool.view.itemDelegateForRow(1),"native Media Pool color shortcut releases only selected row paint and executes once");
+    }
+    colors.reset();presetCommandChecks(check,&main,commands,timeline,clip,files.path());
     std::printf("clip color menu failures=%d\n",failures);return failures?1:0;
 }

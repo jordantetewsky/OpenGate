@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "colorcategoryeditor.h"
+#include "colordisplaysettings.h"
 #include "colormanagerfiles.h"
 #include "colorpalettedrafts.h"
 #include "colorpreseteditor.h"
@@ -16,7 +17,8 @@ namespace Unbound {
 // preview. Hosting/docking, native clip assignment and history live elsewhere.
 class ColorManagerWidget : public QWidget {
   public:
-    ColorManagerWidget(ColorPalette &sharedPalette, ColorPaletteDrafts &recoveredDrafts, QWidget *owner = nullptr)
+    ColorManagerWidget(ColorPalette &sharedPalette, ColorPaletteDrafts &recoveredDrafts,
+                       QWidget *owner = nullptr)
         : QWidget(owner), palette(sharedPalette), drafts(recoveredDrafts) {
         setObjectName("openGateColorManagerPanel");
         setWindowTitle("Clips & Tracks Color Manager");
@@ -29,7 +31,9 @@ class ColorManagerWidget : public QWidget {
              exportButton = new QPushButton("Export Presets…"),
              thumbnail = new QPushButton("Preview Thumbnail…");
         textureToggle = new QCheckBox("Textures");
-        textureToggle->setChecked(true);
+        textureToggle->setObjectName("openGateColorTexturesEnabled");
+        display = ColorDisplaySettings::shared();
+        textureToggle->setChecked(!display || display->texturesEnabled());
         tools->addWidget(import, 0, 0);
         tools->addWidget(exportButton, 0, 1);
         tools->addWidget(thumbnail, 1, 0);
@@ -45,6 +49,7 @@ class ColorManagerWidget : public QWidget {
         layout->setContentsMargins(4, 4, 4, 4);
         layout->setSpacing(8);
         sample = new ColorPresetPreview;
+        sample->setTextures(textureToggle->isChecked());
         layout->addWidget(sample);
         auto comparison = new ColorStockComparison;
         comparison->selected = [this](QColor color, QString name) {
@@ -117,7 +122,21 @@ class ColorManagerWidget : public QWidget {
                 reload();
             }
         });
-        connect(textureToggle, &QCheckBox::toggled, sample, &ColorPresetPreview::setTextures);
+        if (display)
+            display->subscribe(this, [this](bool enabled) {
+                const QSignalBlocker blocked(textureToggle);
+                textureToggle->setChecked(enabled);
+                sample->setTextures(enabled);
+            });
+        connect(textureToggle, &QCheckBox::toggled, this, [this](bool enabled) {
+            if (!display)
+                return;
+            const auto error = display->setTexturesEnabled(enabled);
+            if (!report(error)) {
+                const QSignalBlocker blocked(textureToggle);
+                textureToggle->setChecked(display->texturesEnabled());
+            }
+        });
         connect(thumbnail, &QPushButton::clicked, this, [this] {
             const auto file = QFileDialog::getOpenFileName(this, "Preview thumbnail", {},
                                                            "Images (*.png *.jpg *.jpeg *.webp)");
@@ -153,6 +172,8 @@ class ColorManagerWidget : public QWidget {
             report(palette.error());
         else if (!drafts.error().isEmpty())
             report(drafts.error());
+        else if (display && !display->error().isEmpty())
+            report(display->error());
     }
     ~ColorManagerWidget() override {
         editor->preview = {};
@@ -185,6 +206,7 @@ class ColorManagerWidget : public QWidget {
     ColorPresetPreview *sample;
     QLabel *status;
     QCheckBox *textureToggle;
+    QPointer<ColorDisplaySettings> display;
     QSplitter *splitter = nullptr;
     QGridLayout *tools = nullptr;
     QList<QWidget *> headerActions;

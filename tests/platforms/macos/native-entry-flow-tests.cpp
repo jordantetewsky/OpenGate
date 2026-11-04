@@ -24,6 +24,7 @@ int main(int argc,char **argv) {
  const bool restart=app.arguments().contains("--restart-check");QTemporaryDir files(OpenGateTest::evidenceTemplate("native-entry-flow-tests"));OpenGateTest::retainEvidence(files);
  if(!restart){qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());qputenv("UNBOUND_WORKSPACE_FILE",(files.path()+"/Workspace.json").toUtf8());qputenv("UNBOUND_ARRANGEMENTS_FILE",(files.path()+"/Arrangements.json").toUtf8());}
  if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1&&!restart)qputenv("OPENGATE_COLOR_PALETTE_FILE",(files.path()+"/Colors.json").toUtf8());
+ if(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1&&!restart)qputenv("OPENGATE_COLOR_DISPLAY_FILE",(files.path()+"/ColorDisplay.json").toUtf8());
  int errors=0;auto check=[&](bool ok,const char *why){if(!ok){++errors;std::fprintf(stderr,"FAIL %s\n",why);}};
  QWidget main;main.setObjectName("UiMainWindow");main.setAttribute(Qt::WA_DontShowOnScreen);main.resize(1300,800);auto outer=new QVBoxLayout(&main);
  auto bar=new QMenuBar(&main);bar->setNativeMenuBar(false);auto workspace=bar->addMenu("Workspace");workspace->setObjectName("workspace");outer->setMenuBar(bar);
@@ -33,6 +34,7 @@ int main(int argc,char **argv) {
  auto page=new QWidget(&main);page->setObjectName("WStackPage_Conform");outer->addWidget(page,1);auto native=new QHBoxLayout(page);
  auto surface=[&](const char *name){auto widget=new QWidget(page);widget->setObjectName(name);auto box=new QVBoxLayout(widget);auto header=new QWidget(widget);auto headerRow=new QHBoxLayout(header);auto options=new QToolButton(header);options->setObjectName("tbtnPlayerOptions");headerRow->addWidget(options);box->addWidget(header);box->addWidget(new QPushButton(name,widget),1);native->addWidget(widget);return widget;};
  auto timeline=surface("frameConformTimelines");auto source=surface("widgetEditSourcePlayer");auto program=surface("widgetEditTimelinePlayer");
+ timeline->findChild<QToolButton *>("tbtnPlayerOptions")->parentWidget()->setObjectName("frameEditToolbarTop");
  auto footer=new QWidget(&main);footer->setObjectName("m_PageSwitcherContainer");auto footRow=new QHBoxLayout(footer);outer->addWidget(footer);
  int homeCalls=0,settingsCalls=0;for(const auto &name:{"buttonConformPanel","buttonFusionPanel","buttonHome","buttonConfig"}){auto button=new QPushButton(name,footer);button->setObjectName(name);footRow->addWidget(button);if(QString(name)=="buttonHome")QObject::connect(button,&QPushButton::clicked,[&]{++homeCalls;});if(QString(name)=="buttonConfig")QObject::connect(button,&QPushButton::clicked,[&]{++settingsCalls;});}
  auto navigation=workspace->addAction("Show Page Navigation");navigation->setCheckable(true);navigation->setChecked(true);QObject::connect(navigation,&QAction::toggled,footer,&QWidget::setVisible);

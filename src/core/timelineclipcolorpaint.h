@@ -25,7 +25,7 @@ class TimelineClipColorPaint {
                                         [](const auto &r) { return bool(r.style); });
         ClipFillPaintDevice::PaintHooks hooks;
         if (styled) {
-            styles.begin(regions, inverse);
+            styles.begin(regions, inverse,bindings->texturesEnabled());
             hooks.brush = [this](const QRectF &r, QColor c, const QTransform &device) {
                 return styles.brush(r, c, device);
             };

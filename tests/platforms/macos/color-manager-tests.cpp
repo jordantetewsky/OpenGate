@@ -4,6 +4,9 @@
 #include "../../../src/core/panelsession.h"
 #include "../../../src/core/workspacearrangements.h"
 #include "../../core/colors/perceptualchecks.h"
+#include "../../core/colors/stockpalettechecks.h"
+#include "../../core/colors/colordisplaychecks.h"
+#include "../../core/colors/paintcachechecks.h"
 #include <QApplication>
 #include <QContextMenuEvent>
 #include <QElapsedTimer>
@@ -24,6 +27,7 @@ int main(int argc, char **argv) {
     qputenv("UNBOUND_DIAGNOSTICS_DIR", directory.path().toUtf8());
     qputenv("UNBOUND_TEST_HIDDEN_HOSTS", "1");
     qputenv("UNBOUND_SHORTCUTS_FILE", (directory.path() + "/Shortcuts.json").toUtf8());
+    qputenv("OPENGATE_COLOR_DISPLAY_FILE", (directory.path()+"/ColorDisplay.json").toUtf8());
     int failures = 0;
     const auto check = [&](bool good, const char *message) {
         if (!good) {
@@ -32,6 +36,9 @@ int main(int argc, char **argv) {
         }
     };
     OpenGateTest::perceptualColorChecks(check);
+    OpenGateTest::stockPaletteChecks(check,directory.path());
+    OpenGateTest::colorDisplayChecks(check,directory.path());
+    OpenGateTest::paintCacheChecks(check);
     Unbound::ColorPreset p;
     p.id = "custom-test";
     p.name = "Readable VFX";
@@ -170,6 +177,10 @@ int main(int argc, char **argv) {
         check(invoked == 0 && line->text().endsWith("M"),
               "typing in manager fields retains native text editing instead of executing panel "
               "commands");
+        int explicitClicks=0;commands.add({"fixture.texture-display","Fixture textures",[]{return true;},[&]{++explicitClicks;}});
+        const auto text=line->text();
+        check(commands.invoke("fixture.texture-display","opengate-command-toolbar")&&explicitClicks==1&&line->hasFocus()&&line->text()==text,
+              "explicit toolbar operation preserves active text editor and caret without enabling typed commands");
     }
     check(session.dock().isEmpty() && !session.active() && !widget->isVisible(),
           "native return parks the manager without leaving a native slot footprint");

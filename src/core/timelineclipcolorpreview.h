@@ -27,6 +27,7 @@ class TimelineClipColorPreview : public QObject {
     int applySelected(QColor color) {
         if (!color.isValid())
             return 0;
+        TimelineClipColorBindings::RepaintBatch repaint(bindings);
         int count = 0;
         QSet<QGraphicsObject *> seen;
         for (auto surface : views())
@@ -46,8 +47,10 @@ class TimelineClipColorPreview : public QObject {
         return count;
     }
     int applySelected(const ColorPreset &style) {
+        TimelineClipColorBindings::RepaintBatch repaint(bindings);
         int count = 0;
         QSet<QGraphicsObject *> seen;
+        const auto definition = QSharedPointer<const ColorPreset>::create(style);
         for (auto surface : views())
             if (surface->scene())
                 for (auto item : surface->scene()->selectedItems()) {
@@ -56,7 +59,7 @@ class TimelineClipColorPreview : public QObject {
                         continue;
                     seen.insert(clip);
                     if (bindings)
-                        count += bindings->apply(surface, clip, style);
+                        count += bindings->apply(surface, clip, definition);
                 }
         logEvent("clip-color.style.requested", {{"clips", count},
                                                 {"preset", style.id},

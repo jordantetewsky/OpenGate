@@ -25,6 +25,7 @@ private:QGraphicsItem *clip;QPointF before;
 };
 int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir tmp;qputenv("UNBOUND_DIAGNOSTICS_DIR",tmp.path().toUtf8());
+    qputenv("OPENGATE_COLOR_DISPLAY_FILE",(tmp.path()+"/ColorDisplay.json").toUtf8());
     int failures=0;auto check=[&](bool good,const char *why){if(!good){++failures;std::fprintf(stderr,"FAIL: %s\n",why);}};
     for(bool rounded:{false,true})for(double factor:{.7,1.,1.47,2.13,3.}) {
         if(qEnvironmentVariableIsSet("OPENGATE_TEST_ONE_SCALE") && factor!=1.)continue;

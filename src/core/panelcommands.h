@@ -34,6 +34,16 @@ public:
     }
     ~PanelCommands() override { if (qApp) qApp->removeEventFilter(this); }
     void add(Command value) { commands.append(std::move(value)); }
+    // Dynamic feature catalogs replace their own stable IDs; bindings remain
+    // separate so renaming/reordering a preset cannot duplicate an operation.
+    void replace(Command value) {
+        for(auto &command:commands)if(command.id==value.id){command=std::move(value);refresh.start(0);return;}
+        add(std::move(value));refresh.start(0);
+    }
+    void remove(const QString &id) {
+        for(int i=commands.size()-1;i>=0;--i)if(commands[i].id==id)commands.removeAt(i);
+        refresh.start(0);
+    }
     void defaultBinding(const QString &id,const QString &sequence) {
         if (!bindings.contains(id)) bindings[id]=sequence;
         refresh.start(0);
@@ -41,11 +51,15 @@ public:
     bool invoke(const QString &id,const QString &origin) {
         auto active=QApplication::activeWindow();
         const auto inputBlock=PanelCommandContext::blocked();
-        const QString blocked=!inputBlock.isEmpty() ? inputBlock :
+        const bool directToolbar=origin=="opengate-command-toolbar";
+        // An explicit NoFocus toolbar click may operate while a field retains
+        // its caret. Keyboard dispatch still rejects text editing; modal/menu
+        // and workspace guards remain authoritative for every origin.
+        const QString blocked=!inputBlock.isEmpty()&&!(directToolbar&&inputBlock=="text-editing") ? inputBlock :
             !context || !context() ? "outside-workspace" : QString();
         const bool eligible=blocked.isEmpty();
         for (const auto &command:commands) if (command.id==id) {
-            const bool scoped=origin=="opengate-command-menu" || shortcutEligible(command.id);
+            const bool scoped=directToolbar || origin=="opengate-command-menu" || shortcutEligible(command.id);
             const bool accepted=eligible && scoped && command.available && command.available();
             logEvent("command.invoke",{{"command",id},{"origin",origin},{"accepted",accepted},
                 {"reason",accepted ? "accepted" : !blocked.isEmpty() ? blocked : !scoped ? "panel-context" : "command-unavailable"},

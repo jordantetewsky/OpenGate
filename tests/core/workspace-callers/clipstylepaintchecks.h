@@ -29,6 +29,31 @@ class UiTiGraphicsLabelItem : public QGraphicsItem {
 
 namespace OpenGateTest {
 template <class Check> void clipStylePaintChecks(Check check) {
+    {
+        TimelineViewportFixture fixture;
+        fixture.view->clip->hide();
+        QVector<UiTiClipContainer *> clips;
+        for (int i = 0; i < 32; ++i) {
+            auto clip = new UiTiClipContainer;
+            clip->setFlag(QGraphicsItem::ItemHasNoContents);
+            clip->setPos(i * 250, 0);
+            fixture.view->tracksScene->addItem(clip);
+            clip->setSelected(true);
+            clips.append(clip);
+        }
+        Unbound::TimelineClipColorPreview preview(fixture.view, fixture.view);
+        auto bindings = Unbound::TimelineClipColorBindings::find(fixture.view);
+        const auto before = bindings->revision();
+        Unbound::ColorPreset preset;
+        preset.id = "bulk";
+        preset.name = "Bulk";
+        check(preview.applySelected(preset) == 32 && bindings->revision() == before + 1,
+              "bulk selection updates every binding with one coalesced display revision");
+        for (auto clip : clips)
+            delete clip;
+        check(bindings->regions().isEmpty(),
+              "deleted native clip objects release their weak bindings without stale paint");
+    }
     for (bool skin : {false, true})
         for (double factor : {.7, 1., 1.47, 2.13, 3.}) {
             TimelineViewportFixture fixture;
@@ -129,6 +154,25 @@ template <class Check> void clipStylePaintChecks(Check check) {
                           pixel(textured, {219, 20}) == pixel(before, {219, 20}),
                       "texture leaves native foreground and playhead unchanged");
             }
+            const auto texturedFrame = frame();
+            const auto appearance = Unbound::TimelineClipColorBindings::find(fixture.view)
+                                        ->regions()
+                                        .front()
+                                        .style->json();
+            auto display = Unbound::ColorDisplaySettings::shared();
+            display->setTexturesEnabled(false);
+            TimelineViewportFixture::settle();
+            check(content->presentation()->grab().toImage() == gradient,
+                  "texture-off immediately paints the base gradient without native input or edit");
+            check(Unbound::TimelineClipColorBindings::find(fixture.view)
+                          ->regions()
+                          .front()
+                          .style->json() == appearance,
+                  "texture-off preserves exact preset and assignment parameters");
+            display->setTexturesEnabled(true);
+            TimelineViewportFixture::settle();
+            check(content->presentation()->grab().toImage() == texturedFrame,
+                  "texture-on immediately restores identical cached texture pixels");
             style.opacity = .5;
             check(preview.applySelected(style) == 0,
                   "unverified native multi-layer alpha is rejected without replacing the existing "

@@ -10,9 +10,10 @@ namespace Unbound {
 class ClipStylePaint {
   public:
     explicit ClipStylePaint(ClipSkinPaint &skins) : skins(skins) {}
-    void begin(QVector<ClipFillRegion> current, QTransform deviceToRoot) {
+    void begin(QVector<ClipFillRegion> current, QTransform deviceToRoot, bool textures = true) {
         regions = std::move(current);
         inverse = deviceToRoot;
+        texturesEnabled = textures;
     }
     bool owns(QRectF rect) const {
         for (const auto &r : regions)
@@ -33,9 +34,7 @@ class ClipStylePaint {
         const auto toLocal = basis.inverted(&ok);
         if (!ok)
             return {};
-        auto result = paint.brush(*region->style, region->rect);
-        result.setTransform(toLocal);
-        return result;
+        return paint.brush(region->style, region->rect, toLocal);
     }
     void afterBody(QPainter *out, const QRectF &rect, const QTransform &device) {
         const auto basis = device * inverse;
@@ -45,7 +44,8 @@ class ClipStylePaint {
         const auto toLocal = basis.inverted(&ok);
         if (!region || !ok)
             return;
-        paint.texture(*out, rect, *region->style, region->rect, toLocal);
+        if (texturesEnabled)
+            paint.texture(*out, rect, *region->style, region->rect, toLocal);
         labels(out, *region, toLocal);
     }
     bool pixmap(QPainter *out, const QRectF &rect, const QPixmap &native, const QRectF &source,
@@ -74,7 +74,7 @@ class ClipStylePaint {
             out->save();
             out->setClipRect(rect, Qt::IntersectClip);
             out->setClipPath(local.map(mask), Qt::IntersectClip);
-            paint.fill(*out, rect, *region->style, region->rect, true, toLocal);
+            paint.fill(*out, rect, region->style, region->rect, texturesEnabled, toLocal);
             labels(out, *region, toLocal);
             out->restore();
             return true;
@@ -114,6 +114,7 @@ class ClipStylePaint {
     ColorPresetPaint paint;
     QVector<ClipFillRegion> regions;
     QTransform inverse;
+    bool texturesEnabled = true;
     QCache<qint64, QColor> inks{128};
     const ClipFillRegion *find(QRectF rect) const {
         const ClipFillRegion *found = nullptr;

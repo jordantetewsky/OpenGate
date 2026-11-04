@@ -15,6 +15,7 @@ void colorManagerEntryChecks(PanelControls &controls, QMenu *ui, Unbound::PanelC
           "color manager entry is above native return in assembled menu");
     if (!action || !native)
         return;
+    check(main->findChild<QToolButton *>("openGateTimelineTextures"),"Timeline exposes texture control before the manager is opened");
     action->trigger();
     settle(600);
     auto content = main->findChild<QWidget *>("openGateColorManagerPanel");
@@ -26,6 +27,30 @@ void colorManagerEntryChecks(PanelControls &controls, QMenu *ui, Unbound::PanelC
           "opening owned manager preserves native media panel owners");
     if (!content)
         return;
+    auto textureButton = main->findChild<QToolButton *>("openGateTimelineTextures");
+    auto textureCheck = content->findChild<QCheckBox *>("openGateColorTexturesEnabled");
+    check(textureButton && textureCheck && textureButton->isChecked() == textureCheck->isChecked(),
+          "assembled manager and Timeline toolbar expose one texture display state");
+    if (textureButton && textureCheck) {
+        const bool before = textureCheck->isChecked();
+        // A real toolbar mouse click activates its host. Hidden fixture
+        // QAbstractButton::click() alone does not synthesize that OS activation.
+        QApplication::setActiveWindow(textureButton->window());
+        textureButton->click();
+        settle(100);
+        check(textureCheck->isChecked() != before &&
+                  textureButton->isChecked() == textureCheck->isChecked(),
+              "Timeline toolbar synchronizes the floating manager");
+        QApplication::setActiveWindow(content->window());
+        content->setFocusPolicy(Qt::StrongFocus);
+        content->setFocus();
+        settle(50);
+        check(controls.invokeWorkflowCommand("color-display.toggle-textures"),
+              "texture command reaches the shared display preference operation");
+        settle(100);
+        check(textureCheck->isChecked() == before && textureButton->isChecked() == before,
+              "mapped texture command restores display state without replacing presets");
+    }
     auto host = content->window();
     const auto frame = host->geometry();
     host->close();
