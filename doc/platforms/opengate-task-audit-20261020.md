@@ -2240,3 +2240,37 @@ integrity, editing, Original UI comparison and playback await live acceptance.
 Checkmarks, saved palette/picker and portability remain unfinished. Evidence and
 the exact mode-switch discovery:
 `opengate-native-clip-fill-20261103.md`. No main merge or package publication.
+
+### November 4 continuation: palette candidate and current regressions
+
+The Color Manager and separately gated gradient/texture rendering trial are on
+`feat/color-manager-paint`; the live installation remains `660cdfd`. Source
+checkpoints `a7c1228`, `ed92e49` and `827c965` distinguish editor/rendering work,
+command/display wiring, and scratch-storage evidence. See
+`opengate-color-manager-implementation-20261103.md` for the remaining gates.
+Native swatches remain locked. Custom presets retain editable names, categories,
+ordering, selected gradient stops and individual texture definitions.
+
+Jordan's additional acceptance requirements and evidence:
+
+| Requirement | Current evidence | Still required |
+| --- | --- | --- |
+| Renaming a bin/clip must retain text input; letters/Shift-letters must not open drawers or panels | Isolated repair `8ed4ab0`, integrated as `226f3ab`; workflow, panel-command and native-preset optimized ASAN fixtures pass, including delayed workflow delivery after editor exit and unrelated native editing shortcut delivery | Live native rename, AppKit and generated-workflow timing in docked/drawer/floating layouts |
+| Every menu must work at every supported GUI/display scale; Media Pool is the reported failure | Isolated `5fb2c71`/`9ea066d`, integrated `9288f8e`/`c2e6811`; reproduced child menus becoming embedded graphics items instead of tracked native popups. Reversible canvas flag keeps popups native. Integrated optimized ASAN panel-scale matrix passes at 70–300%, including nested scenes, submenus, action execution and screen bounds | Actual Resolve bins, thumbnails/list, empty space and menus across docked/drawer/floating layouts and display configurations; component proof does not close the report |
+| Active native timeline ID must match the highlighted/displayed timeline tab | Explicit November 4 requirement recorded; native identity investigation and cache-boundary review in progress | A verified native identity mapping and rapid-switch/reorder/rename/close/reopen/duplicate-name checks; matching names or indexes alone is insufficient |
+| Custom colors save/reopen and survive DRP handoff | Disposable generated-media probe proves namespaced Timeline metadata survives save/reopen and DRP import, while Timeline/clip/source SDK IDs regenerate | Stable per-instance association, preserved native map data, closest stock fallback, returning handoff, project/version parity and native Undo/Redo |
+| Builder edits are retained on transfer into the native editor | HTML export includes committed `presets` plus optional `draftPresets`; native editor has separate draft recovery | Native import currently reads committed presets only; preserve exported pending drafts before transferring Jordan's edited file |
+
+The integrated workflow sanitizer, clip-color menu sanitizer and assembled native
+Color Manager entry fixtures pass after the rename/menu repairs. These are hidden
+Qt fixtures, not live acceptance. Windows shared callers were reviewed; no
+Windows Qt runtime pass is claimed. No source merge to main, package publication,
+new installation or mutation of Jordan's editing project occurred.
+
+Offline native storage evidence now identifies `ImportExportMetadataBA` as a
+per-instance Qt property containing an existing serialized map. Its inspected
+setter is FromDb deserialization, not an established native Undo operation.
+Resolve-owned entries must be preserved. Native graphics-to-SDK identity and
+history attachment remain unresolved; a raw property write is not an accepted
+substitute. The retained manifest and limitations are indexed in the color
+implementation checkpoint.

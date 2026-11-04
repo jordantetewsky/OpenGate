@@ -1,5 +1,11 @@
 # Native Color Manager implementation checkpoint — November 3
 
+November 4 integration: rename context and scaled popup repairs are included in
+`226f3ab`, `9288f8e` and `c2e6811`. Integrated optimized sanitizer workflow,
+panel-scale and clip-color menu fixtures pass; assembled manager entry passes.
+These remain source/fixture results, not a new installed or accepted runtime.
+Active native timeline ID/displayed-tab agreement is now an explicit gate.
+
 Branch: `feat/color-manager-paint`, based on preserved paint checkpoint
 `fix/native-clip-skin-color`. This is development work, not an installed or
 accepted project-color feature. The [agreed task list](opengate-color-system-plan-20261103.md)
@@ -245,6 +251,19 @@ claimed. Resolve was released for Jordan's work; subsequent investigation uses
 the captured archive offline.
 
 ## Retained native-history evidence
+
+The later bounded metadata-property pass is retained in
+`build/rea-clip-colors/import-export-metadata-20261104/manifest.json`, SHA256
+`5309737d65916133a3ba23c897e5666dc430c8d1e6a0bb6def15c911770a0877`.
+Nine bounded disassemblies and five metadata/vtable slices identify
+`Sm2TiItem::ImportExportMetadataBA` as a read/write/reset QByteArray Qt property
+with a serialized string-to-variant map. It already contains Resolve interchange
+data; any future namespaced entry must preserve those entries. The setter is
+deserialization machinery and no native history submission was observed in it.
+No safe live selected-model join, SDK write route, automatic color-action payload
+attachment or stable identity/remap route was established. These are offline
+shell observations, not new REA provider evidence or runtime behavior. No private
+property writes have been added to production.
 
 REA provider tools were absent in the static-analysis worker. Read-only doctor
 reported aligned registration; no setup/configuration changes were performed.
