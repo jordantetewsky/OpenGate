@@ -1,5 +1,18 @@
 # Native Color Manager implementation checkpoint — November 3
 
+The explicit builder/native transfer now preserves existing saved presets and
+their separate pending edits, including gradient stops and per-color textures.
+It preflights the combined palette before writing, rejects conflicting local
+drafts, and persists draft recovery before committing the palette. If the second
+write fails, the UI reports the retained draft backup rather than claiming an
+atomic two-file transaction. Native export includes pending edits too, with a
+256 KB bound and schema validation. An entirely new builder color that has never
+been updated has no saved base; import rejects that file with an instruction to
+Update Preset in the builder, preserving both files. It does not silently drop
+or commit that new draft. Native draft-only creation/import remains a separate
+flow gap. Temporary-file transfer/collision/reopen/write-failure checks and the
+full optimized ASAN manager fixture pass. No frame-paint path was added.
+
 November 4 integration: rename context and scaled popup repairs are included in
 `226f3ab`, `9288f8e` and `c2e6811`. Integrated optimized sanitizer workflow,
 panel-scale and clip-color menu fixtures pass; assembled manager entry passes.

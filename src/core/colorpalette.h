@@ -165,6 +165,13 @@ class ColorPalette {
         return replace(next);
     }
     QString import(const QByteArray &bytes) {
+        Data next;
+        const auto problem = planImport(bytes, next);
+        return problem.isEmpty() ? replace(next) : problem;
+    }
+    QString planImport(const QByteArray &bytes, Data &result) const {
+        if (!lastError.isEmpty())
+            return "Existing palette needs recovery before import: " + lastError;
         Data incoming;
         QString problem;
         if (!decode(bytes, incoming, problem))
@@ -196,7 +203,11 @@ class ColorPalette {
             if (!found)
                 next.presets.append(preset);
         }
-        return replace(next);
+        Data validated;
+        if (!decode(encode(next), validated, problem))
+            return problem;
+        result = validated;
+        return {};
     }
 
   private:

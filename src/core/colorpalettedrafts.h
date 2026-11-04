@@ -71,6 +71,28 @@ class ColorPaletteDrafts : public QObject {
     QString error() const {
         return problem;
     }
+    // Explicit transfer flushes existing pending edits too, but never replaces
+    // a different local draft with imported data.
+    QString appendImported(const QVector<ColorPreset> &incoming) {
+        if (!problem.isEmpty())
+            return "Existing drafts need recovery before import: " + problem;
+        auto next = drafts;
+        for (const auto &preset : incoming) {
+            if (next.contains(preset.id) && !(next[preset.id] == preset))
+                return "A preset has different local pending edits; drafts were retained.";
+            next.insert(preset.id, preset);
+        }
+        if (next == drafts)
+            return {};
+        if (next.size() > 128)
+            return "Draft backup supports up to 128 colors.";
+        const auto error = write(next);
+        if (!error.isEmpty())
+            return error;
+        drafts = next;
+        timer.stop();
+        return {};
+    }
 
   private:
     QString path, problem;
@@ -80,22 +102,25 @@ class ColorPaletteDrafts : public QObject {
         timer.stop();
         if (!problem.isEmpty())
             return;
+        problem = write(drafts);
+    }
+    QString write(const QHash<QString, ColorPreset> &valuesById) {
         QJsonArray values;
-        auto keys = drafts.keys();
+        auto keys = valuesById.keys();
         keys.sort();
         for (const auto &id : keys)
-            values.append(drafts[id].json());
+            values.append(valuesById[id].json());
         const auto bytes =
             QJsonDocument(QJsonObject{{"schema", "com.cinewaltz.opengate.palette-drafts.v1"},
                                       {"drafts", values}})
                 .toJson();
         if (bytes.size() > 256000 || !QDir().mkpath(QFileInfo(path).absolutePath())) {
-            problem = "Cannot save draft backup.";
-            return;
+            return "Cannot save draft backup.";
         }
         QSaveFile file(path);
         if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit())
-            problem = "Cannot save draft backup; committed presets retained.";
+            return "Cannot save draft backup; committed presets retained.";
+        return {};
     }
 };
 } // namespace Unbound

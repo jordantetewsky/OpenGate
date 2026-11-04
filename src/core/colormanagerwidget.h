@@ -4,6 +4,7 @@
 #include "colordisplaysettings.h"
 #include "colormanagerfiles.h"
 #include "colorpalettedrafts.h"
+#include "colorpalettetransfer.h"
 #include "colorpreseteditor.h"
 #include "colorpresetpreview.h"
 #include "colorstockcomparison.h"
@@ -154,7 +155,7 @@ class ColorManagerWidget : public QWidget {
             QByteArray bytes;
             if (!report(ColorManagerFiles::readPalette(file, bytes)))
                 return;
-            if (report(palette.import(bytes))) {
+            if (report(ColorPaletteTransfer::apply(bytes, palette, drafts))) {
                 selected.clear();
                 reload();
             }
@@ -165,7 +166,9 @@ class ColorManagerWidget : public QWidget {
                                                            "Palette JSON (*.json)");
             if (file.isEmpty())
                 return;
-            report(ColorManagerFiles::writePalette(file, ColorPalette::encode(palette.state())));
+            QByteArray bytes;
+            if (report(ColorPaletteTransfer::encode(palette, drafts, bytes)))
+                report(ColorManagerFiles::writePalette(file, bytes));
         });
         reload();
         if (!palette.error().isEmpty())
