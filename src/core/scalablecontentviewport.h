@@ -23,9 +23,14 @@ public:
         canvasWidth=qMax(logicalWidth>0?logicalWidth:content->width(),qMax(1,content->minimumSizeHint().width()));
         minimumHeight=qMax(1,content->minimumSizeHint().height());
         originalOffscreen=content->testAttribute(Qt::WA_DontShowOnScreen);originalQuit=content->testAttribute(Qt::WA_QuitOnClose);
+        originalPopupBypass=content->windowFlags().testFlag(Qt::BypassGraphicsProxyWidget);
         auto scene=new QGraphicsScene(this);setScene(scene);proxy=new ContentProxy;
         proxy->setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
         scene->addItem(proxy);content->setAttribute(Qt::WA_DontShowOnScreen);content->setParent(nullptr);
+        // Explicitly embed only the canvas. Descendant menus/dialogs must keep
+        // native popup tracking and screen bounds, not become clipped/scaled
+        // child graphics proxies. Qt checks this flag along popup ancestry.
+        content->setWindowFlag(Qt::BypassGraphicsProxyWidget,true);
         proxy->setWidget(content);proxy->setFocusPolicy(Qt::StrongFocus);content->show();
         fitCanvas();
     }
@@ -42,6 +47,7 @@ public:
         // no host/main window is involved in this transition.
         if(widget->windowHandle())widget->windowHandle()->destroy();
         widget->setParent(owner,Qt::Widget);proxy->setWidget(nullptr);
+        widget->setWindowFlag(Qt::BypassGraphicsProxyWidget,originalPopupBypass);
         widget->setAttribute(Qt::WA_DontShowOnScreen,originalOffscreen);widget->setAttribute(Qt::WA_QuitOnClose,originalQuit);
         content=nullptr;return widget;
     }
@@ -78,6 +84,6 @@ private:
     }
     QPointer<QWidget> content;
     QGraphicsProxyWidget *proxy=nullptr;
-    int canvasWidth=1,minimumHeight=1;double amount=1.;bool originalOffscreen=false,originalQuit=false;
+    int canvasWidth=1,minimumHeight=1;double amount=1.;bool originalOffscreen=false,originalQuit=false,originalPopupBypass=false;
 };
 }
