@@ -18,8 +18,11 @@ Saved personal presets/order use `Colors.json` in the existing profile. Pending
 appearance edits use a separate debounced recovery file, `Colors.json.drafts`;
 they do not overwrite saved definitions. These are local editor files, **not
 project-portable clip assignments**. Opening/painting the preview does not write
-project data. No new preset-to-Timeline assignment command is exposed by this
-checkpoint. Existing experimental Red remains its separate, unchanged adapter.
+project data. A separately gated preset-to-Timeline **rendering trial** is now
+available with both `OPENGATE_EXPERIMENTAL_COLOR_MANAGER=1` and
+`OPENGATE_EXPERIMENTAL_COLOR_PAINT=1`; it does not provide saved clip assignments
+or native color-history integration. Existing experimental Red remains available
+independently. Neither development path has been installed by this work.
 
 The preview uses generic sample video/audio labels, generated waveform geometry
 and a neutral thumbnail placeholder. An explicit image chooser accepts a bounded
@@ -120,7 +123,128 @@ paint, cached foreground, playhead, native command replacement and mode parity;
 measure playback/edit latency. Mac fixture success does not establish Windows
 compilation/runtime parity. No installation, main merge or package publication.
 
-## Native history investigation — observations and limits
+## November 4 source checkpoint: paint, commands and display controls
+
+This remains an uninstalled development candidate. The following are fixture or
+source results, not acceptance in Jordan's editing project:
+
+- Shared presets now reach the existing native menu/selection adapter under the
+  separate color-paint flag. Category order, names, gradient/textured pills and
+  the custom row's checkmark come from the one committed palette. Updating a
+  preset replaces its stable registry ID; deleting one retires its operation.
+  Existing assigned render snapshots are not silently rewritten by palette edits.
+- Native stock definitions stay outside the editable model. Reserved native IDs
+  and the stock category are rejected by updates/imports. Choosing a stock
+  comparison cannot edit a custom draft; removing a custom color preserves every
+  native comparison/action. The stock comparison is visibly labelled locked.
+- A native action observer replaces the former menu-only cleanup callback.
+  Recognized native color QAction shortcuts and menu actions release only the
+  selected Timeline/Media Pool render bindings; the original action executes
+  once. Typing and unrelated actions retain their behavior. Actual Resolve
+  shortcut identifiers/routes beyond these fixture cases still need validation.
+- The paint-device hooks delegate background/label decisions to `ClipStylePaint`.
+  Verified opaque clip bodies and monochrome nine-piece skins can use solids,
+  2–5-stop gradients and twelve static texture variants. Unknown photos and
+  waveforms pass through. Semantic native labels get contrast backing while
+  retaining native ink. Fixtures cover direct/cached labels and a crossing
+  playhead at 70%, 100%, 147%, 213% and 300%. This does not prove every real
+  native cache role or the reported moving-playhead capture defect.
+- Immutable gradient resources have a 128-entry cache; positions/sizes use
+  transforms rather than another stop table. Diagonal gradients retain the
+  preview's projection on wide, shallow clips. All clips in one selection share
+  an immutable definition. Binding updates use indexed lookup and a repaint-only
+  batch; native command label invalidation uses a generation counter. No native
+  history transaction is implied by that repaint batch. Geometry preparation
+  still visits the bound clips; matched real-project performance remains open.
+- `ColorDisplaySettings` owns a local, atomic `ColorDisplay.json` texture setting.
+  The manager and compact Timeline toolbar control share it. Off bypasses tile
+  drawing and retains definitions/assignments; On restores identical pixels.
+  These operations make no project/history writes. The explicit NoFocus toolbar
+  route permits a click while a field retains its caret, while keyboard dispatch,
+  modal/menu and workspace guards remain in force. The toolbar is available
+  before opening the manager and uses the existing toolbar layout/overflow.
+- `build-workflow-commands.py --color-manager` generates native keymap targets
+  for manager opening and texture toggling through the existing bridge on both
+  platforms. Per-preset **native Keyboard Customization registration and mapping
+  survival after rename/restart remain unfinished**. A stable Qt registry ID is
+  insufficient evidence for that requirement.
+- Wide/360-pixel manager layouts are captured in
+  `build/macos/color-manager-preview.png` and its `.narrow.png` companion. Sample
+  labels elide when necessary; category icons use the shared gradient/texture
+  renderer. No current-project names or media are used.
+
+Additional focused modules have one responsibility each:
+
+| Module | Responsibility |
+| --- | --- |
+| `clipstylepaint.h` | Adapt verified native bodies/labels to shared preset paint |
+| `cliplabelregions.h` | Discover semantic label bounds without retaining child pointers |
+| `clipopaquemask.h` | Derive opaque body coverage of an already verified skin |
+| `clipcolorpresetcommands.h` | Route committed preset IDs through the existing command registry |
+| `colorpresetmenu.h` | Own only the added category/swatch menu rows |
+| `nativeclipcoloractions.h` | Observe actual native color actions without executing them |
+| `colordisplaysettings.h` | Own the local texture-display preference |
+| `colortexturetoolbar.h` | Present that preference in the native tools layout |
+
+Removed paths: the coordinator's broad QMenu-trigger cleanup was replaced by the
+shared action observation route; Media Pool all/selected cleanup share one lease
+release implementation; the manager checkbox no longer owns a separate texture
+preference. Native controls, menus and action definitions are not replaced.
+`PanelControls` adds feature wiring only. Shared command/paint interfaces are
+used by the existing callers; macOS fixtures pass. Windows generated-script tests
+run on this host, but Windows Qt compilation/runtime acceptance remains open.
+
+Open acceptance requirements include: saved project assignments; real native
+Undo/Redo and mixed edit sequences; a stable native graphics-to-SDK identity join;
+one canonical checkmark (the underlying native fallback check is still present);
+Original UI paint parity; verified stock fallback values/rules; project palette
+ownership/conflicts; per-swatch native keymap registration/rename persistence;
+real cached-label/playhead coverage; and matched playback/edit performance.
+Native alpha blending is deliberately unavailable in the rendering trial rather
+than approximated across overlapping body layers. The editor retains alpha data.
+
+The installed SDK declares Timeline `GetSelectedClips` and
+`GetMediaPoolItem`; the existing stabilization route already uses selection.
+The bounded selection probe reads IDs/colors only, verifies a repeated snapshot,
+and never substitutes a playhead clip. A live attempt could not connect to
+Resolve, so no new native identity observation is claimed. Source and Timeline
+Media Pool metadata carriers are both supported by the scratch probe; neither
+has passed the new save/reopen/DRP experiment yet. Scratch lifecycle checks now
+verify current project ID/name before save/close and skip cleanup if ownership
+changes. Twelve offline probe scope/identity/carrier tests pass. The later live
+storage pass is recorded below; no build has been installed.
+
+### Live scratch storage evidence, November 4
+
+Jordan subsequently relaunched Resolve without opening a project. The SDK still
+reported its empty `Untitled Project` placeholder: zero timelines, root clips and
+subfolders. A separate explicit probe flag accepts only that verified empty
+placeholder; normal editing projects still cause refusal. The first attempt
+created/closed its scratch project but failed to import media because relative
+paths were interpreted in Resolve's working directory. Probe output/media/archive
+paths now resolve absolutely.
+
+The subsequent generated-audio-only Timeline-carrier experiment completed:
+
+- namespaced third-party metadata was accepted and read back exactly;
+- it survived project save/close/reopen without changing clip range;
+- it survived DRP export and import into a separately named scratch project;
+- the native Orange control assignment survived;
+- **Timeline, clip and source SDK IDs all changed on DRP import**. Opaque JSON
+  references to those original IDs were not remapped. The experiment correctly
+  reports `instance_association_portable: false`.
+
+Receipt: `build/color-timeline-metadata-native-20261104-absolute/receipt.json`.
+Archive SHA-256: `c4c3b0ccb19e648cdfa4a0b79decdf31a01712bf128c7f5abf9c9dcb01bd9379`.
+Its XML identifies Resolve `21.1.1.0010`. The nested `drp_roundtrip` result is the
+actual import evidence; the older metadata subrecord's initial
+`drp_import_verified: false` was not updated by that run. Test projects were
+closed; their library entries and artifacts were retained. No user editing
+project was saved/modified, no build was installed, and no native Undo result is
+claimed. Resolve was released for Jordan's work; subsequent investigation uses
+the captured archive offline.
+
+## Retained native-history evidence
 
 REA provider tools were absent in the static-analysis worker. Read-only doctor
 reported aligned registration; no setup/configuration changes were performed.

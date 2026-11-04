@@ -28,7 +28,23 @@ controls and organization editor are not evidence of runtime implementation,
 native Undo, portable project storage or playback performance. No build or
 installation is authorized by this planning update.
 
+November 4 source update: native Qt editor/entry fixtures, scoped preset-menu
+rendering, stock-definition protection, native QAction replacement, local texture
+controls and immutable paint caches are implemented in the isolated candidate.
+See the [implementation/verification ledger](opengate-color-manager-implementation-20261103.md).
+The feature is **not installed or ready for full live acceptance**: saved project
+assignments, actual native Undo/Redo, native keymap persistence, fallback and mode
+parity remain open. Jordan's export takes priority; disposable-project checks
+wait until Project Manager is available. No task below is considered complete
+solely because its component fixture passes.
+
 ## Palette, picker and menu workflow
+
+Clarification, November 4: **native Resolve swatches are immutable**. Their
+definitions, names and presence cannot be edited, removed or replaced by the
+custom palette editor or import. Custom/OpenGate swatches remain editable.
+Assigning a custom swatch to a clip does not redefine a native swatch. Preserve
+native thumbnail, waveform and clip-display settings throughout.
 
 - [ ] Preserve the stock Resolve colors for reference and selection, alongside
   an expanded set of included OpenGate colors. Jordan is using the preview to
