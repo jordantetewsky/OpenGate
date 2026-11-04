@@ -9,6 +9,14 @@ development_flags=(-std=c++17)
 if [[ "${OPENGATE_DEVELOPMENT_ENTRY:-0}" == 1 ]]; then
     development_flags+=(-DOPENGATE_DEVELOPMENT_ENTRY)
 fi
+if [[ -n "${OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY:-}" ]]; then
+    [[ "$OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY" == /* && -f "$OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY/profile/Colors.json" ]] || {
+        echo 'The explicit local color trial requires an absolute directory with profile/Colors.json.' >&2
+        exit 1
+    }
+    trial_literal="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY")"
+    development_flags+=("-DOPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY=$trial_literal")
+fi
 if [[ ! -f "$qt/src/corelib/global/qconfig.h" || ! -f "$qt/include/QtWidgets/QApplication" || ! -d "$out" ]]; then
     echo 'Configure Qt 5.15.2 headers and build the OpenFX probe first.' >&2
     exit 1
