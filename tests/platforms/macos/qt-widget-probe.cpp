@@ -12,6 +12,9 @@
 #include <QVBoxLayout>
 #include "panelcontrols.h"
 #include "controlservice.h"
+#ifdef OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY
+#include "colorvisualtrial.h"
+#endif
 
 
 static void captureWidgets(int capture)
@@ -52,6 +55,14 @@ extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets()
     QTimer::singleShot(30000, qApp, [] { captureWidgets(3); });
     const auto start=[] {
         if (qApp->findChild<QObject *>(QStringLiteral("unboundControlService"))) return;
+#ifdef OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY
+        if (!Unbound::ColorVisualTrial::activate(QString::fromUtf8(OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY))) {
+            Unbound::logEvent("color-trial.activation.failed",{{"reason","trial-profile-unavailable"}});
+            return;
+        }
+        Unbound::logEvent("color-trial.activation.ready",{{"manager_enabled",true},{"paint_enabled",true},
+            {"palette_file",qEnvironmentVariable("OPENGATE_COLOR_PALETTE_FILE")}});
+#endif
         auto diagnostics = new Unbound::WindowDiagnostics(qApp);
         qApp->installEventFilter(diagnostics);
         new Unbound::ControlService(qApp);
