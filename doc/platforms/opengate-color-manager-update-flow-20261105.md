@@ -102,3 +102,37 @@ checkmarks, native per-swatch keymap registration, native Undo and Original UI
 parity remain open in the consolidated color task list. The read-only SDK
 selection probe last reported Resolve scripting unavailable. No private metadata
 setter or private history address has been invoked in production as a substitute.
+
+## Combined candidate and later read-only evidence
+
+The isolated trial branch `trial/color-manager-update-flow-20261105` combines the
+three focused changes with the already installed ordinary-launch trial adapter.
+Runtime source `13ba354faf94eca96bc9d1d89d4f06aa011cb405` builds clean at O2 for
+arm64/x86_64. The signed binary SHA256 is
+`672541bc630737132d99c59bfe53183bdbb7f2b6099568f93102d2c959872042`.
+Strict signature verification and an install/byte-identical rollback rehearsal
+pass for 25 managed files across nine paths. The separate assembled entry-flow
+fixture passes on this combined branch. This is staging evidence, not installation.
+
+The fresh merge preflight retained the original export unchanged and validated
+34 saved presets with two pending drafts from the latest trial files. The earlier
+three-draft inventory above was an earlier snapshot; user edits remain authoritative.
+Fresh input hashes must be checked/recomputed after Resolve closes, before any
+actual merge. The running palette was not overwritten during this preflight.
+
+On November 5, after Resolve had relaunched as a new process, the documented SDK
+selection inspection succeeded: one selected item, consistent project/timeline/
+item IDs across repeated reads, and no project writes. The receipt is retained
+in the trial worktree's `build/color-selection-readonly-native-20261105/`.
+The current connector's 21.1.1 API declarations still expose only stock clip
+colors for SetClipColor and no TimelineItem third-party metadata or native Undo
+transaction API. Marker customData remains a separate candidate, not verified
+invisible assignment storage.
+
+A further bounded static review found a private native graphics/item/model
+association, but no safe Qt identity getter/property on the inspected container,
+item or model superclass chains. It does not justify production raw-offset
+access. Findings and hashes are retained in the original timeline-content
+worktree's `build/rea-clip-colors/clip-instance-identity-20261105/`. The live SDK
+item is not yet joined to a painted graphics object. That join and native history
+attachment remain unresolved despite successful SDK connectivity.
