@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "../../../src/core/colormanagerwidget.h"
+#include "presetpickerchecks.h"
 #include <QFormLayout>
 
 namespace OpenGateTest {
@@ -52,6 +53,7 @@ template <class Check> void presetUpdateVisibilityChecks(Check check, const QStr
     check(palette.find("red")->texture == "stipple-coarse" && !editor->modified() &&
               !update->isEnabled(),
           "visible Update commits through the existing palette owner and clears pending state");
+    presetPickerChecks(check, manager, *editor, palette);
     manager.resize(360, 1000);
     settle();
     manager.resize(360, 1000);

@@ -1,5 +1,11 @@
 ## Native Color Manager development — November 3, 2026
 
+November 5 source/fixture follow-up: visible Update/Revert, committed-swatch
+propagation to existing clips, explicit clip-over-track display precedence and a
+clickable live color picker are recorded in
+[the update-flow checkpoint](opengate-color-manager-update-flow-20261105.md).
+This is not an installation or a project-persistence/native-history acceptance.
+
 Jordan confirmed visible Red paint in OpenGate, but reports project-reopen loss,
 incorrect checkmarks, native shortcut replacement and UI-mode parity gaps. The
 installed `660cdfd` is retained. The new `feat/color-manager-paint` branch contains

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "colorgradientstopbar.h"
+#include "colorpickerbutton.h"
 #include "colorpreset.h"
 #include <QCheckBox>
-#include <QColorDialog>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
@@ -59,9 +59,11 @@ class ColorPresetEditor : public QWidget {
         hex = new QLineEdit;
         hex->setObjectName("openGatePresetHex");
         hex->setMaxLength(7);
-        form->addRow("Hex", hex);
-        pick = new QPushButton("Choose Color…");
-        form->addRow(pick);
+        auto colorRow = new QHBoxLayout;
+        pick = new ColorPickerButton;
+        colorRow->addWidget(hex, 1);
+        colorRow->addWidget(pick);
+        form->addRow("Color", colorRow);
         hue = slider(0, 359);
         saturation = slider(0, 100);
         lightness = slider(0, 100);
@@ -107,14 +109,10 @@ class ColorPresetEditor : public QWidget {
                 changed();
             }
         });
-        connect(pick, &QPushButton::clicked, this, [this] {
-            const auto c = QColorDialog::getColor(color(), this, "Preset color",
-                                                  QColorDialog::DontUseNativeDialog);
-            if (c.isValid()) {
-                setColor(c);
-                changed();
-            }
-        });
+        pick->colorChanged = [this](QColor color) {
+            setColor(color);
+            changed();
+        };
         for (auto s : {hue, saturation, lightness})
             connect(s, &QSlider::valueChanged, this, [this] {
                 if (rendering)
@@ -126,6 +124,7 @@ class ColorPresetEditor : public QWidget {
         connect(gradient, &QCheckBox::toggled, this, [this](bool enabled) {
             if (rendering)
                 return;
+            pick->dismissPicker();
             if (enabled)
                 draft.stops = {{ColorPaletteId(), draft.color, 0, 1},
                                {ColorPaletteId(), QColor("#00d4ff"), 1, 1}};
@@ -139,12 +138,14 @@ class ColorPresetEditor : public QWidget {
         connect(stop, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int i) {
             if (rendering || i < 0)
                 return;
+            pick->dismissPicker();
             selectedStop = i;
             refresh();
         });
         bar->chosen = [this](const QString &id) {
             for (int i = 0; i < draft.stops.size(); ++i)
                 if (draft.stops[i].id == id) {
+                    pick->dismissPicker();
                     selectedStop = i;
                     refresh();
                     break;
@@ -219,6 +220,7 @@ class ColorPresetEditor : public QWidget {
                     }
                 });
         connect(revert, &QPushButton::clicked, this, [this] {
+            pick->dismissPicker();
             draft = saved;
             selectedStop = 0;
             changed();
@@ -232,6 +234,7 @@ class ColorPresetEditor : public QWidget {
         restoreDraft(preset, preset);
     }
     void restoreDraft(const ColorPreset &preset, const ColorPreset &working) {
+        pick->dismissPicker();
         saved = preset;
         draft = working;
         selectedStop = 0;
@@ -256,7 +259,8 @@ class ColorPresetEditor : public QWidget {
     QComboBox *stop, *angle, *texture;
     QDoubleSpinBox *position, *stopAlpha, *strength, *opacity;
     QSlider *hue, *saturation, *lightness;
-    QPushButton *pick, *add, *remove, *revert, *updateButton;
+    QPushButton *add, *remove, *revert, *updateButton;
+    ColorPickerButton *pick;
     QLabel *state;
     QFormLayout *form;
     static QString ColorPaletteId() {
@@ -357,6 +361,11 @@ class ColorPresetEditor : public QWidget {
             stopAlpha->setValue(draft.stops[selectedStop].opacity * 100);
         }
         const auto c = color();
+        pick->setColor(
+            c,
+            draft.stops.isEmpty()
+                ? QString("Solid color")
+                : QString("Gradient stop %1 of %2").arg(selectedStop + 1).arg(draft.stops.size()));
         hue->setValue(qRound(qMax(0., c.hslHueF()) * 359));
         saturation->setValue(qRound(c.hslSaturationF() * 100));
         lightness->setValue(qRound(c.lightnessF() * 100));
