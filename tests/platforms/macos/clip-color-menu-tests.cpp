@@ -13,6 +13,7 @@
 #include "../../core/workspace-callers/clipcolorpoolfixture.h"
 #include "../../core/workspace-callers/nativepresetfixture.h"
 #include "../../core/colors/presetcommandchecks.h"
+#include "../../core/workspace-callers/isolatednativeactionchecks.h"
 #include <memory>
 using namespace OpenGateTest;
 class DynamicPalette : public QMenu {
@@ -42,6 +43,7 @@ int main(int argc,char **argv) {
     timeline.view->tracksScene->addItem(clip);clip->setSelected(true);
     Unbound::PanelContentScale scale;scale.restoreState({{"timeline_header_width",160.}});scale.apply(&timeline.timeline);
     ClipColorPoolFixture pool(&edit);pool.root.move(920,0);pool.root.show();main.show();
+    isolatedNativeActionChecks(&app,check);
     Unbound::PanelCommandCatalog commands(&main,[]{return true;});auto colors=std::make_unique<Unbound::ClipColorPreviewCommands>(&main,&commands);
     TimelineViewportFixture::settle();
     auto popup=[&](QWidget *focus,bool expectPool) {
