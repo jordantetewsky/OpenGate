@@ -136,3 +136,19 @@ access. Findings and hashes are retained in the original timeline-content
 worktree's `build/rea-clip-colors/clip-instance-identity-20261105/`. The live SDK
 item is not yet joined to a painted graphics object. That join and native history
 attachment remain unresolved despite successful SDK connectivity.
+
+The clip/track precedence follow-up reproduced a separate real menu-routing bug:
+the old swatch-name fallback treated a titled Track Color palette as a clip
+palette, appended clip commands and cleared clip bindings when a track swatch
+was chosen. The detector now honors declared menu/parent-row scope and the
+`changeTrackColor` identity before using its unnamed-palette fallback. Optimized
+sanitizer checks pass for titled, separately parent-labeled and native-identified
+track menus, while retaining late-populated clip submenus. No new global menu
+controller or assignment owner was added. This repair is not yet in the staged
+`13ba354` binary above.
+
+Jordan's later thumbnail-view screenshots show an exposed gold block in the
+thumbnail well while the custom footer remains teal/mint. This remains an open
+paint regression; the screenshots do not determine whether the missed primitive
+is a solid fill, partial skin or cached raster. Hold the prepared update while
+investigating rather than claiming the existing full-body fixture covers it.

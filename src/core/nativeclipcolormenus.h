@@ -29,9 +29,24 @@ class NativeClipColorMenus : public QObject {
     static bool matches(QMenu *menu) {
         if (!menu)
             return false;
-        if (menu->objectName() == "markSetClipColor" ||
-            label(menu->menuAction()->text()) == "clip color")
+        auto purpose = label(menu->menuAction()->text());
+        // Some native builders attach a separate QAction to an unnamed menu.
+        // The parent row describes its scope more accurately than its swatches.
+        if (auto parent = qobject_cast<QMenu *>(menu->parentWidget()))
+            for (auto action : parent->actions())
+                if (action->menu() == menu && !label(action->text()).isEmpty()) {
+                    purpose = label(action->text());
+                    break;
+                }
+        if (menu->objectName() == "changeTrackColor" || purpose == "track color" ||
+            purpose == "change track color")
+            return false;
+        if (menu->objectName() == "markSetClipColor")
             return true;
+        if (!purpose.isEmpty())
+            return purpose == "clip color";
+        // Retain late-populated unnamed clip palettes, but never use this
+        // swatch-only fallback against a menu with a declared different scope.
         QSet<QString> names;
         for (auto action : menu->actions())
             names.insert(label(action->text()));

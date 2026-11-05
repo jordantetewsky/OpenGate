@@ -164,6 +164,30 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
     const auto beforeUnrelated = bindings->revision();
     check(palette.update(different).isEmpty() && bindings->revision() == beforeUnrelated,
           "unrelated saved colors do not invalidate existing clip paint");
+    for (int scope : {0, 1, 2}) {
+        QMenu parent;
+        QMenu trackMenu(scope == 0 ? "Track Color" : "", &parent);
+        if (scope == 1)
+            parent.addAction("Change Track Color")->setMenu(&trackMenu);
+        if (scope == 2)
+            trackMenu.setObjectName("changeTrackColor");
+        trackMenu.setAttribute(Qt::WA_DontShowOnScreen);
+        for (const auto &label : {"Orange", "Apricot", "Chocolate"})
+            trackMenu.addAction(label);
+        timeline.view->setFocus();
+        QContextMenuEvent context(QContextMenuEvent::Mouse, QPoint(5, 5));
+        QApplication::sendEvent(timeline.view, &context);
+        trackMenu.popup(QPoint(300, 300));
+        TimelineViewportFixture::settle();
+        bool clipCommands = false;
+        for (auto action : trackMenu.actions())
+            clipCommands |= action->objectName().startsWith("openGatePresetColor_");
+        trackMenu.actions().front()->trigger();
+        TimelineViewportFixture::settle();
+        check(!clipCommands && bindings->presetId(clip) == preset.id,
+              "track palette is not a clip palette and cannot clear explicit clip overrides");
+        trackMenu.hide();
+    }
     QAction unrelated("Other command", main);
     unrelated.setObjectName("timelineOtherCommand");
     main->addAction(&unrelated);
