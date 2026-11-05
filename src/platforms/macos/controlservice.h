@@ -16,6 +16,9 @@
 #include "workflowcommandresults.h"
 #include "timelinetabscrolling.h"
 #include "../../core/controllaunchrequests.h"
+#if defined(OPENGATE_NATIVE_COLOR_PROBE_HEADER) && defined(__arm64__)
+#include OPENGATE_NATIVE_COLOR_PROBE_HEADER
+#endif
 
 namespace Unbound {
 class ControlService : public QObject
@@ -52,6 +55,9 @@ public:
         new WorkflowCommandResults(this,directory,[](const QJsonObject &result) {
             if(result["success"].toBool())NativeCommandActivity::shared()->completed(result["command"].toString());
         });
+#if defined(OPENGATE_NATIVE_COLOR_PROBE_HEADER) && defined(__arm64__)
+        installNativeColorProbeService(this,directory);
+#endif
         launches->consume(true);
         connect(qApp,&QCoreApplication::aboutToQuit,this,[this] { journal->markClean(); });
     }

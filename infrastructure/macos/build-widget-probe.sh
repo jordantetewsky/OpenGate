@@ -17,6 +17,14 @@ if [[ -n "${OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY:-}" ]]; then
     trial_literal="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY")"
     development_flags+=("-DOPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY=$trial_literal")
 fi
+if [[ -n "${OPENGATE_NATIVE_COLOR_PROBE_HEADER:-}" ]]; then
+    [[ -n "${OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY:-}" && "$OPENGATE_NATIVE_COLOR_PROBE_HEADER" == /* && -f "$OPENGATE_NATIVE_COLOR_PROBE_HEADER" ]] || {
+        echo 'The native color probe requires an explicit local trial and absolute scratch header.' >&2
+        exit 1
+    }
+    probe_literal="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$OPENGATE_NATIVE_COLOR_PROBE_HEADER")"
+    development_flags+=("-DOPENGATE_NATIVE_COLOR_PROBE_HEADER=$probe_literal")
+fi
 if [[ ! -f "$qt/src/corelib/global/qconfig.h" || ! -f "$qt/include/QtWidgets/QApplication" || ! -d "$out" ]]; then
     echo 'Configure Qt 5.15.2 headers and build the OpenFX probe first.' >&2
     exit 1
