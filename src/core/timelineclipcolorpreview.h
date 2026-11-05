@@ -3,6 +3,7 @@
 #include "colorpalette.h"
 #include "diagnostics.h"
 #include "timelineclipcolorbindings.h"
+#include "timelinecontentinspection.h"
 #include <QApplication>
 #include <QGraphicsProxyWidget>
 #include <QSet>
@@ -56,6 +57,8 @@ class TimelineClipColorPreview : public QObject {
     int applySelected(const ColorPreset &style) {
         TimelineClipColorBindings::RepaintBatch repaint(bindings);
         int count = 0;
+        int inspections = 0;
+        const bool inspect = qEnvironmentVariableIntValue("OPENGATE_COLOR_PAINT_TRACE") == 1;
         QSet<QGraphicsObject *> seen;
         const auto definition = QSharedPointer<const ColorPreset>::create(style);
         for (auto surface : views())
@@ -67,6 +70,9 @@ class TimelineClipColorPreview : public QObject {
                     seen.insert(clip);
                     if (bindings)
                         count += bindings->apply(surface, clip, definition);
+                    if (inspect && inspections++ < 8)
+                        logEvent("clip-color.graphics-members",
+                                 TimelineContentInspection::captureClipMembers(clip));
                 }
         logEvent("clip-color.style.requested", {{"clips", count},
                                                 {"preset", style.id},

@@ -6,11 +6,57 @@
 #include <QMetaMethod>
 #include <QMetaProperty>
 #include <QSet>
+#include <QPointer>
+#include <QApplication>
+#include <QThread>
 #include "diagnostics.h"
 namespace Unbound {
 // Bounded read-only graphics topology; never invokes native methods or reads text.
 class TimelineContentInspection {
 public:
+    static QJsonObject captureClipMembers(QGraphicsObject *container) {
+        const bool gui = qApp && QThread::currentThread() == qApp->thread();
+        QJsonObject result{{"read_only", true}, {"gui_thread", gui},
+                           {"persistent_identity_verified", false}, {"private_access", false}};
+        if (!container || !gui)
+            return result;
+        QJsonArray members;
+        const auto children = container->childItems();
+        bool truncated = children.size() > 64;
+        auto pending = children.mid(0, 64);
+        while (!pending.isEmpty() && members.size() < 64) {
+            auto item = pending.takeFirst();
+            auto object = dynamic_cast<QObject *>(item);
+            QJsonObject member{{"graphics_item", QString::number(quintptr(item), 16)},
+                               {"graphics_parent", QString::number(quintptr(item->parentItem()), 16)},
+                               {"scene", QString::number(quintptr(item->scene()), 16)},
+                               {"to_graphics_object", item->toGraphicsObject() != nullptr},
+                               {"qobject_cross_cast", object != nullptr}};
+            if (object) {
+                QPointer<QObject> alive = object;
+                member["qobject"] = QString::number(quintptr(object), 16);
+                member["class"] = object->metaObject()->className();
+                member["native_timeline_item"] = object->inherits("UiTiItem");
+                member["qobject_parent"] = QString::number(quintptr(object->parent()), 16);
+                member["alive"] = !alive.isNull();
+            }
+            members.append(member);
+            // Bound both visited nodes and the pending tree, including wide trees.
+            for (auto child : item->childItems()) {
+                if (pending.size() >= 64) {
+                    truncated = true;
+                    break;
+                }
+                pending.append(child);
+            }
+        }
+        result["container_graphics_item"] =
+            QString::number(quintptr(static_cast<QGraphicsItem *>(container)), 16);
+        result["container_qobject"] = QString::number(quintptr(container), 16);
+        result["members"] = members;
+        result["truncated"] = truncated || !pending.isEmpty();
+        return result;
+    }
     static QJsonObject capture(QWidget *timeline) {
         QJsonArray views;QSet<QGraphicsView *> seen;int itemsLeft=256;
         auto pending=timeline?timeline->findChildren<QGraphicsView *>():QList<QGraphicsView *>{};

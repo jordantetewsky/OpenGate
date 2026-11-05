@@ -152,3 +152,45 @@ thumbnail well while the custom footer remains teal/mint. This remains an open
 paint regression; the screenshots do not determine whether the missed primitive
 is a solid fill, partial skin or cached raster. Hold the prepared update while
 investigating rather than claiming the existing full-body fixture covers it.
+
+## Bounded native diagnostic follow-up
+
+`ClipPaintTrace` is disabled by default. The local diagnostic trial can enable
+`OPENGATE_COLOR_PAINT_TRACE=1`. It records at most 64 distinct large primitive
+receipts per binding revision: kind, original fill color or pixmap cache identity/
+size/source rectangle, mapped/pass-through result, clip/primitive geometry and
+an explicitly ephemeral QGraphicsObject address. It never captures image pixels
+or alters replacement decisions. Native callsites are not captured. Disabled
+capture retains no regions and installs no raster observer. Repeated diagnostic
+frames use bounded numeric hashes without JSON allocation/serialization.
+
+`TimelineContentInspection` adds a focused public graphics-child walk, separate
+from QObject parent/child lookup. It cross-casts graphics members to QObject and
+records type/parent/scene/liveness, capped at 64 members and eight selected clips
+per explicit paint command. It reads no private offsets, invokes no private
+methods and retains no native pointer across event-loop turns. This supports a
+scratch check of graphics reachability; it does not produce a persistent ID.
+The fixture models the actual separate QObject+QGraphicsRectItem inheritance and
+checks both public cross-casting and reported truncation.
+
+The optimized sanitizer paint regression passes with primitive diagnostics
+enabled, retaining metadata receipts while preserving the existing native text,
+thumbnail, waveform, playhead and scale assertions. Diagnostic fixtures verify
+deduplication, capture limits, new-revision reset and disabled behavior. These
+are fixture receipts, not a native capture of Jordan's thumbnail leak.
+
+The supplied installed app is now independently identified as Resolve 21.1.1,
+build 21.1.10010. Its ARM64 slice hashes exactly to the retained analysis input
+`801848888e276e40cefcc89011155702ddf67bb6ecfccff4de60ff505685e2a9`.
+This matches static input identity; it does not validate calling private methods.
+
+Further static evidence establishes native compound Undo grouping, but the Qt
+method table does not expose Begin/Commit/AbortTransaction. An actual per-instance
+metadata child action remains missing. The SDK TimelineItem ID getter's QString
+return path is verified on a real native script proxy; that function cannot be
+called with a model pointer or fabricated receiver. Public graphics traversal
+is a useful next scratch probe, not a complete identity adapter. Evidence lives
+under `build/rea-clip-colors/native-color-transaction-20261105/`,
+`thumbnail-well-paint-20261105/` and `native-identity-adapter-feasibility-20261105/`
+in the original timeline-content worktree. Tab hopping, project persistence and
+the gold thumbnail-well leak remain open.

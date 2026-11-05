@@ -40,6 +40,14 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e) override {++presses;QGraphicsObject::mousePressEvent(e);}
 };
 
+// Native clip members have separate QObject and graphics bases. QObject parent
+// lookup and QGraphicsItem::toGraphicsObject do not cover this public cross-cast.
+class UiTiItem : public QObject, public QGraphicsRectItem {
+    Q_OBJECT
+public:
+    explicit UiTiItem(QGraphicsItem *parent) : QObject(nullptr), QGraphicsRectItem(parent) {}
+};
+
 // Native capture shows body batches in drawBackground, outside clip-item paint.
 class BatchedClipSceneView : public QGraphicsView {
 public:

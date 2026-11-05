@@ -30,6 +30,22 @@ class UiTiGraphicsLabelItem : public QGraphicsItem {
 namespace OpenGateTest {
 template <class Check> void clipStylePaintChecks(Check check) {
     {
+        UiTiClipContainer container;
+        new UiTiItem(&container);
+        const auto inspected = Unbound::TimelineContentInspection::captureClipMembers(&container);
+        const auto members = inspected["members"].toArray();
+        check(members.size() == 1 && members[0].toObject()["qobject_cross_cast"].toBool() &&
+                  members[0].toObject()["native_timeline_item"].toBool() &&
+                  !members[0].toObject()["to_graphics_object"].toBool() &&
+                  !inspected["persistent_identity_verified"].toBool(),
+              "bounded graphics traversal reaches separate QObject members without inventing an ID");
+        for (int i = 0; i < 100; ++i)
+            new QGraphicsRectItem(&container);
+        const auto wide = Unbound::TimelineContentInspection::captureClipMembers(&container);
+        check(wide["members"].toArray().size() == 64 && wide["truncated"].toBool(),
+              "native graphics inspection reports truncation instead of traversing an unbounded tree");
+    }
+    {
         TimelineViewportFixture fixture;
         fixture.view->clip->hide();
         QVector<UiTiClipContainer *> clips;

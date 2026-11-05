@@ -13,6 +13,11 @@ input, scaling, repaint and workspace requirements remain in the
   [native fill investigation and installation evidence](opengate-native-clip-fill-20261103.md).
 - [ ] Save/reopen must retain the custom color. Jordan reports that Red currently
   disappears after reopening the project.
+- [ ] Switching Timeline tabs A → B → A must retain each clip's assignment and
+  repaint the correct active timeline. Jordan reports that the current visual
+  trial loses paint on tab hopping. Recreated graphics objects must rejoin the
+  persistent project/timeline/clip identity; same names, positions or UI addresses
+  cannot substitute for it. Cover repeated hops and duplicate timeline names.
 - [ ] Original UI and OpenGate must display the same assignment without a mode
   switch, maximization or other repaint workaround.
 - [ ] The selected color must receive the correct menu checkmark. Current native
@@ -143,6 +148,11 @@ native thumbnail, waveform and clip-display settings throughout.
   seek, zoom, scroll, scaling and repaint. Check clips, gaps, transitions and lane
   boundaries with custom paint enabled/disabled and against native UI. Do not
   recolor the scene globally or conceal a stale frame by painting another line.
+- [ ] Changing native thumbnail display modes must repaint the whole assigned
+  clip background, including empty thumbnail wells, without exposing an old
+  native fill or recoloring the thumbnail pixels. Jordan's November 5 9:14
+  screenshots show a gold well while the custom footer remains teal/mint.
+  Determine the missed native primitive/cache path before broadening matching.
 
 ## Saved project state and non-OpenGate interchange
 
