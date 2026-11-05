@@ -15,7 +15,7 @@ void colorManagerEntryChecks(PanelControls &controls, QMenu *ui, Unbound::PanelC
           "color manager entry is above native return in assembled menu");
     if (!action || !native)
         return;
-    check(main->findChild<QToolButton *>("openGateTimelineTextures"),"Timeline exposes texture control before the manager is opened");
+    check(main->findChild<QAbstractButton *>("openGateTimelineTextures"),"Timeline exposes texture control before the manager is opened");
     action->trigger();
     settle(600);
     auto content = main->findChild<QWidget *>("openGateColorManagerPanel");
@@ -27,7 +27,7 @@ void colorManagerEntryChecks(PanelControls &controls, QMenu *ui, Unbound::PanelC
           "opening owned manager preserves native media panel owners");
     if (!content)
         return;
-    auto textureButton = main->findChild<QToolButton *>("openGateTimelineTextures");
+    auto textureButton = main->findChild<QAbstractButton *>("openGateTimelineTextures");
     auto textureCheck = content->findChild<QCheckBox *>("openGateColorTexturesEnabled");
     check(textureButton && textureCheck && textureButton->isChecked() == textureCheck->isChecked(),
           "assembled manager and Timeline toolbar expose one texture display state");

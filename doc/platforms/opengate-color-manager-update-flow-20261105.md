@@ -1,5 +1,35 @@
 # Color Manager update flow — November 5, 2026
 
+## Installed limited trial — November 5 afternoon
+
+Jordan closed Resolve and authorized installation. Runtime `e9f11fe` is now
+installed; all 25 managed-file hashes match the staged payload. Transaction
+`376BB1CC-9872-4A18-ADA5-C161CC91E9DF` preserves the previous installation.
+The fresh closed-session inventory verified 197 protected files unchanged before
+the explicitly authorized additive palette import. The real transfer model merged
+34 saved presets and two pending drafts. The latest profile and original export
+were backed up; the original export was not changed. Receipts are under
+`build/color-toolbar-diagnostic-trial-20261105/closed-install-20261105-142829/`.
+
+The final optimized ASAN assembled entry check initially failed two assertions
+because its lookup still required the old QToolButton type. Production now uses
+QAbstractButton for the native-sized vector control. Correcting only those two
+fixture lookups preserved every assertion and the complete rerun passed with zero
+failures. No production code changed after the staged runtime build.
+
+The numbered native-entry contract was reread before installation. Its assembled
+fixture covers default entry and workspace protections (1–2), Native return and
+temporary/persistent gestures (3–5), native bands, flat Panels, visibility and
+drag/reclaim paths (6–9), maximize/restore (10), and the assembled sequence (12).
+Actual native pointer/GPU behavior, page/restart restoration and Windows parity
+(1, 8, 10–12) remain live gates. The reported project dropdown regression is an
+open native-control behavior gap (6, 8); it is not repaired by this trial.
+
+This installation is for picker, saved-preset refresh, menu-scope and single-row
+texture-control testing plus bounded diagnostics. Project color persistence,
+timeline-tab restoration, native Undo/parity and thumbnail paint leakage remain
+unfinished. Installation does not establish live acceptance or release readiness.
+
 This is a source/fixture checkpoint on `feat/color-manager-update-flow-20261104`,
 based on `6634ee9`. It does not describe a new installation or completion of
 project-persistent colors. The running local visual trial remains separate.
