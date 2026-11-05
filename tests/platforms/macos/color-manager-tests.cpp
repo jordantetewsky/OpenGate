@@ -8,6 +8,7 @@
 #include "../../core/colors/colordisplaychecks.h"
 #include "../../core/colors/paintcachechecks.h"
 #include "../../core/colors/palettetransferchecks.h"
+#include "../../core/colors/presetupdatevisibilitychecks.h"
 #include <QApplication>
 #include <QContextMenuEvent>
 #include <QElapsedTimer>
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
     OpenGateTest::colorDisplayChecks(check,directory.path());
     OpenGateTest::paintCacheChecks(check);
     OpenGateTest::paletteTransferChecks(check,directory.path());
+    OpenGateTest::presetUpdateVisibilityChecks(check,directory.path());
     Unbound::ColorPreset p;
     p.id = "custom-test";
     p.name = "Readable VFX";

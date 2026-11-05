@@ -11,7 +11,6 @@
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
-#include <QScrollArea>
 #include <QSplitter>
 namespace Unbound {
 // Compose the palette, category editor, one-preset draft editor and neutral
@@ -57,11 +56,8 @@ class ColorManagerWidget : public QWidget {
             sample->setReference(color, std::move(name));
         };
         layout->addWidget(comparison);
-        auto scroll = new QScrollArea;
-        scroll->setWidgetResizable(true);
         editor = new ColorPresetEditor;
-        scroll->setWidget(editor);
-        layout->addWidget(scroll);
+        layout->addWidget(editor, 1);
         splitter->addWidget(right);
         splitter->setStretchFactor(1, 1);
         splitter->setSizes({250, 750});

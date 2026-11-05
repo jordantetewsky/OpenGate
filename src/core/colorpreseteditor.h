@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSignalBlocker>
 #include <QSlider>
 #include <QUuid>
@@ -23,11 +24,19 @@ class ColorPresetEditor : public QWidget {
   public:
     std::function<void(const ColorPreset &)> preview, commit;
     explicit ColorPresetEditor(QWidget *owner = nullptr) : QWidget(owner) {
+        setObjectName("openGateColorPresetEditor");
         auto box = new QVBoxLayout(this);
-        auto form = new QFormLayout;
+        auto scroll = new QScrollArea;
+        scroll->setObjectName("openGatePresetFormScroll");
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setMinimumSize(0, 0);
+        auto fields = new QWidget;
+        form = new QFormLayout(fields);
         form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
         form->setRowWrapPolicy(QFormLayout::WrapLongRows);
-        box->addLayout(form);
+        scroll->setWidget(fields);
+        box->addWidget(scroll, 1);
         name = new QLineEdit;
         name->setObjectName("openGatePresetName");
         name->setMaxLength(80);
@@ -249,6 +258,7 @@ class ColorPresetEditor : public QWidget {
     QSlider *hue, *saturation, *lightness;
     QPushButton *pick, *add, *remove, *revert, *updateButton;
     QLabel *state;
+    QFormLayout *form;
     static QString ColorPaletteId() {
         return QUuid::createUuid().toString(QUuid::WithoutBraces);
     }
@@ -317,8 +327,10 @@ class ColorPresetEditor : public QWidget {
         const bool changed = modified();
         updateButton->setEnabled(changed && !draft.name.trimmed().isEmpty());
         revert->setEnabled(changed);
-        state->setText(changed ? "Previewing this preset only · Update Preset to keep changes"
-                               : "Saved preset · edits affect this color only");
+        state->setText(changed ? "Unsaved preset changes · Update Preset to save"
+                       : !draft.opaque()
+                           ? "Preset saved · transparency is preview-only in this trial"
+                           : "Preset saved");
     }
     void refresh() {
         rendering = true;
@@ -333,8 +345,11 @@ class ColorPresetEditor : public QWidget {
         for (int i = 0; i < draft.stops.size(); ++i)
             stop->addItem(QString("Stop %1 · %2").arg(i + 1).arg(draft.stops[i].color.name()));
         stop->setCurrentIndex(selectedStop);
-        for (auto w : QList<QWidget *>{stop, position, stopAlpha, angle, add, remove})
+        for (auto w : QList<QWidget *>{stop, position, stopAlpha, angle, add, remove}) {
             w->setVisible(!draft.stops.isEmpty());
+            if (auto label = form->labelForField(w))
+                label->setVisible(!draft.stops.isEmpty());
+        }
         add->setEnabled(draft.stops.size() < 5);
         remove->setEnabled(draft.stops.size() > 2);
         if (!draft.stops.isEmpty()) {
