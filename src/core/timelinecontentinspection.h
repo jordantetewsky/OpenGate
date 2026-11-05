@@ -10,14 +10,17 @@
 #include <QApplication>
 #include <QThread>
 #include "diagnostics.h"
+#include "../platform/timelineclipidentityinspection.h"
 namespace Unbound {
-// Bounded read-only graphics topology; never invokes native methods or reads text.
+// Bounded graphics topology with an opt-in platform identity diagnostic.
+// Metadata getter inspection is separately restricted to disposable SDK IDs.
 class TimelineContentInspection {
 public:
-    static QJsonObject captureClipMembers(QGraphicsObject *container) {
+    static QJsonObject captureClipMembers(QGraphicsObject *container, bool inspectNativeIdentity = false) {
         const bool gui = qApp && QThread::currentThread() == qApp->thread();
         QJsonObject result{{"read_only", true}, {"gui_thread", gui},
-                           {"persistent_identity_verified", false}, {"private_access", false}};
+                           {"persistent_identity_verified", false}, {"private_access", false},
+                           {"private_calls", false}, {"project_writes", false}};
         if (!container || !gui)
             return result;
         QJsonArray members;
@@ -39,6 +42,12 @@ public:
                 member["native_timeline_item"] = object->inherits("UiTiItem");
                 member["qobject_parent"] = QString::number(quintptr(object->parent()), 16);
                 member["alive"] = !alive.isNull();
+                if (member["native_timeline_item"].toBool()) {
+                    const auto identity = inspectTimelineClipIdentity(object, inspectNativeIdentity);
+                    member["identity_probe"] = identity;
+                    if (identity["bounded_memory_reads"].toInt() > 0)
+                        result["private_access"] = true;
+                }
             }
             members.append(member);
             // Bound both visited nodes and the pending tree, including wide trees.
