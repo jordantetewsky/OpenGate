@@ -8,6 +8,7 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
                          TimelineViewportFixture &timeline, UiTiClipContainer *clip,
                          const QString &directory) {
     Unbound::ColorPalette palette(directory + "/command-colors.json");
+    const auto nativeBaseline = clip->fill;
     Unbound::ColorPreset preset;
     preset.id = "vfx-custom";
     preset.name = "My VFX";
@@ -30,6 +31,8 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
     QMenu native;
     native.setAttribute(Qt::WA_DontShowOnScreen);
     native.setObjectName("markSetClipColor");
+    auto clear = native.addAction("Clear Color");
+    clear->setObjectName("markSetClipColorDefault");
     auto blue = native.addAction("Blue");
     blue->setObjectName("markSetClipColorBlue");
     blue->setCheckable(true);
@@ -75,8 +78,56 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
     preset.name = "Renamed VFX";
     preset.color = QColor("#219c8a");
     preset.stops.clear();
+    preset.texture = "flat";
+    const auto beforeUpdate = bindings->revision();
     check(palette.update(preset).isEmpty() && count() == 1,
           "Update Preset replaces the existing command rather than appending duplicates");
+    check(bindings->regions().front().style &&
+              bindings->regions().front().style->color == preset.color &&
+              bindings->revision() == beforeUpdate + 1,
+          "Update Preset refreshes its existing clip assignment without manually reapplying it");
+    TimelineViewportFixture::settle();
+    auto content = dynamic_cast<Unbound::TimelineContentViewport *>(
+        timeline.timeline.findChild<QWidget *>("openGateTimelineContentViewport"));
+    if (content) {
+        const auto frame = content->presentation()->grab().toImage();
+        const auto at = QPointF(content->headerWidth() + 190, 60) * frame.devicePixelRatioF();
+        if (frame.pixelColor(at.toPoint()) != preset.color || clip->fill != nativeBaseline)
+            std::fprintf(stderr,
+                         "preset frame pixel=%s expected=%s native=%s baseline=%s at=%d,%d\n",
+                         qPrintable(frame.pixelColor(at.toPoint()).name()),
+                         qPrintable(preset.color.name()), qPrintable(clip->fill.name()),
+                         qPrintable(nativeBaseline.name()), at.toPoint().x(), at.toPoint().y());
+        check(
+            frame.pixelColor(at.toPoint()) == preset.color && clip->fill == nativeBaseline,
+            "saved preset update reaches displayed pixels while native clip color remains intact");
+    } else
+        check(false, "preset update fixture retains its real presentation viewport");
+    QAction trackColor("Native track color", main);
+    trackColor.setObjectName("timelineSetTrackColorGreen");
+    main->addAction(&trackColor);
+    QObject::connect(&trackColor, &QAction::triggered, main, [&] {
+        clip->fill = QColor("#449366");
+        clip->update();
+    });
+    TimelineViewportFixture::settle();
+    trackColor.trigger();
+    TimelineViewportFixture::settle();
+    if (content) {
+        const auto frame = content->presentation()->grab().toImage();
+        const auto at = QPointF(content->headerWidth() + 190, 60) * frame.devicePixelRatioF();
+        check(bindings->presetId(clip) == preset.id &&
+                  frame.pixelColor(at.toPoint()) == preset.color,
+              "underlying native track-color repaint preserves the explicit custom clip paint");
+        clear->trigger();
+        TimelineViewportFixture::settle();
+        const auto inherited = content->presentation()->grab().toImage();
+        check(bindings->presetId(clip).isEmpty() &&
+                  inherited.pixelColor(at.toPoint()) == clip->fill,
+              "native Clear releases the custom override to the current native paint");
+        check(commands.invoke(commandId, "fixture"),
+              "custom clip paint can be reassigned after Clear without changing its saved ID");
+    }
     QString label;
     for (const auto &entry : commands.entries())
         if (entry.id == commandId)
@@ -97,6 +148,22 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
     auto surface = qobject_cast<QGraphicsView *>(timeline.view->tracksProxy->widget());
     check(bindings->apply(surface, other, preset),
           "another clip can retain an independent preset binding");
+    const auto beforeBulkUpdate = bindings->revision();
+    preset.color = QColor("#c63a12");
+    check(palette.update(preset).isEmpty(),
+          "a shared preset can be edited after multiple assignments");
+    bool matching = true;
+    for (const auto &region : bindings->regions())
+        matching &= region.style && region.style->color == preset.color;
+    check(bindings->regions().size() == 2 && matching &&
+              bindings->revision() == beforeBulkUpdate + 1,
+          "one saved swatch edit refreshes all its assigned clips with one display revision");
+    auto different = preset;
+    different.id = "unrelated-swatch";
+    different.name = "Other swatch";
+    const auto beforeUnrelated = bindings->revision();
+    check(palette.update(different).isEmpty() && bindings->revision() == beforeUnrelated,
+          "unrelated saved colors do not invalidate existing clip paint");
     QAction unrelated("Other command", main);
     unrelated.setObjectName("timelineOtherCommand");
     main->addAction(&unrelated);
@@ -129,6 +196,10 @@ void presetCommandChecks(Check check, QWidget *main, Unbound::PanelCommands &com
     check(nativeOperations == operationsBefore + 1 && bindings->presetId(clip).isEmpty() &&
               bindings->presetId(other) == preset.id,
           "native QAction shortcut executes once and replaces only selected clip paint");
+    preset.color = QColor("#4e288c");
+    palette.update(preset);
+    check(bindings->presetId(clip).isEmpty(),
+          "later palette updates cannot revive a cleared clip assignment");
     delete other;
     auto next = palette.state();
     for (int i = next.presets.size() - 1; i >= 0; --i)

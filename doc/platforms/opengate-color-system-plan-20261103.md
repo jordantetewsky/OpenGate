@@ -20,6 +20,11 @@ input, scaling, repaint and workspace requirements remain in the
 - [ ] Native keyboard color commands must replace a custom color immediately,
   just as choosing a native color in the context menu should. Jordan reports
   that the keyboard route currently leaves Red behind.
+- [ ] An explicitly selected OpenGate clip paint takes precedence over its
+  track color, as a native explicit clip color does. Later track-color changes
+  must preserve that clip assignment. Clear removes the clip override and lets
+  Resolve resolve the current inherited appearance; do not copy the track RGB
+  into a new explicit clip color. This is Jordan's November 5 clarification.
 - [ ] Finish ordinary clip colors, persistence and commands before track lane
   painting. A successful paint probe is not a finished saved-color feature.
 

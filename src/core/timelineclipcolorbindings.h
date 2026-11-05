@@ -96,6 +96,33 @@ class TimelineClipColorBindings : public QObject {
             return entry->style->id;
         return {};
     }
+    int refreshDefinitions(const QVector<ColorPreset> &presets) {
+        QHash<QString, const ColorPreset *> definitions;
+        for (const auto &preset : presets)
+            definitions.insert(preset.id, &preset);
+        QHash<QString, QSharedPointer<const ColorPreset>> shared;
+        int count = 0;
+        for (auto &entry : entries) {
+            if (!entry.clip || !entry.style)
+                continue;
+            const auto preset = definitions.value(entry.style->id);
+            // Removed definitions retain their last assigned appearance. Alpha
+            // remains unsupported by the native rendering trial.
+            if (!preset || !preset->opaque() || *entry.style == *preset)
+                continue;
+            if (!shared.contains(preset->id))
+                shared.insert(preset->id, QSharedPointer<const ColorPreset>::create(*preset));
+            entry.style = shared.value(preset->id);
+            entry.color = preset->color;
+            // The native clip lives inside an embedded view. Root-only damage
+            // can leave its proxy pixels cached with the preceding definition.
+            entry.clip->update();
+            ++count;
+        }
+        if (count)
+            changed();
+        return count;
+    }
     void clear(const QSet<QGraphicsObject *> &selected = {}) {
         const auto before = entries.size();
         if (selected.isEmpty())

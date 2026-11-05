@@ -19,7 +19,7 @@ class ClipColorPreviewCommands : public QObject {
                              std::function<void()> manager = {}, bool preview = true,
                              ColorPalette *palette = nullptr)
         : QObject(owner), commands(commands), pool(this), openManager(std::move(manager)),
-          previewEnabled(preview) {
+          previewEnabled(preview), sharedPalette(palette) {
         QPointer<ClipColorPreviewCommands> alive = this;
         if (previewEnabled)
             for (const auto &surface : surfaces())
@@ -69,6 +69,7 @@ class ClipColorPreviewCommands : public QObject {
     QPointer<QWidget> explicitFocus;
     std::function<void()> openManager;
     bool previewEnabled = true;
+    ColorPalette *sharedPalette = nullptr;
     ClipColorPresetCommands *presets = nullptr;
     NativeClipColorActions *nativeColors = nullptr;
     QHash<QGraphicsView *, QPointer<TimelineClipColorPreview>> timelines;
@@ -108,7 +109,7 @@ class ClipColorPreviewCommands : public QObject {
         if (!view)
             return nullptr;
         if (!timelines.value(view)) {
-            timelines[view] = new TimelineClipColorPreview(view, view);
+            timelines[view] = new TimelineClipColorPreview(view, view, sharedPalette);
             connect(view, &QObject::destroyed, this, [this, view] { timelines.remove(view); });
         }
         return timelines.value(view);

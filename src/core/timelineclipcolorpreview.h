@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include "colorpalette.h"
 #include "diagnostics.h"
 #include "timelineclipcolorbindings.h"
 #include <QApplication>
@@ -10,9 +11,15 @@ namespace Unbound {
 // Persistent project association remains outside this temporary proof adapter.
 class TimelineClipColorPreview : public QObject {
   public:
-    TimelineClipColorPreview(QGraphicsView *view, QObject *owner)
+    TimelineClipColorPreview(QGraphicsView *view, QObject *owner, ColorPalette *palette = nullptr)
         : QObject(owner), view(view),
-          bindings(view ? TimelineClipColorBindings::ensure(view) : nullptr) {}
+          bindings(view ? TimelineClipColorBindings::ensure(view) : nullptr) {
+        if (palette)
+            palette->subscribe(this, [session = bindings, palette] {
+                if (session)
+                    session->refreshDefinitions(palette->state().presets);
+            });
+    }
     ~TimelineClipColorPreview() override {
         clear();
     }
