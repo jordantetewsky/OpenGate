@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include "workspaceheaders.h"
 #include "panelcallermenu.h"
+#include "../../core/workspace-callers/projectselectorinspectionchecks.h"
 #include <cstdio>
 int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir logs;qputenv("UNBOUND_DIAGNOSTICS_DIR",logs.path().toUtf8());
@@ -31,6 +32,9 @@ int main(int argc,char **argv) {
         [&] { return scale; },[&](double value) { scale=value; },[&] { ++floated; }});
     auto settle=[] { QElapsedTimer t;t.start();while (t.elapsed()<90) { QApplication::processEvents();QThread::msleep(1); } };
     headers.schedule();settle();bool ok=first.windowTitle()=="Timeline" && second.windowTitle()=="Source Monitor";
+    OpenGateTest::projectSelectorInspectionChecks(project,[&](bool passed,const char *why){
+        if(!passed)std::fprintf(stderr,"FAIL %s\n",why);ok &= passed;
+    });
     ok &= !Unbound::nativeHeaderMenuFrameForTest(&main).isEmpty()&&Unbound::nativeHeaderMenuFrameForTest(&first).isEmpty()&&Unbound::nativeHeaderMenuFrameForTest(&second).isEmpty();
     toolbar.hide();headers.schedule();settle();ok &= !Unbound::nativeHeaderMenuFrameForTest(&main).isEmpty();toolbar.show();
     project->hide();project->setText("Project B");headers.schedule();settle();do { const bool passed=(first.windowTitle()=="Timeline"); if(!passed)std::fprintf(stderr,"FAIL header line %d\n",__LINE__); ok &= passed; } while(false);

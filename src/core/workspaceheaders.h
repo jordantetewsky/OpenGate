@@ -10,6 +10,7 @@
 #include <QSet>
 #include <QTimer>
 #include "diagnostics.h"
+#include "nativeprojectselectorinspection.h"
 #include "../platform/nativewindowcontract.h"
 namespace Unbound {
 // Existing native title-bar accessories only: no extra row, window, or copy of
@@ -19,6 +20,8 @@ public:
     struct Panel { QString id,title;std::function<QWidget *()> host;std::function<bool()> shown;std::function<void(bool)> setShown;std::function<double()> scale={};std::function<void(double)> setScale={};std::function<void()> floatPanel={}; };
     struct Window { QString title;std::function<bool()> shown;std::function<void(bool)> setShown; };
     explicit WorkspaceHeaders(QObject *owner):QObject(owner) {
+        if(qEnvironmentVariableIntValue("OPENGATE_PROJECT_SELECTOR_TRACE")==1)
+            projectInspection=new NativeProjectSelectorInspection(this);
         timer.setSingleShot(true);timer.setInterval(50);
         connect(&timer,&QTimer::timeout,this,[this] { refresh(); });qApp->installEventFilter(this);
         // Hidden native buttons need not paint when a project is switched.
@@ -71,6 +74,8 @@ private:
                 if (button->parentWidget() && button->parentWidget()->objectName()=="UiProjectsMainBarImp" &&
                     !button->text().trimmed().isEmpty()) { projectLabel=button;break; }
         }
+        if(projectInspection && projectLabel)
+            projectInspection->observe(qobject_cast<QAbstractButton *>(projectLabel.data()));
         return projectLabel ? projectLabel->property("text").toString().trimmed() : QString();
     }
     void refresh() {
@@ -108,6 +113,7 @@ private:
     }
     QList<Panel> panels;QList<QPointer<QWidget>> known;QPointer<QWidget> projectLabel;
     QPointer<QToolButton> primaryButton;
+    NativeProjectSelectorInspection *projectInspection=nullptr;
     QString lastProject;QTimer timer,projectWatch;bool projectScanned=false;
 };
 }
