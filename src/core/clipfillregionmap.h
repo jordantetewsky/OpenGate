@@ -13,6 +13,7 @@ struct ClipFillRegion {
     QRectF visible{};
     QSharedPointer<const ColorPreset> style{};
     QVector<QRectF> labels{};
+    quintptr graphicsIdentity = 0; // Ephemeral QGraphicsObject address, never a project ID.
 };
 inline bool clipBodyPrimitive(const QRectF &rect, QColor source) {
     return !rect.isEmpty() && source.alpha() > 0 && source.hsvSaturationF() > .25 &&

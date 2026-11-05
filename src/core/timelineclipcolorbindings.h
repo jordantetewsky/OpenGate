@@ -151,6 +151,7 @@ class TimelineClipColorBindings : public QObject {
                 const auto bounds = inRootScene(entry, full), visible = inRootScene(entry, exposed);
                 if (!bounds.isEmpty() && !visible.isEmpty()) {
                     ClipFillRegion region{bounds, entry.color, visible, entry.style};
+                    region.graphicsIdentity = quintptr(entry.clip.data());
                     if (entry.style) {
                         if (entry.labelSize != full.size() || entry.labelEpoch != labelEpoch) {
                             entry.labels = clipLabelRegions(entry.clip);

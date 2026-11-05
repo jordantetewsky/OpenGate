@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "clipfillpaintdevice.h"
+#include "clippainttrace.h"
 #include "clipskinpaint.h"
 #include "clipstylepaint.h"
 #include "diagnostics.h"
@@ -21,20 +22,31 @@ class TimelineClipColorPaint {
             return;
         }
         skins.begin(regions);
+        trace.begin(regions, inverse, bindings->revision());
         const bool styled = std::any_of(regions.cbegin(), regions.cend(),
                                         [](const auto &r) { return bool(r.style); });
         ClipFillPaintDevice::PaintHooks hooks;
+        ClipFillPaintDevice::RasterObserver raster;
+        if (trace.active())
+            raster = [this](const QRectF &r, const QTransform &device, const char *kind) {
+                if (qstrcmp(kind, "pixmap") != 0)
+                    trace.observe(kind, r, device, false);
+            };
         if (styled) {
-            styles.begin(regions, inverse,bindings->texturesEnabled());
+            styles.begin(regions, inverse, bindings->texturesEnabled());
             hooks.brush = [this](const QRectF &r, QColor c, const QTransform &device) {
-                return styles.brush(r, c, device);
+                const auto result = styles.brush(r, c, device);
+                trace.observe("solid-fill", r, device, result.style() != Qt::NoBrush, c);
+                return result;
             };
             hooks.afterBody = [this](QPainter *p, const QRectF &r, const QTransform &device) {
                 styles.afterBody(p, r, device);
             };
             hooks.pixmap = [this](QPainter *p, const QRectF &r, const QPixmap &image,
                                   const QRectF &s, const QTransform &device) {
-                return styles.pixmap(p, r, image, s, device);
+                const bool mapped = styles.pixmap(p, r, image, s, device);
+                trace.observe("pixmap", r, device, mapped, {}, image.size(), image.cacheKey(), s);
+                return mapped;
             };
             hooks.text = [this](QPainter *p, const QPointF &position, const QTextItem &item,
                                 const QTransform &device) {
@@ -49,7 +61,7 @@ class TimelineClipColorPaint {
                 return styled && styles.owns(root) ? QColor()
                                                    : clipRegionReplacement(root, source, regions);
             },
-            native, {},
+            native, std::move(raster),
             [this, inverse, styled](const QRectF &r, const QPixmap &pixmap, const QRectF &source,
                                     const QTransform &device) {
                 const auto root = (device * inverse).mapRect(r);
@@ -87,5 +99,6 @@ class TimelineClipColorPaint {
     bool reportedRaster = false;
     ClipSkinPaint skins;
     ClipStylePaint styles{skins};
+    ClipPaintTrace trace;
 };
 } // namespace Unbound

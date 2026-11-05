@@ -95,5 +95,9 @@ int main(int argc,char **argv) {
             "unsupported raster-only source restores native painting and never tints thumbnail/image pixels or changes native color");
     }
     if(failures){QFile::remove("build/view-fill-fail-events.jsonl");QFile::copy(tmp.path()+"/events.jsonl","build/view-fill-fail-events.jsonl");}
+    if (const auto receipt=qEnvironmentVariable("OPENGATE_COLOR_PAINT_TRACE_RECEIPT");!receipt.isEmpty()) {
+        QFile::remove(receipt);
+        check(QFile::copy(tmp.path()+"/events.jsonl",receipt),"bounded paint evidence receipt is retained");
+    }
     std::printf("timeline red preview failures=%d\n",failures);return failures?1:0;
 }
