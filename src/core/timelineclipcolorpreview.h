@@ -4,6 +4,7 @@
 #include "diagnostics.h"
 #include "timelineclipcolorbindings.h"
 #include "timelinecontentinspection.h"
+#include "timelineclipselection.h"
 #include <QApplication>
 #include <QGraphicsProxyWidget>
 #include <QSet>
@@ -25,10 +26,10 @@ class TimelineClipColorPreview : public QObject {
         clear();
     }
     bool hasSelection() const {
-        for (auto surface : views())
+        for (auto surface : TimelineClipSelection::views(view))
             if (surface->scene())
                 for (auto item : surface->scene()->selectedItems())
-                    if (container(item))
+                    if (TimelineClipSelection::container(item))
                         return true;
         return false;
     }
@@ -37,17 +38,9 @@ class TimelineClipColorPreview : public QObject {
             return 0;
         TimelineClipColorBindings::RepaintBatch repaint(bindings);
         int count = 0;
-        QSet<QGraphicsObject *> seen;
-        for (auto surface : views())
-            if (surface->scene())
-                for (auto item : surface->scene()->selectedItems()) {
-                    auto clip = container(item);
-                    if (!clip || seen.contains(clip))
-                        continue;
-                    seen.insert(clip);
-                    if (bindings)
-                        count += bindings->apply(surface, clip, color);
-                }
+        for (const auto &clip : TimelineClipSelection::selected(view))
+            if (bindings)
+                count += bindings->apply(clip.surface, clip.object, color);
         logEvent("clip-color.preview.requested", {{"clips", count},
                                                   {"color", color.name()},
                                                   {"temporary", true},
@@ -59,21 +52,14 @@ class TimelineClipColorPreview : public QObject {
         int count = 0;
         int inspections = 0;
         const bool inspect = qEnvironmentVariableIntValue("OPENGATE_COLOR_PAINT_TRACE") == 1;
-        QSet<QGraphicsObject *> seen;
         const auto definition = QSharedPointer<const ColorPreset>::create(style);
-        for (auto surface : views())
-            if (surface->scene())
-                for (auto item : surface->scene()->selectedItems()) {
-                    auto clip = container(item);
-                    if (!clip || seen.contains(clip))
-                        continue;
-                    seen.insert(clip);
-                    if (bindings)
-                        count += bindings->apply(surface, clip, definition);
-                    if (inspect && inspections++ < 8)
-                        logEvent("clip-color.graphics-members",
-                                 TimelineContentInspection::captureClipMembers(clip));
-                }
+        for (const auto &clip : TimelineClipSelection::selected(view)) {
+            if (bindings)
+                count += bindings->apply(clip.surface, clip.object, definition);
+            if (inspect && inspections++ < 8)
+                logEvent("clip-color.graphics-members",
+                         TimelineContentInspection::captureClipMembers(clip.object));
+        }
         logEvent("clip-color.style.requested", {{"clips", count},
                                                 {"preset", style.id},
                                                 {"texture", style.texture},
@@ -85,16 +71,13 @@ class TimelineClipColorPreview : public QObject {
     QString selectedPresetId() const {
         QString id;
         bool found = false;
-        for (auto surface : views())
-            if (surface->scene())
-                for (auto item : surface->scene()->selectedItems())
-                    if (auto clip = container(item)) {
-                        const auto next = bindings ? bindings->presetId(clip) : QString();
-                        if (next.isEmpty() || (found && id != next))
-                            return {};
-                        id = next;
-                        found = true;
-                    }
+        for (const auto &clip : TimelineClipSelection::selected(view)) {
+            const auto next = bindings ? bindings->presetId(clip.object) : QString();
+            if (next.isEmpty() || (found && id != next))
+                return {};
+            id = next;
+            found = true;
+        }
         return id;
     }
     void clear() {
@@ -103,11 +86,8 @@ class TimelineClipColorPreview : public QObject {
     }
     void clearSelected() {
         QSet<QGraphicsObject *> selected;
-        for (auto surface : views())
-            if (surface->scene())
-                for (auto item : surface->scene()->selectedItems())
-                    if (auto clip = container(item))
-                        selected.insert(clip);
+        for (const auto &clip : TimelineClipSelection::selected(view))
+            selected.insert(clip.object);
         if (bindings && !selected.isEmpty())
             bindings->clear(selected);
     }
@@ -115,29 +95,5 @@ class TimelineClipColorPreview : public QObject {
   private:
     QPointer<QGraphicsView> view;
     QPointer<TimelineClipColorBindings> bindings;
-    static QGraphicsObject *container(QGraphicsItem *item) {
-        for (auto p = item; p; p = p->parentItem())
-            if (auto object = p->toGraphicsObject())
-                if (object->inherits("UiTiClipContainer"))
-                    return object;
-        return nullptr;
-    }
-    QList<QGraphicsView *> views() const {
-        QList<QGraphicsView *> result, pending;
-        if (view)
-            pending.append(view);
-        while (!pending.isEmpty() && result.size() < 32) {
-            auto next = pending.takeFirst();
-            if (!next || result.contains(next))
-                continue;
-            result.append(next);
-            if (auto scene = next->scene())
-                for (auto item : scene->items())
-                    if (auto proxy = qgraphicsitem_cast<QGraphicsProxyWidget *>(item))
-                        if (auto nested = qobject_cast<QGraphicsView *>(proxy->widget()))
-                            pending.append(nested);
-        }
-        return result;
-    }
 };
 } // namespace Unbound
