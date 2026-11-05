@@ -12,8 +12,10 @@ int main(int argc, char **argv) {
     auto check=[&](bool ok,const char *message) { if(!ok){++failures;std::fprintf(stderr,"FAIL: %s\n",message);} };
     qunsetenv("OPENGATE_EXPERIMENTAL_COLOR_MANAGER");
     qunsetenv("OPENGATE_EXPERIMENTAL_COLOR_PAINT");
+    qunsetenv("OPENGATE_COLOR_PAINT_TRACE");
     check(!Unbound::ColorVisualTrial::activate(directory.path()) &&
-          qEnvironmentVariableIsEmpty("OPENGATE_EXPERIMENTAL_COLOR_MANAGER"),
+          qEnvironmentVariableIsEmpty("OPENGATE_EXPERIMENTAL_COLOR_MANAGER") &&
+          qEnvironmentVariableIsEmpty("OPENGATE_COLOR_PAINT_TRACE"),
           "missing trial profile cannot partially activate features");
     QDir().mkpath(directory.path()+"/profile");
     {
@@ -24,6 +26,7 @@ int main(int argc, char **argv) {
     check(Unbound::ColorVisualTrial::activate(directory.path()),"trial activates without launch environment flags");
     check(qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_MANAGER")==1 &&
           qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_COLOR_PAINT")==1 &&
+          qEnvironmentVariableIntValue("OPENGATE_COLOR_PAINT_TRACE")==1 &&
           qEnvironmentVariableIntValue("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS")==0,
           "ordinary trial startup enables the intended manager and timeline paint only");
     Unbound::ColorManagerPanel manager;

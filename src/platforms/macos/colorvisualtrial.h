@@ -16,6 +16,7 @@ public:
         qputenv("OPENGATE_EXPERIMENTAL_RED_PREVIEW", "1");
         qputenv("OPENGATE_EXPERIMENTAL_COLOR_MANAGER", "1");
         qputenv("OPENGATE_EXPERIMENTAL_COLOR_PAINT", "1");
+        qputenv("OPENGATE_COLOR_PAINT_TRACE", "1");
         qputenv("OPENGATE_EXPERIMENTAL_MEDIA_POOL_COLORS", "0");
         const QPair<const char *,const char *> paths[]{
             {"OPENGATE_COLOR_PALETTE_FILE", "Colors.json"},
