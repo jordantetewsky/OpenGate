@@ -194,3 +194,26 @@ under `build/rea-clip-colors/native-color-transaction-20261105/`,
 `thumbnail-well-paint-20261105/` and `native-identity-adapter-feasibility-20261105/`
 in the original timeline-content worktree. Tab hopping, project persistence and
 the gold thumbnail-well leak remain open.
+
+Final staging checkpoint: local diagnostic runtime
+`6fc09b421d3d6ab2f0c3c261cf42ba0cf1e616a2` builds clean at O2 for arm64/x86_64.
+Its binary SHA256 is
+`a6b2109b849c7af6b06a4f5f51358eaac0b3dc4832323c31a625f71c2a17cee7`.
+Strict signature, 25 managed-file hashes, exact install/rollback rehearsal and
+the assembled entry-flow fixture pass. Startup/isolated-profile sanitizer checks
+also pass. This candidate includes the clip/track menu guard, editor/picker fixes
+and bounded diagnostics. No application paint-matching threshold was loosened.
+
+The diagnostic stage is retained in the trial worktree at
+`build/color-manager-diagnostic-trial-20261105/`. A read-only process check still
+found Resolve PID 5130, so no installation or live palette merge was performed.
+Before installing, recheck absence, recapture the 197 protected-path hashes and
+merge from fresh closed-session palette/draft inputs with a backup. Keep both
+the preceding visual trial and stable `660cdfd` rollback transactions.
+
+Next native evidence requires that install window, then reapplying a custom
+paint before changing thumbnail modes and exercising A → B → A. The paint receipt
+can classify the exposed native background path; graphics-member receipts can
+test public traversal and object recreation. These are diagnostic checks, not
+acceptance of persistence, native Undo or a corrected thumbnail path. All those
+user requirements remain release blockers.
