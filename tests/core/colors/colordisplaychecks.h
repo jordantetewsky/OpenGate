@@ -2,6 +2,7 @@
 #pragma once
 #include "../../../src/core/colormanagerwidget.h"
 #include "../../../src/core/colortexturetoolbar.h"
+#include "texturetoolbarchecks.h"
 namespace OpenGateTest {
 template <class Check> void colorDisplayChecks(Check check, const QString &directory) {
     const auto path = directory + "/local-display.json";
@@ -45,8 +46,8 @@ template <class Check> void colorDisplayChecks(Check check, const QString &direc
     });
     controls.wire(&toolbar);
     controls.wire(&toolbar);
-    auto button = toolbar.findChild<QToolButton *>("openGateTimelineTextures");
-    check(button && toolbar.findChildren<QToolButton *>("openGateTimelineTextures").size() == 1 &&
+    auto button = toolbar.findChild<QAbstractButton *>("openGateTimelineTextures");
+    check(button && toolbar.findChildren<QAbstractButton *>("openGateTimelineTextures").size() == 1 &&
               button->focusPolicy() == Qt::NoFocus,
           "texture toolbar attaches one focus-preserving control");
     if (checkbox)
@@ -61,5 +62,6 @@ template <class Check> void colorDisplayChecks(Check check, const QString &direc
           "toolbar restores textures and synchronizes manager without native command side effects");
     check(Unbound::ColorPalette::encode(palette.state()) == saved,
           "texture display changes preserve preset definitions and category ordering");
+    textureToolbarChecks(check, *display);
 }
 } // namespace OpenGateTest

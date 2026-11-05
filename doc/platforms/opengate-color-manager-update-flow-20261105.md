@@ -217,3 +217,102 @@ can classify the exposed native background path; graphics-member receipts can
 test public traversal and object recreation. These are diagnostic checks, not
 acceptance of persistence, native Undo or a corrected thumbnail path. All those
 user requirements remain release blockers.
+
+## Branch integration and platform gates
+
+Jordan asked which changes eventually reach main and how module boundaries,
+persistence and Mac/Windows parity will be checked. These are acceptance gates,
+not a declaration that all existing modules or platforms are complete.
+
+The inspected main head is `f915bfc`. None of the relevant feature/fix/trial heads
+below is an ancestor of that main head. Some fixes have already been cherry-picked
+into the color candidate under different hashes; do not merge them twice.
+
+| Branch | Scope | Integration decision |
+| --- | --- | --- |
+| `fix/rename-command-context-20261104` (`8ed4ab0`) | Shared text-entry and deferred-command context guard | Candidate for a focused integration after native rename/keymap acceptance; already included in the color lineage as `226f3ab` |
+| `fix/scaled-context-menus-20261104` (`9ea066d`) | Native popup ownership above/below 100% and coordinate regression | Candidate for focused integration after real Media Pool/menu acceptance; equivalent work already in color lineage as `9288f8e`/`c2e6811` |
+| `fix/timeline-switch-presentation-20261104` (`35998d7`) | Nested-scene presentation regression and investigation record | Tests may be harvested; this branch is not a persistent timeline-ID or color-restoration fix |
+| `feat/color-manager-paint` (`6634ee9`) | Shared palette/editor, paint rendering trial and transfer | Hold full feature acceptance for persistence, history, native parity, fallback and platform gates; do not equate personal palette save with project assignment save |
+| `feat/color-manager-update-flow-20261104` | Visible Update, live picker, saved-swatch refresh, menu guard and diagnostics | Review focused production commits against the feature dependency set; diagnostic code remains opt-in and is not evidence of repaired native failures |
+| `fix/texture-toolbar-row-20261105` | One-row texture control and bright/muted state | Integrate the focused change into the local test candidate first; shared source does not prove Windows/native layout acceptance |
+| `trial/color-texture-startup-20261104`, `trial/color-manager-update-flow-20261105` | Local profile paths, ordinary-launch opt-in and bounded diagnostic activation | Test artifacts only; exclude local profile activation/forced diagnostics from the eventual main/release integration |
+
+No main merge or publication is requested by this discussion. Integration should
+be a reviewed dependency set, not a blind merge of every experimental ancestor.
+Preserve the accepted installation and test rollback before installation.
+
+The source organization gate requires one job per module, one authoritative
+owner per kind of state, and removal of the superseded path. Current ownership:
+committed personal definitions in ColorPalette; pending editor recovery in
+ColorPaletteDrafts; local texture-display preference in ColorDisplaySettings;
+transient UI editing in ColorPresetEditor; RGB selection in ColorPickerButton;
+native graphics bindings in TimelineClipColorBindings. Persistent project/clip
+assignment ownership is still unfinished; graphics bindings cannot substitute
+for it. The large shared PanelControls remains a coordinator: this toolbar
+repair adds no implementation there. Existing oversized modules are not a blanket
+organization pass; extract a touched responsibility in a bounded change.
+
+Mac and Windows use shared PanelControls (`windows/managedworkspace.cpp` creates
+it), while bootstrap, native window behavior and paths remain platform adapters.
+The current color changes have Mac compilation/fixture evidence. There is no
+current-branch Windows compile/runtime receipt establishing color-feature parity,
+and earlier Windows workspace CI is not a substitute. An arm64/x86_64 Mac binary
+also does not prove live Intel-Mac or Windows GPU behavior.
+
+Required assembled edge cases before enabling the finished feature:
+
+- A → B → A with duplicate timeline names, recreated clip objects, same source
+  used in multiple instances, linked/multi-selection and correct active tab ID.
+- Project save/reopen, Save As, timeline/project duplication, copy/paste/split,
+  relink and DRP round trip through stock Resolve and another OpenGate installation.
+- Explicit clip paint over track color; track changes preserve clip overrides;
+  Clear restores verified inheritance. Native/custom/custom transitions include
+  different custom presets sharing the same closest native fallback.
+- One native Undo operation restores exact paint, provenance, fallback and menu
+  state without disturbing neighboring move/trim/edit operations or native keys.
+- All thumbnail modes, clip heights, partial exposures, scrolling and zoom,
+  Native/OpenGate switching, cached labels, waveform pixels and moving playhead.
+- Native swatches remain immutable; preset rename/reorder retains IDs/keymaps;
+  removal, invalid imports, pending drafts and write failure preserve prior data.
+- Native versus mapped versus context-menu routes; bin/clip rename, picker fields,
+  delayed commands after editor exit, floating/docked focus and scaled menus.
+- Narrow/wide one-row toolbar, on/off state and shared manager synchronization;
+  supported scales and DPI/display changes on both OSes, preserving native owners.
+- Matching-project performance comparison with texture on/off and many clips;
+  no animated noise, per-frame file writes or unbounded paint/image caches.
+- Actual packaged Windows startup/DLL integration and Mac arm64/Intel checks,
+  then install/rollback with native projects, presets and preferences preserved.
+
+The immediate native session should exercise the smaller targeted UI/diagnostic
+test plan. It is not acceptance of the full matrix or a substitute for native
+persistence/history work.
+
+## Single-row texture control correction
+
+`fix/texture-toolbar-row-20261105` changes only texture-control presentation.
+The previous code appended a 24px font glyph to the outer QBoxLayout without
+checking direction; the real `frameEditToolbarTop` owns a vertical layout, so
+this created the extra row Jordan reported. The control now joins the known
+native middle-buttons horizontal row beside position lock. Missing/not-ready
+vertical structure does not create a fallback row. Native constraints, controls,
+command registration and the existing overflow owner are unchanged.
+
+The font-dependent glyph and standard toolbutton frame are replaced by a small
+Qt icon button: bright checked texture grid, muted unchecked grid, native-sized
+hit area, subtle hover/press feedback and explicit On/Off tooltip/accessibility
+state. ColorDisplaySettings remains authoritative and the existing scoped command
+still handles the click. There is no new preference or assignment writer, global
+event filter or timer; PanelControls receives no additional implementation.
+
+The old outer-layout append path is removed. The existing owned-button list now
+retains weak toolbar/button pairs so idempotent discovery works when the button's
+parent is the inner native row. Both platform callers retain the same interface.
+The focused fixture reuses the existing display/manager checks and existing
+PanelOverflow, verifying one row, native-sized alignment, wide/narrow widths,
+reachable horizontal scrolling, one invocation, shared setting synchronization,
+immutable palette data and distinct On/Off pixels. Wide-state screenshots were
+rendered and inspected. Stock Aqua fixture buttons demanded42px layout height
+inside the captured30px Resolve row; only the test stand-ins were corrected to
+use their actual widget rectangles. Native controls were not changed to make the
+fixture pass. Actual Resolve appearance and Windows runtime remain live gates.
