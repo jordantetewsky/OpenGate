@@ -52,7 +52,7 @@ public:
 class BatchedClipSceneView : public QGraphicsView {
 public:
     using QGraphicsView::QGraphicsView;
-    bool clipBackground=false,clipBatchToExposure=false,clipSkins=false;QPixmap skin;
+    bool clipBackground=false,clipBatchToExposure=false,clipSkins=false,clipThumbnailWells=false;QPixmap skin;
     static QVector<QPair<QRectF,QRectF>> skinTiles(QRectF target,QSize size) {
         const double tx[]{target.left(),target.left()+4,target.right()-4,target.right()};
         const double ty[]{target.top(),target.top()+4,target.bottom()-4,target.bottom()};
@@ -69,7 +69,9 @@ protected:
         QMap<QRgb,QVector<QRectF>> batches;
         for(auto item:scene()->items())if(!item->parentItem() && item->flags().testFlag(QGraphicsItem::ItemHasNoContents))
             if(auto clip=dynamic_cast<UiTiClipContainer *>(item))if(clip->isVisible()) {
-                if(clipSkins){for(const auto &tile:skinTiles(clip->sceneBoundingRect(),skin.size()))p->drawPixmap(tile.first,skin,tile.second);}
+                if(clipSkins){for(const auto &tile:skinTiles(clip->sceneBoundingRect(),skin.size()))p->drawPixmap(tile.first,skin,tile.second);
+                    if(clipThumbnailWells){const auto r=clip->sceneBoundingRect();const QRectF well(r.left()+r.width()*.58,r.top()+5,r.width()*.42-4,r.height()-25);
+                        p->fillRect(well.adjusted(-1,-1,1,1),Qt::black);p->fillRect(well,clip->fill);}}
                 else batches[clip->fill.rgba()].append(clipBatchToExposure?clip->sceneBoundingRect().intersected(area):clip->sceneBoundingRect());
             }
         p->save();p->setPen(Qt::NoPen);

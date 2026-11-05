@@ -35,9 +35,20 @@ class ClipPaintTrace {
     void observe(const char *kind, QRectF target, const QTransform &device, bool mapped,
                  QColor sourceColor = {}, QSize imageSize = {}, qint64 imageKey = 0,
                  QRectF imageSource = {}) {
+        if (!enabled)
+            return;
+        observeRoot(kind, (device * inverse).mapRect(target), mapped, sourceColor, imageSize,
+                    imageKey, imageSource);
+    }
+    void rejectedSkin(QRectF clip, QColor center, QSize size, qint64 key) {
+        observeRoot("skin-palette-rejected", clip, false, center, size, key, {});
+    }
+
+  private:
+    void observeRoot(const char *kind, QRectF root, bool mapped, QColor sourceColor,
+                     QSize imageSize, qint64 imageKey, QRectF imageSource) {
         if (!enabled || seen.size() >= limit)
             return;
-        const auto root = (device * inverse).mapRect(target);
         const ClipFillRegion *match = nullptr;
         for (const auto &region : regions)
             if (region.style && region.rect.adjusted(-3, -3, 3, 3).contains(root)) {
@@ -88,6 +99,8 @@ class ClipPaintTrace {
             {"read_only", true},
             {"pixel_content_captured", false},
             {"native_callsite_captured", false}};
+        if (qstrcmp(kind, "skin-palette-rejected") == 0)
+            value["complete_nine_patch_verified"] = true;
         if (sourceColor.isValid())
             value["source_color"] = sourceColor.name(QColor::HexArgb);
         if (!imageSize.isEmpty()) {

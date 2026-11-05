@@ -21,8 +21,13 @@ class TimelineClipColorPaint {
             native(target);
             return;
         }
-        skins.begin(regions);
         trace.begin(regions, inverse, bindings->revision());
+        skins.begin(regions, trace.active() ? ClipSkinPaint::RejectedSkin(
+                                                 [this](QRectF clip, QColor center, QSize size,
+                                                        qint64 key) {
+                                                     trace.rejectedSkin(clip, center, size, key);
+                                                 })
+                                           : ClipSkinPaint::RejectedSkin());
         const bool styled = std::any_of(regions.cbegin(), regions.cend(),
                                         [](const auto &r) { return bool(r.style); });
         ClipFillPaintDevice::PaintHooks hooks;
@@ -58,8 +63,10 @@ class TimelineClipColorPaint {
             [this, regions, inverse, styled](const QRectF &r, QColor source,
                                              const QTransform &device) {
                 const auto root = (device * inverse).mapRect(r);
-                return styled && styles.owns(root) ? QColor()
-                                                   : clipRegionReplacement(root, source, regions);
+                if (styled && styles.owns(root))
+                    return QColor();
+                const auto body = skins.mapBodyFill(root, source);
+                return body.isValid() ? body : clipRegionReplacement(root, source, regions);
             },
             native, std::move(raster),
             [this, inverse, styled](const QRectF &r, const QPixmap &pixmap, const QRectF &source,

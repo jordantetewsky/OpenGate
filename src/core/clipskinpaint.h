@@ -6,18 +6,30 @@
 #include "clipskinpalette.h"
 #include <QHash>
 #include <QPixmap>
+#include <QSet>
+#include <functional>
 namespace Unbound {
 // Bounded cache of verified native nine-piece skins and their recolored variants.
 // Clip ownership, input, native commands and persistent colors live elsewhere.
 class ClipSkinPaint {
   public:
-    void begin(QVector<ClipFillRegion> current) {
+    using RejectedSkin = std::function<void(QRectF, QColor, QSize, qint64)>;
+    void begin(QVector<ClipFillRegion> current, RejectedSkin rejected = {}) {
         regions = std::move(current);
+        rejectedSkin = std::move(rejected);
         pending.clear();
+        bodyColors.fill({}, regions.size());
         discovered = false;
     }
     bool learned() const {
         return discovered;
+    }
+    QColor mapBodyFill(QRectF target, QColor source) const {
+        const int selected = regionIndex(target);
+        if (selected < 0 || !source.isValid() || source.alpha() != 255 ||
+            bodyColors.value(selected) != source)
+            return {};
+        return regions[selected].color;
     }
     QPainterPath opaqueMask(const QPixmap &native) {
         auto found = skins.find(native.cacheKey());
@@ -33,14 +45,7 @@ class ClipSkinPaint {
     QPixmap map(QRectF target, const QPixmap &native, QRectF source) {
         if (native.width() > 512 || native.height() > 512)
             return {};
-        int selected = -1;
-        for (int i = 0; i < regions.size(); ++i)
-            if (regions[i].rect.contains(target.center()) &&
-                regions[i].rect.adjusted(-3, -3, 3, 3).contains(target)) {
-                if (selected >= 0)
-                    return {};
-                selected = i;
-            }
+        const int selected = regionIndex(target);
         if (selected < 0)
             return {};
         const auto key = native.cacheKey();
@@ -54,17 +59,26 @@ class ClipSkinPaint {
                 return {};
             const auto image = native.toImage();
             auto recolored = clipSkinPalette(image, color);
-            if (recolored.isNull())
+            if (recolored.isNull()) {
+                if (rejectedSkin && rejectedKeys.size() < 16 && !rejectedKeys.contains(key)) {
+                    rejectedKeys.insert(key);
+                    rejectedSkin(regions[selected].rect,
+                                 image.pixelColor(image.width() / 2, image.height() / 2),
+                                 image.size(), key);
+                }
                 return {};
+            }
             if (skins.size() >= 8)
                 skins.clear();
             Skin skin;
             skin.original = image;
+            skin.bodyColor = image.pixelColor(image.width() / 2, image.height() / 2);
             skin.colors.insert(color.rgba(), QPixmap::fromImage(recolored));
             skins.insert(key, std::move(skin));
             discovered = true;
         }
         auto &skin = skins[key];
+        bodyColors[selected] = skin.bodyColor;
         if (!skin.colors.contains(color.rgba())) {
             auto image = clipSkinPalette(skin.original, color);
             if (image.isNull())
@@ -77,8 +91,20 @@ class ClipSkinPaint {
     }
 
   private:
+    int regionIndex(QRectF target) const {
+        int selected = -1;
+        for (int i = 0; i < regions.size(); ++i)
+            if (regions[i].rect.contains(target.center()) &&
+                regions[i].rect.adjusted(-3, -3, 3, 3).contains(target)) {
+                if (selected >= 0)
+                    return -1;
+                selected = i;
+            }
+        return selected;
+    }
     struct Skin {
         QImage original;
+        QColor bodyColor;
         QHash<QRgb, QPixmap> colors;
         QPainterPath mask;
         bool maskReady = false;
@@ -86,6 +112,11 @@ class ClipSkinPaint {
     QHash<qint64, Skin> skins;
     QHash<QPair<qint64, int>, QVector<ClipSkinTile>> pending;
     QVector<ClipFillRegion> regions;
+    // A cached skin can be reused by many clips. Palette ownership is established
+    // again during each capture, so a replaced scene/binding cannot inherit it.
+    QVector<QColor> bodyColors;
+    RejectedSkin rejectedSkin;
+    QSet<qint64> rejectedKeys;
     bool discovered = false;
 };
 } // namespace Unbound

@@ -4,6 +4,7 @@
 #include "../../../src/core/panelcontentscale.h"
 #include "../../../src/core/timelineclipcolorpreview.h"
 #include "../../../src/core/clipskinpaint.h"
+#include "../../../src/core/clippainttrace.h"
 namespace OpenGateTest {
 template<class Check> void clipSkinPaintChecks(Check check) {
     QImage skinImage(12,12,QImage::Format_ARGB32);skinImage.fill(QColor(30,130,180));
@@ -35,8 +36,34 @@ template<class Check> void clipSkinPaintChecks(Check check) {
         paint.begin({{bounds,Qt::red}});QPixmap result;
         for(const auto &tile:tiles)result=paint.map(tile.first,pixmap,tile.second);
         check(paint.learned() && !result.isNull() && result.toImage().pixelColor(6,6)==QColor(Qt::red),"a complete nine-piece native background becomes a verified recolored skin");
+        check(paint.mapBodyFill(bounds,skinImage.pixelColor(6,6))==QColor(Qt::red),"complete native skin establishes its source palette for this capture");
         paint.begin({{bounds,Qt::red}});const auto cached=paint.map(tiles.front().first,pixmap,tiles.front().second);
         check(!paint.learned() && cached.cacheKey()==result.cacheKey(),"later frames reuse recolored bitmap pixels without another palette transform");
+        paint.begin({{bounds,Qt::red}});
+        check(!paint.mapBodyFill(bounds,skinImage.pixelColor(6,6)).isValid(),"new capture discards prior clip-to-palette association");
+        paint.map(tiles.front().first,pixmap,tiles.front().second);
+        check(paint.mapBodyFill(bounds,skinImage.pixelColor(6,6))==QColor(Qt::red),"cached native skin reestablishes current palette ownership");
+        check(!paint.mapBodyFill(bounds,Qt::green).isValid(),"unknown solid ink cannot borrow a verified body's palette");
+    }
+    {
+        const QRectF bounds(10,10,240,95);QImage gray(12,12,QImage::Format_ARGB32);gray.fill(Qt::gray);
+        const auto tiles=BatchedClipSceneView::skinTiles(bounds,gray.size());
+        Unbound::ClipSkinPaint paint;int rejected=0;
+        const auto report=[&](QRectF r,QColor center,QSize size,qint64){
+            ++rejected;check(r==bounds && center==QColor(Qt::gray) && size==gray.size(),"rejected skin metadata identifies verified geometry and center only");};
+        const auto first=QPixmap::fromImage(gray);paint.begin({{bounds,Qt::red}},report);
+        paint.map(tiles.front().first,first,tiles.front().second);
+        check(rejected==0,"unverified image fragments do not emit palette rejection receipts");
+        for(int n=0;n<20;++n){const auto image=QPixmap::fromImage(gray);paint.begin({{bounds,Qt::red}},report);
+            for(const auto &tile:tiles)paint.map(tile.first,image,tile.second);}
+        check(rejected==16,"opt-in rejected skin receipts are bounded by distinct image keys");
+        auto style=QSharedPointer<Unbound::ColorPreset>::create();style->id="trace-fixture";
+        QJsonObject receipt;Unbound::ClipPaintTrace trace(true,[&](const QJsonObject &r){receipt=r;});
+        trace.begin({{bounds,Qt::red,{},style}},QTransform(),3);
+        trace.rejectedSkin(bounds,Qt::gray,gray.size(),first.cacheKey());
+        check(receipt["complete_nine_patch_verified"].toBool() && receipt["read_only"].toBool() &&
+                  !receipt["pixel_content_captured"].toBool() && receipt["source_color"]=="#ffa0a0a4",
+              "palette rejection trace preserves its read-only metadata boundary");
     }
     for(double factor:{.7,1.,1.47,2.13,3.}) {
         TimelineViewportFixture fixture;fixture.view->clip->hide();auto tracks=dynamic_cast<BatchedClipSceneView *>(fixture.view->tracksProxy->widget());

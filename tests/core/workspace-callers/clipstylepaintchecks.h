@@ -77,12 +77,14 @@ template <class Check> void clipStylePaintChecks(Check check) {
             auto tracks = dynamic_cast<BatchedClipSceneView *>(fixture.view->tracksProxy->widget());
             tracks->clipBackground = true;
             tracks->clipSkins = skin;
+            tracks->clipThumbnailWells = skin;
             QImage source(244, 164, QImage::Format_ARGB32);
             source.fill(QColor(67, 118, 161));
             source.setPixelColor(0, 0, QColor(0, 0, 0, 100));
             tracks->skin = QPixmap::fromImage(source);
             tracks->skin.setDevicePixelRatio(2);
             auto clip = new UiTiClipContainer;
+            clip->fill = QColor(67, 118, 161);
             clip->setFlag(QGraphicsItem::ItemHasNoContents);
             clip->setSelected(true);
             fixture.view->tracksScene->addItem(clip);
@@ -136,6 +138,9 @@ template <class Check> void clipStylePaintChecks(Check check) {
                              qPrintable(left.name()), qPrintable(right.name()));
             check(left.red() > right.red() + 70 && right.blue() > left.blue() + 70,
                   "gradient spans the native clip body at every scale and skin path");
+            if (skin)
+                check(right != clip->fill,
+                      "partial native thumbnail well uses the verified body palette at every scale");
             check(preview.selectedPresetId() == style.id,
                   "selected preset identity is retained separately from native swatch state");
             check(pixel(gradient, {200, 130}) == pixel(before, {200, 130}),

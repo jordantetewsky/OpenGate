@@ -24,11 +24,17 @@ class ClipStylePaint {
     QBrush brush(const QRectF &rect, QColor source, const QTransform &device) {
         const auto basis = device * inverse;
         const auto root = basis.mapRect(rect);
-        if (!clipBodyPrimitive(root, source) || source.alpha() != 255)
+        if (root.isEmpty() || !source.isValid() || source.alpha() != 255)
             return {};
         const auto region = find(root);
-        if (!region || !clipBodyContains(*region, root) ||
-            root.width() < region->rect.width() * .9 || root.height() < region->rect.height() * .9)
+        if (!region)
+            return {};
+        const bool fullBody = clipBodyPrimitive(root, source) && clipBodyContains(*region, root) &&
+                              root.width() >= region->rect.width() * .9 &&
+                              root.height() >= region->rect.height() * .9;
+        // Native thumbnail modes repaint a partial well after the body skin.
+        // Its exact verified palette identifies it without guessing its size.
+        if (!fullBody && !skins.mapBodyFill(root, source).isValid())
             return {};
         bool ok = false;
         const auto toLocal = basis.inverted(&ok);
