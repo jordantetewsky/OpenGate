@@ -2,6 +2,20 @@
 
 ## Current per-instance storage gate — November 6, 2026
 
+Jordan clarified that marker custom-data was an analogy for another hidden field:
+**do not create hidden or visible marker carriers**. The saved record should hold
+the current assignment and exact paint/fallback information; native history must
+handle changes. No custom append-only color-history log is a substitute.
+
+An earlier generated-audio test did verify a different carrier: timeline
+MediaPoolItem metadata survived reopen and native DRP export/import, but project,
+timeline, source and instance IDs changed on import. Receipt:
+`timeline-content-candidate/build/color-timeline-metadata-native-20261104-absolute/receipt.json`.
+That result is useful for a timeline-level palette catalog. It did not prove
+portable per-instance association, rendering or native Undo. Do not describe it
+as a successful custom-clip-color handoff, or describe all metadata storage as
+untested.
+
 The source-media experiment below is historical. A reused source file may have
 several differently colored timeline instances; source metadata alone cannot
 represent those assignments. Static inspection of Resolve 21.1.1 identifies
@@ -26,6 +40,15 @@ edit behavior verified separately.
 
 Current receipts, runtime identity and remaining gates are recorded in
 [the color update checkpoint](opengate-color-manager-update-flow-20261105.md).
+
+For the next native import check, an offline copy of that same generated-audio
+DRP now contains a 604-byte, Qt-encoded per-instance fixture payload and an
+unrelated preservation field in `ImportExportMetadataBA`. No markers were added;
+the original DRP and every unrelated archive member are unchanged. The verified
+fixture is `build/native-color-disposable-render-20261105/seeded-d-r-p/generated-audio-hidden-data-v2.drp`,
+SHA256 `03ac4c2d5fc8b595edb1ef2511bc674eaafd609e89888a2ed48256c5430eb867`.
+The unversioned earlier build attempt is unverified and must not be used. This
+is a diagnostic input, not a production project writer or native acceptance.
 
 ## Earlier source-media probe
 
