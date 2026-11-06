@@ -4,6 +4,53 @@
 
 ### November 6 live continuation
 
+Latest installed runtime is now `1083901`, binary SHA256
+`20dd788f5b123f3f90647c312f17961cc9a7732c26dd8fa22761d5c3dd642083`,
+transaction `944C9BF2-FBE5-4EA6-B287-E9F364F66986`. All 25 managed hashes and
+strict signature verify; all 203 protected files were unchanged **before**
+reopening. Stage/receipts: `build/native-color-storage-gate-v2-20261106/`.
+Immediately preceding `12f18b4` was installed/verified under transaction
+`EE34F601-2B75-4BDB-8B5C-767D8CC51163`, also with 203 files unchanged before
+reopening. Both preserve their prior installation. No palette/draft merge or
+automatic assignment migration was performed. These supersede the installed
+`4d743ff` checkpoints below.
+
+Actual owned-project results, indexed in `native-results-index.json`:
+
+- Native import/save/export preserves the two seeded per-instance metadata
+  entries. The original DRP and Jordan's 24-clip export are unchanged.
+- First probe attempt selected the exact SDK-matched graphics container, but
+  selection disappeared before a subsequent bind request. It stopped before any
+  property writes. The scratch service now binds one visible, exact SDK-ID
+  candidate directly, retaining all title/model/lifetime/proxy guards. This
+  changes a test dependency, not production clip selection behavior.
+- Actual audio clip SDK/native UUID equality and Qt metadata write/readback/
+  restoration pass. The owned namespace then writes and reads back correctly,
+  with unrelated entries/native Qt color unchanged. **SaveProject returns true
+  but the exported DRP lacks that new payload.** Receipt
+  `phases-20261106-141846-14fea8/receipt.json`; the same-run SeqContainer XML is
+  byte-identical before/after. A raw Qt property write is not a persistence path.
+- A stock SDK Blue control returns true and reads back Blue, while the matched
+  Qt `ClipColor` property remains empty. The separate zero-metadata-write native
+  color control **does** survive project close/reopen, receipt
+  `phases-20261106-153239-336838/receipt.json`. Do not mistake the Qt serialization
+  field for the native live color field, or blame a failed SaveProject call.
+- The GUI stock Undo/Redo control subsequently refused to start because an
+  editing project was open. Zero project mutations/metadata writes/keys occurred
+  in that run. No stock or custom native Undo/Redo acceptance is established.
+
+Offline native tracing distinguishes shadow color getter `1002a6ea4` (+0x210)
+from the native color getter/setter `1008ab090`/`1008ab188`, which traverse the
+model's +0x440 backing weak handle. Archive inspection locates the actual color
+change in the per-instance `Sm2TiItemLockableBlob` owned by the SDK clip UUID.
+The existing disconnected native snapshot experiment's Qt-color assertions are
+therefore invalid for this control; it remains disabled/uncompiled. Canonical
+backing metadata/schema/history must be established before another writer is
+enabled. This is a concrete storage failure diagnosis, not a completed repair.
+
+Jordan's editing project remains available; native mutation tests must wait for
+an empty Project Manager state. Offline backing analysis continues independently.
+
 Runtime `4d743ff` is installed, transaction
 `75C34AC4-D42A-4349-B9E9-FD05994B0CBC`; all 25 managed payload hashes were
 verified. The receipt is in

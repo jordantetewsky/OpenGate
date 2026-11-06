@@ -2312,3 +2312,27 @@ Undo/Redo, saved assignment/paint restoration, audio-over-track precedence,
 thumbnail modes and full OpenGate → stock Resolve → OpenGate return remain open.
 Project switching remains lower priority at Jordan's request. No main merge,
 push, publication or automatic project repair occurred.
+
+### November 6 native test outcome: serialization shadow is insufficient
+
+Runtime `1083901` is installed and hash/signature verified (25 managed files),
+transaction `944C9BF2-FBE5-4EA6-B287-E9F364F66986`. All 203 protected files were
+verified unchanged before reopening. Previous installations and Jordan's presets,
+drafts and exported DRP are preserved. This local diagnostic candidate has no
+automatic project assignment writer or compiled private-history calls.
+
+Actual audio SDK/native UUID equality and reversible Qt metadata control pass.
+Unknown seeded metadata also survives native DRP import/save/export. However, a
+new live Qt metadata write reads back but is absent from the saved export, despite
+SaveProject success. A separate public native stock-color control survives
+save/reopen while the Qt color serialization field remains empty. The native
+editable backing record differs from those Qt fields; the direct-property route
+is rejected as a completed persistence implementation. Exact receipts and the
+canonical backing investigation are indexed in the color update-flow checkpoint.
+
+Native stock Undo/Redo was not run: the scope guard found an editing project and
+refused all mutations/keys. Custom Undo/Redo, live custom-paint persistence and
+returning non-OpenGate handoff remain open. Do not relabel import-time metadata
+survival or reversible property access as those acceptance results. Offline work
+may continue while Jordan edits; any further native writer test requires an
+empty Project Manager state and a separately verified canonical backing path.
