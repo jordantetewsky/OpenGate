@@ -555,3 +555,60 @@ still `4d743ff`; these fixes and the rejected-skin cache repair are source-only.
 Private history remains excluded from the storage candidate. A disconnected
 native-compound snapshot experiment has static ABI evidence and syntax checks,
 but has not executed or established metadata Undo/Redo.
+
+### Candidate built for the next owned storage test
+
+Clean source `12f18b4` compiled universal O2; binary SHA256
+`fce367e1a25dc96b5da395eac08bc18b2c33dec890d6d27e0a11b205808e4fdb`.
+Staged bundle strict signature and exact temporary install/rollback pass: 25
+managed files across 9 paths. Stage: `build/native-color-storage-gate-20261106/`.
+It is **not installed**. Existing `4d743ff` and rollback checkpoints are unchanged.
+The six declared scratch headers are hashed before/after compilation. The new
+guarded probe can write/remove only its owned test namespace after native/SDK
+identity equality and a reversible property control. It never automatically
+writes assignments. No private native history calls or snapshot experiment are
+compiled. Ordinary paints remain temporary in this candidate.
+
+The external storage coordinator reuses `ScratchProjectScope`, mailbox transport
+and the extracted `bind_item_control` from the existing property fixture. It
+refuses a named/nonempty editing project before import, retains real SDK proxies,
+and performs filesystem-only waits after SDK calls return. The Qt property and
+SDK color tokens are compared to their own baselines, avoiding the incorrect
+comparison of native `ClipColorBlue` against SDK `Blue`. Five original offline
+checks and four storage failure/codec checks pass. The real Qt codec decodes the
+seeded audio DRP and identifies the two unrelated fixture entries. These checks
+do not access Resolve and are not persistence acceptance.
+
+Next native sequence: import the owned generated-audio DRP; verify actual
+instance identity and reversible metadata control; write an exact payload while
+preserving unrelated entries/native color; save/export; close/reopen and compare;
+import the exported DRP under a second owned name and verify regenerated IDs plus
+the same payload; remove only the hash-matched test namespace and verify foreign
+entries remain in the native export. This is deliberately a storage foundation
+test, not custom-paint restoration or native Undo/Redo acceptance. Jordan's
+24-clip capture remains preserved unchanged for the later assembled regression.
+
+The final-source optimized ASAN assembled entry fixture passes with Color Manager
+enabled (`native entry flow failures=0`). Numbered Native-entry contract reread:
+
+| Contract | Actual entry/control and available evidence | Native acceptance gap |
+| --- | --- | --- |
+| 1 | `PanelControls` startup, immutable Resolve Layout inventory, hidden manual background control; clean/restart fixture paths | Actual fresh-profile first launch and native content/GPU |
+| 2 | `unboundSaveWorkspaceAs`, arrangements inventory, built-in protection paths; assembled Save As | Full native Save/Update protection and failure recovery |
+| 3 | `unboundRestoreNativeWorkspace`, saved workspace action; fixture restores native slots and returns | Actual native owners/rendering after real edits |
+| 4 | Existing command/backtick path; prior focused command/context fixtures, no change here | Physical/remapped keys and temporary Native maximize |
+| 5 | Native Source/Program/Timeline drag callbacks; fixture moves/group/reclaims without default load | Real pointer gestures from Native and unchanged unrelated placements |
+| 6 | `PinnedWorkspaceHeader`/`FooterPanel`, native project/button stand-ins, Home/Settings fixture invocation | Actual AppKit title strip, project dropdown regression remains open/lower priority |
+| 7 | Header/footer visibility actions and maximize viewport checks; assembled band combinations | Actual native painting for every combination |
+| 8 | Direct drag, native return, retained hide/show controls in assembled fixture | Native title clicks, X/group recall and exact constraints |
+| 9 | `PanelCallerMenu`, `WorkspaceHeaders::populate`, flat `openGateShowPanel`, narrow overflow checks | Real native panel inventory/navigation; Mixer independent behavior |
+| 10 | Source/Timeline/Program maximize and floating group viewport assertions | Actual GPU, Mixer and resize minima |
+| 11 | Existing per-page owners unchanged; this run exercises Edit | Actual multi-page and Windows integration |
+| 12 | One assembled entry/rearrange/bands/maximize/save/Native/return/restart fixture with Color Manager | Real pointer/keys, native GPU, page switching and Relay/Deliver |
+
+No deliberate contract departure is introduced. This candidate is a local
+diagnostic installation, not completion of the numbered experience or the color
+checklist. A fresh Resolve process is required to load it; no user editing project
+will be closed/switched by the coordinator. Closed-session state capture and
+verification must finish before reopening, so later user activity cannot be
+misreported as an installer settings change.

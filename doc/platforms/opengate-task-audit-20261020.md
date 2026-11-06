@@ -2280,3 +2280,35 @@ Resolve-owned entries must be preserved. Native graphics-to-SDK identity and
 history attachment remain unresolved; a raw property write is not an accepted
 substitute. The retained manifest and limitations are indexed in the color
 implementation checkpoint.
+
+### November 6 owned storage candidate; installed trial still temporary
+
+Jordan's manually exported `color pallette.drp` is captured unchanged together
+with his trial profile and diagnostics. It has 22 video and 2 audio instances;
+no nonempty per-instance hidden metadata is present. It is reproduction input,
+not evidence that temporary custom paints saved. His current working project
+must not be switched or used for experimental writes.
+
+Separate source repairs `359a752` (actual derived clip identity layouts) and
+`12f18b4` (reachable native preset menus) are committed. The negative-skin cache
+repair `95bc22b` is also in this lineage. Native-ID guards still reject unknown
+layouts/lifetimes/proxies. Menu rows use one reversible, scoped scrolling lease
+and the existing palette/command owner. No new persistent assignment owner or
+history implementation is claimed. Bounded identity, optimized menu/paint and
+final-source assembled optimized ASAN entry fixtures pass.
+
+Universal O2 candidate `12f18b4`, strict signature, 25-file staged inventory and
+exact temporary install/rollback pass. It is not installed; actual runtime is
+still `4d743ff`. The new storage probe is limited to an owned disposable project
+and namespace after SDK/native equality and a reversible property control.
+Private native history is excluded. A prepared import/save/reopen/export/import
+coordinator passes its offline guards/Qt-codec checks, but has not run in Resolve.
+
+The numbered Native-entry contract was reread and mapped action-by-action to
+actual controls, fixture evidence and native gaps in
+`opengate-color-manager-update-flow-20261105.md`. Ordinary-launch key contexts
+and Commands submenu remain in that acceptance set. Windows/native GPU, custom
+Undo/Redo, saved assignment/paint restoration, audio-over-track precedence,
+thumbnail modes and full OpenGate → stock Resolve → OpenGate return remain open.
+Project switching remains lower priority at Jordan's request. No main merge,
+push, publication or automatic project repair occurred.
