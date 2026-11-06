@@ -46,6 +46,37 @@ template<class Check> void clipSkinPaintChecks(Check check) {
         check(!paint.mapBodyFill(bounds,Qt::green).isValid(),"unknown solid ink cannot borrow a verified body's palette");
     }
     {
+        const QRectF bounds(10,10,240,95);
+        QPixmap transparent(226,228);transparent.fill(Qt::transparent);
+        const auto tiles=BatchedClipSceneView::skinTiles(bounds,transparent.size());
+        Unbound::ClipSkinPaint paint;
+        const auto capture=[&](const QPixmap &image,QColor target){
+            paint.begin({{bounds,target}});QPixmap result;
+            for(const auto &tile:tiles)result=paint.map(tile.first,image,tile.second);
+            return result;
+        };
+        check(capture(transparent,Qt::red).isNull() && capture(transparent,Qt::blue).isNull(),
+              "transparent-center skin stays native across targets and repeated captures");
+        int reports=0;paint.begin({{bounds,Qt::red}},[&](QRectF,QColor center,QSize size,qint64){
+            ++reports;check(center.alpha()==0 && size==transparent.size(),
+                            "cached rejection retains center metadata without inventing a body color");});
+        for(const auto &tile:tiles)paint.map(tile.first,transparent,tile.second);
+        check(reports==1 && !paint.mapBodyFill(bounds,Qt::transparent).isValid() &&
+                  paint.opaqueMask(transparent).isEmpty(),
+              "cached rejection can be inspected later without creating paint coverage");
+        paint.begin({{bounds,Qt::red},{bounds,Qt::blue}});
+        QPixmap ambiguous;for(const auto &tile:tiles)ambiguous=paint.map(tile.first,transparent,tile.second);
+        check(ambiguous.isNull(),"negative classification never bypasses current owner ambiguity");
+        const auto rejectedKey=transparent.cacheKey();transparent.fill(QColor(30,130,180));
+        const auto repaired=capture(transparent,Qt::red);
+        check(transparent.cacheKey()!=rejectedKey && !repaired.isNull() &&
+                  repaired.toImage().pixelColor(113,114)==QColor(Qt::red),
+              "pixmap mutation changes its key and reclassifies newly valid source pixels");
+        QPixmap fresh(226,228);fresh.fill(QColor(30,130,180));
+        check(capture(fresh,QColor()).isNull() && !capture(fresh,Qt::red).isNull(),
+              "invalid target color cannot poison an otherwise valid native skin");
+    }
+    {
         const QRectF bounds(10,10,240,95);QImage gray(12,12,QImage::Format_ARGB32);gray.fill(Qt::gray);
         const auto tiles=BatchedClipSceneView::skinTiles(bounds,gray.size());
         Unbound::ClipSkinPaint paint;int rejected=0;

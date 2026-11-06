@@ -56,6 +56,24 @@ and respect native recipient edits. Passing a reversible property test alone
 does not close persistence or handoff. Editor/paint polish and dropdown work must
 not substitute for this acceptance.
 
+The bounded rejected-skin cache repair was verified separately on November 6.
+`ClipSkinPaint` remains the sole owner of native skin classification and now
+retains at most 16 rejected-source classifications. Complete current-capture
+nine-piece ownership and target validity are still checked before a cached
+rejection is used. The repeated image-conversion/classification path was removed
+for retained rejected keys; no native cache/effect setting or acceptance threshold
+changed. Control/candidate instrumentation reduced 100 palette calls to one for
+the same rejected source, with unchanged native output and working mutation/key
+eviction. Artifacts are under
+`timeline-content-candidate/build/rea-clip-colors/skin-rejection-cache-20261106/`.
+The optimized assembled timeline paint fixture compiled and then ran in the main
+conversation with `timeline red preview failures=0`. Its earlier worker run never
+launched because the approval remained pending and eventually aborted. This
+source-only repair is not installed; it does not establish persistence, native
+audio precedence, handoff or Windows live acceptance. Responsibility review found
+one bounded cache added to the existing owner, no parallel model/controller or
+project-state writer, and focused checks added to the existing skin fixture.
+
 The paragraphs below are retained checkpoints; their pre-install state is
 historical. Project assignments remain temporary despite the newer installation.
 

@@ -5,6 +5,7 @@
 #include "clipopaquemask.h"
 #include "clipskinpalette.h"
 #include <QHash>
+#include <QCache>
 #include <QPixmap>
 #include <QSet>
 #include <functional>
@@ -50,6 +51,8 @@ class ClipSkinPaint {
             return {};
         const auto key = native.cacheKey();
         const auto color = regions[selected].color;
+        if (!color.isValid())
+            return {};
         if (!skins.contains(key)) {
             auto &tiles = pending[{key, selected}];
             if (tiles.size() >= 9)
@@ -57,15 +60,18 @@ class ClipSkinPaint {
             tiles.append({target, source});
             if (!clipNinePatch(tiles, regions[selected].rect, native.size()))
                 return {};
+            if (const auto center = invalidSkins.object(key)) {
+                reportRejected(selected, native, *center);
+                return {};
+            }
             const auto image = native.toImage();
+            if (image.isNull())
+                return {};
             auto recolored = clipSkinPalette(image, color);
             if (recolored.isNull()) {
-                if (rejectedSkin && rejectedKeys.size() < 16 && !rejectedKeys.contains(key)) {
-                    rejectedKeys.insert(key);
-                    rejectedSkin(regions[selected].rect,
-                                 image.pixelColor(image.width() / 2, image.height() / 2),
-                                 image.size(), key);
-                }
+                const auto center = image.pixelColor(image.width() / 2, image.height() / 2);
+                invalidSkins.insert(key, new QColor(center));
+                reportRejected(selected, native, center);
                 return {};
             }
             if (skins.size() >= 8)
@@ -91,6 +97,13 @@ class ClipSkinPaint {
     }
 
   private:
+    void reportRejected(int selected, const QPixmap &native, QColor center) {
+        const auto key = native.cacheKey();
+        if (rejectedSkin && rejectedKeys.size() < 16 && !rejectedKeys.contains(key)) {
+            rejectedKeys.insert(key);
+            rejectedSkin(regions[selected].rect, center, native.size(), key);
+        }
+    }
     int regionIndex(QRectF target) const {
         int selected = -1;
         for (int i = 0; i < regions.size(); ++i)
@@ -110,6 +123,9 @@ class ClipSkinPaint {
         bool maskReady = false;
     };
     QHash<qint64, Skin> skins;
+    // Rejections depend only on unchanged source pixels once target validity
+    // and this capture's complete nine-piece ownership have been established.
+    QCache<qint64, QColor> invalidSkins{16};
     QHash<QPair<qint64, int>, QVector<ClipSkinTile>> pending;
     QVector<ClipFillRegion> regions;
     // A cached skin can be reused by many clips. Palette ownership is established
