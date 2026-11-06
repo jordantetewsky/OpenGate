@@ -519,3 +519,39 @@ rendered and inspected. Stock Aqua fixture buttons demanded42px layout height
 inside the captured30px Resolve row; only the test stand-ins were corrected to
 use their actual widget rectangles. Native controls were not changed to make the
 fixture pass. Actual Resolve appearance and Windows runtime remain live gates.
+
+## November 6: captured DRP, native identity and menu reachability
+
+Jordan's manually exported `Downloads/color pallette.drp` was copied unchanged
+into `build/native-color-disposable-render-20261105/user-test-state-20261106-092742/test-project.drp`.
+Original and copy SHA256 are
+`2fac3ee841b1c117587bf5ae60fe095bb51b1a1f3004f13bd1081705171bca7d`.
+The valid archive contains 22 video and 2 audio instances, with no nonempty
+per-instance `ImportExportMetadataBA` values. Palette/profile and diagnostic files
+are captured separately. This preserves reproduction material; it does not prove
+that the installed visual trial saved custom assignments. The user can continue
+editing; subsequent destructive/storage tests require an owned imported copy.
+
+Actual diagnostics rejected `UiTiVideoClip` as `unsupported-ui-class`. The
+exact-image identity adapter now recognizes the evidenced primary QObject layouts
+of `UiTiVideoClip` and `UiTiAudioClip`, in addition to `UiTiItem`. The same profile
+drives class and vtable acceptance. Unknown/secondary vtables, changed lifetime,
+proxy/owner mismatch and identity changes remain rejected. The bounded identity
+fixture passes; SDK/native equality and saved assignments still need live proof.
+
+The color menu now leases Qt's scrollable-menu hint through a focused reversible
+style lease. `ColorPresetMenu` still owns only its committed-palette rows; the
+lease owns only its scoped rule/property, preserves the native foreign style and
+unrelated stylesheet changes, and releases on hide/rebuild/destruction. No
+replacement menu, assignment writer, timer or global style was added. Optimized
+assembled menu fixture passes (`clip color menu failures=0`), including reaching
+and invoking the final row once, native rows/checkmarks/style lifetime and
+reacquisition after a foreign stylesheet replacement. This shared core change
+uses the existing Mac/Windows command caller; Windows runtime remains unverified.
+
+Diff review confirms these are separate presentation and identity boundaries;
+neither introduces saved-assignment or history state. The installed runtime is
+still `4d743ff`; these fixes and the rejected-skin cache repair are source-only.
+Private history remains excluded from the storage candidate. A disconnected
+native-compound snapshot experiment has static ABI evidence and syntax checks,
+but has not executed or established metadata Undo/Redo.

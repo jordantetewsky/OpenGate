@@ -3,6 +3,8 @@
 #include "colorpalette.h"
 #include "isolatednativeaction.h"
 #include "menuactioncolorswatch.h"
+#include "menuscrollablestylelease.h"
+#include <QSharedPointer>
 namespace Unbound {
 // Present committed categories/swatches in an existing native menu. This owns
 // only its added rows; assignment, commands and native check state live outside.
@@ -18,6 +20,7 @@ class ColorPresetMenu : public QObject {
                  std::function<void(QString)> invoke) {
         if (!menus.contains(menu)) {
             menus.insert(menu, {});
+            menus[menu].scroll = QSharedPointer<MenuScrollableStyleLease>::create(menu);
             connect(menu, &QObject::destroyed, this, [this, menu] { dispose(menus.take(menu)); });
         }
         auto &entry = menus[menu];
@@ -65,6 +68,8 @@ class ColorPresetMenu : public QObject {
         for (auto action : entry.actions)
             if (action)
                 action->setVisible(true);
+        if (!entry.colors.isEmpty())
+            entry.scroll->acquire();
         for (auto it = entry.colors.cbegin(); it != entry.colors.cend(); ++it)
             if (it.value()) {
                 const auto preset = palette.find(it.key());
@@ -74,9 +79,12 @@ class ColorPresetMenu : public QObject {
             }
     }
     void hide(QMenu *menu) {
-        for (auto action : menus.value(menu).actions)
+        const auto entry = menus.value(menu);
+        for (auto action : entry.actions)
             if (action)
                 action->setVisible(false);
+        if (entry.scroll)
+            entry.scroll->release();
     }
 
   private:
@@ -85,9 +93,12 @@ class ColorPresetMenu : public QObject {
         QVector<QPointer<QAction>> actions;
         QHash<QString, QPointer<QAction>> colors;
         std::function<void(QString)> invoke;
+        QSharedPointer<MenuScrollableStyleLease> scroll;
     };
     QHash<QMenu *, Entry> menus;
     static void dispose(const Entry &entry) {
+        if (entry.scroll)
+            entry.scroll->release();
         for (auto action : entry.actions)
             if (action)
                 delete action;

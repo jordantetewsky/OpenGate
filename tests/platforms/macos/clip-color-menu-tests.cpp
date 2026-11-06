@@ -13,6 +13,7 @@
 #include "../../core/workspace-callers/clipcolorpoolfixture.h"
 #include "../../core/workspace-callers/nativepresetfixture.h"
 #include "../../core/colors/presetcommandchecks.h"
+#include "../../core/colors/presetmenuoverflowchecks.h"
 #include "../../core/workspace-callers/isolatednativeactionchecks.h"
 #include <memory>
 using namespace OpenGateTest;
@@ -37,6 +38,7 @@ int main(int argc,char **argv) {
         {"OpenGate - Timeline Clip Color-Preview Red (Temporary)",{QKeySequence(Qt::Key_F6)}},
         {"OpenGate - Media Pool Clip Color-Preview Red (Temporary)",{QKeySequence(Qt::Key_F6)}}}));
     int failures=0;auto check=[&](bool good,const char *why){if(!good){++failures;std::fprintf(stderr,"FAIL: %s\n",why);}};
+    presetMenuOverflowChecks(check,files.path());
     QWidget main;main.setObjectName("UiMainWindow");main.setAttribute(Qt::WA_DontShowOnScreen);main.resize(1300,800);
     QWidget edit(&main);edit.setObjectName("WStackPage_Conform");edit.resize(main.size());edit.show();
     TimelineViewportFixture timeline(&edit);timeline.view->clip->hide();auto clip=new UiTiClipContainer;
