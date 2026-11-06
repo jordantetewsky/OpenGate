@@ -1,5 +1,64 @@
 # Color Manager update flow — November 5, 2026
 
+## Native repair continuation — November 5
+
+Jordan explicitly requires completing persistence, native history/parity, timeline
+tab restoration, project selector behavior and thumbnail paint coverage. Manual
+audio clip colors overriding track color is also a required live regression.
+The installed runtime remains `e9f11fe`; the following source is not installed.
+
+- `339ec78` repairs a verified partial-well primitive. A native monochrome skin
+  identifies its owning clip's exact body palette for that capture; the later
+  partial solid fill uses that identity instead of lowering the size threshold.
+  Preset and RGB routes share the same skin cache. The prior per-capture palette
+  association is cleared on begin. Gold/Blue scratch cases passed 20/20 with zero
+  protected foreground/neighbor differences, and the optimized assembled paint
+  fixture passes. Audio raster rejection is separately bounded and logged; this
+  does not establish manual audio precedence or native thumbnail acceptance.
+- `0dfda7b` adds an opt-in exact-image ARM64 identity inspector. It uses bounded
+  current-task memory copies to validate actual UI/model/proxy ownership, and
+  emits the candidate ID. It neither constructs native proxies nor writes a
+  project. Unsupported platforms/architectures reject explicitly. The focused
+  guard fixture passes; SDK/native equality is still a required runtime result.
+- `5a33d18` records the real native project button's public menu/ownership/input
+  state. A null menu must be distinguished from a failure to show an attached
+  menu; static native code deliberately assigns null when its open-project list
+  contains fewer than two entries. No substitute dropdown or private refresh was
+  implemented. The header fixture passes, without claiming a live selector fix.
+- `06bdefe` extracts native clip selection traversal to TimelineClipSelection.
+  Actual color command call sites now use that resolver and the old private
+  traversal is removed. It owns no assignment, renderer or persistent data.
+  Existing paint/selection regressions pass after extraction.
+- `b921178` fixes broad signal blocking in IsolatedNativeAction. Previously a
+  custom hover blocked all native menus/menubars. The same fixture reproduced
+  four failures for an unrelated native command/lifecycle and now passes all of
+  them. The implementation follows the action's actual associated menu chain,
+  preserves original signal state and restores leases before native Hide
+  handling. This removes the global allWidgets menu-blocking path; it is not yet
+  proof of the reported native project dropdown's cause or repair.
+- `c1933ed` adds an explicitly compiled local probe factory hook. ControlService
+  only wires it; the normal build includes no scratch service. The ignored local
+  service has bounded requests, fresh disposable SDK/project guards, weak model
+  tokens and no polling. It can inspect, select an exact SDK-matched disposable
+  clip, bind/read metadata and test a reversible Qt property round trip. Native
+  history functions are **not compiled** into this candidate. No working-project
+  property writes or private native calls were performed.
+
+The final local test package is staged at
+`build/native-color-disposable-select-20261105/`, runtime `c1933ed`, SHA256
+`e9d464b1088a9be492b3ae56af0b46e682f96b388cb03a9be2344204bb11f761`.
+It includes the declared ignored scratch headers whose hashes were verified
+unchanged across compilation; those inputs are recorded separately from Git
+ancestry. Mac arm64/x86_64 O2 compilation, strict signature, all 25 managed-file
+hashes, exact install/rollback rehearsal and final assembled entry fixture pass.
+The ARM64 property probe is a local test component, not Windows/Intel parity.
+
+Required next acceptance is a controlled Project Manager/disposable-project
+window: compare native and SDK item IDs, verify reversible property writes and
+foreign metadata preservation, then separately review/test actual native
+history/save/DRP before enabling any persistent assignment writer. Native UI/GPU,
+audio track precedence, project dropdown and Windows live acceptance remain open.
+
 ## Installed limited trial — November 5 afternoon
 
 Jordan closed Resolve and authorized installation. Runtime `e9f11fe` is now
