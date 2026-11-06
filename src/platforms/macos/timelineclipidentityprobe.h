@@ -97,6 +97,10 @@ inline Image verifyImage() {
         return {};
     return {true, "exact-image-verified", std::uintptr_t(_dyld_get_image_vmaddr_slide(0))};
 }
+inline bool isSupportedUiObject(QObject *object) {
+    return object && object->inherits("UiTiItem") &&
+           NativeClipIdentity::isSupportedUiClassName(object->metaObject()->className());
+}
 inline QJsonObject inspect(QObject *object) {
     QJsonObject result{{"enabled", true}, {"read_only", true}, {"private_calls", false},
                        {"sdk_equality_verified", false}, {"persistent_identity_verified", false}};
@@ -105,7 +109,7 @@ inline QJsonObject inspect(QObject *object) {
         return result;
     }
     QPointer<QObject> alive = object;
-    if (!alive || QByteArray(object->metaObject()->className()) != "UiTiItem") {
+    if (!alive || !isSupportedUiObject(object)) {
         result["status"] = "unsupported-ui-class";
         return result;
     }

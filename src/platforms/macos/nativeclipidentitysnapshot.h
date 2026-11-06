@@ -2,6 +2,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <string>
@@ -12,6 +13,26 @@ inline constexpr char imageHash[] =
     "801848888e276e40cefcc89011155702ddf67bb6ecfccff4de60ff505685e2a9";
 inline constexpr std::uint64_t imageSize = 511507696;
 using Reader = std::function<bool(std::uintptr_t, void *, std::size_t)>;
+// QObject is the zero-offset base in each evidenced exact-image UI layout.
+// The graphics subobject address points (offset-to-top -0x10) are excluded.
+struct UiLayout { const char *className; std::uintptr_t vtable; };
+inline constexpr UiLayout uiLayouts[] = {
+    {"UiTiItem", 0x11d473c90ULL},
+    {"UiTiAudioClip", 0x11d470d28ULL},
+    {"UiTiVideoClip", 0x11d478770ULL},
+};
+inline bool isSupportedUiClassName(const char *name) {
+    if (!name) return false;
+    for (const auto &layout : uiLayouts)
+        if (std::strcmp(name, layout.className) == 0) return true;
+    return false;
+}
+inline bool isSupportedUiVtable(std::uintptr_t value, std::uintptr_t slide) {
+    for (const auto &layout : uiLayouts)
+        if (slide <= std::numeric_limits<std::uintptr_t>::max() - layout.vtable &&
+            value == slide + layout.vtable) return true;
+    return false;
+}
 struct Snapshot {
     std::string id;
     const char *status = "unavailable";
@@ -32,7 +53,7 @@ inline Snapshot inspect(const Reader &reader, std::uintptr_t object, std::uintpt
     std::uintptr_t uiV = 0, weak = 0, owner = 0, ownerV = 0, proxy = 0, proxyV = 0;
     std::uintptr_t proxyWeak = 0;
     std::uint8_t flags = 1;
-    if (!read(reader, object, 0, uiV) || uiV != slide + 0x11d473c90ULL)
+    if (!read(reader, object, 0, uiV) || !isSupportedUiVtable(uiV, slide))
         return fail("unsupported-ui-vtable");
     if (!read(reader, object, 0xc0, weak) || !read(reader, weak, 0x20, flags) ||
         (flags & 1) || !read(reader, weak, 0, owner) || !owner)

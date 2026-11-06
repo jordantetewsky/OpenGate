@@ -21,11 +21,17 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
     qunsetenv("OPENGATE_CLIP_IDENTITY_PROBE");
     QObject ordinary;
+    assert(isSupportedUiClassName("UiTiItem") && isSupportedUiClassName("UiTiAudioClip") &&
+           isSupportedUiClassName("UiTiVideoClip"));
+    assert(!isSupportedUiClassName(nullptr) && !isSupportedUiClassName("QObject") &&
+           !isSupportedUiClassName("UiTiMedia") && !isSupportedUiClassName("UiTiVideoClipExtra"));
     assert(Unbound::inspectTimelineClipIdentity(&ordinary)["status"] == "disabled");
     assert(Unbound::inspectTimelineClipIdentity(&ordinary, true)["enabled"].toBool());
     qputenv("OPENGATE_CLIP_IDENTITY_PROBE", "1");
     assert(!Unbound::inspectTimelineClipIdentity(&ordinary)["persistent_identity_verified"].toBool());
 #if defined(Q_OS_MAC) && defined(__arm64__)
+    ordinary.setObjectName("UiTiVideoClip");
+    assert(!Unbound::MacTimelineClipIdentity::isSupportedUiObject(&ordinary));
     QJsonObject offThread;
     std::thread worker([&] { offThread = Unbound::inspectTimelineClipIdentity(&ordinary); });
     worker.join();
@@ -99,6 +105,31 @@ int main(int argc, char **argv) {
     };
     auto valid = inspect(reader, ui, slide, [] { return true; });
     assert(valid.valid && valid.id == expected && reads <= 32);
+    // The two actual derived native classes keep the same zero-offset QObject
+    // and inherited+0xc0 owner weak handle. Other/secondary vtables still reject.
+    for (const auto &layout : uiLayouts) {
+        put(ui, slide+layout.vtable);
+        reads=0;
+        const auto derived=inspect(reader, ui, slide, [] { return true; });
+        assert(derived.valid && derived.id==expected && derived.model==owner && reads<=32);
+    }
+    for (const auto vtable : {0x11d471028ULL, 0x11d478a70ULL, 0x11d474e90ULL,
+                              0x11d478771ULL}) {
+        put(ui, slide+vtable);
+        assert(inspect(reader, ui, slide, [] { return true; }).status==
+               std::string("unsupported-ui-vtable"));
+    }
+    assert(!isSupportedUiVtable(0, std::numeric_limits<std::uintptr_t>::max()));
+    put(ui, slide+0x11d478770ULL);
+    int changingReads=0;
+    Reader changingReader=[&](std::uintptr_t p,void *out,std::size_t n) {
+        const bool result=reader(p,out,n);
+        if(p==ui && ++changingReads==1)put(ui,slide+0x11d470d28ULL);
+        return result;
+    };
+    assert(inspect(changingReader, ui, slide, [] { return true; }).status==
+           std::string("identity-changed-during-read"));
+    put(ui, slide+0x11d473c90ULL);
     put(proxy+0x30, weak+8);
     assert(inspect(reader, ui, slide, [] { return true; }).status ==
            std::string("proxy-owner-mismatch"));
