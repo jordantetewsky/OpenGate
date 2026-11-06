@@ -1,5 +1,44 @@
 # Color Manager update flow — November 5, 2026
 
+## Recovery checkpoint and next native gate
+
+After the tool-server restart, source is clean on
+`integration/native-color-repair-20261105`, runtime source `4d743ff`. Installed
+runtime is still `e9f11fe`; no newer installation transaction exists. The final
+local package is `build/native-color-disposable-render-20261105/`, binary SHA256
+`d7e726b3a7b5bb0abd222f0a6f0e5e5370e83f2b1bce344bdfee4fe8c3da97af`.
+Universal O2 build/signature, unchanged declared scratch-source hashes and exact
+installation/rollback rehearsal pass. The added cache/effect inspection fixture
+passes and verifies that the inspected settings and effect ownership are unchanged.
+The assembled entry fixture passed on the preceding production-equivalent entry
+flow; the final addition only records explicit diagnostic facts. The numbered
+entry contract was reread; native clicks/GPU and page/platform acceptance remain
+open. Nothing was merged to main or published.
+
+The native API audit establishes that public TimelineItem.SetClipColor really
+submits a native color action to UiUndoStack. Absence of a public Undo method must
+not be mistaken for absence of native history from SDK color calls. This is the
+first disposable control to test. It does not establish custom metadata history.
+The disconnected private history prototype is unsupported for execution: Boolean
+submission failures must be handled and its void custom callback has no verified
+atomic failure contract. No private history calls are compiled into the package.
+
+Native UI parity scratch tests rule out a per-clip effect for the batched body.
+A viewport prototype succeeds only with the tested uncached paths; native
+CacheBackground/warmed proxy caches prevent interception. Existing cache settings
+were preserved. An isolated earlier nested fixture crash remains unexplained;
+the bounded ASAN run completed without a sanitizer report. No production effect
+hook was installed. The package now captures actual view/proxy/item cache modes,
+viewport native/GL flags and existing effects for the next native decision.
+
+The generated-media disposable property harness is prepared beside that package.
+It requires an empty Project Manager state before creating its owned project,
+checks the exact installed test runtime and SDK IDs, verifies audio/video property
+round trips and restoration, and closes only its owned project. It has not run.
+The last recovery SDK read reports `WK 29 110526` open on Edit. The pending test
+window request remains unanswered; the working project was not closed/switched
+and no native property or history test was performed against it.
+
 ## Native repair continuation — November 5
 
 Jordan explicitly requires completing persistence, native history/parity, timeline
