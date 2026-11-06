@@ -44,6 +44,25 @@ int main(int argc, char **argv) {
     assert(topology["members"].toArray().size() == 64 && topology["truncated"].toBool());
     assert(!topology["persistent_identity_verified"].toBool() &&
            !topology["project_writes"].toBool() && !topology["private_calls"].toBool());
+    {
+        QGraphicsScene outerScene,innerScene;
+        QGraphicsView outer(&outerScene);
+        auto inner=new QGraphicsView(&innerScene);
+        auto proxy=outerScene.addWidget(inner);
+        proxy->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+        inner->setCacheMode(QGraphicsView::CacheBackground);
+        auto effect=new QGraphicsOpacityEffect;
+        inner->viewport()->setGraphicsEffect(effect);
+        const auto state=Unbound::TimelineContentInspection::captureRenderState(inner);
+        const auto ancestors=state["proxy_ancestry"].toArray();
+        assert(state["view_cache_mode"].toInt()==int(QGraphicsView::CacheBackground));
+        assert(ancestors.size()==1 && ancestors[0].toObject()["proxy_cache_mode"].toInt()==
+               int(QGraphicsItem::DeviceCoordinateCache));
+        assert(state["viewport"].toObject()["effect"].toObject()["class"]=="QGraphicsOpacityEffect");
+        assert(inner->cacheMode()==QGraphicsView::CacheBackground &&
+               proxy->cacheMode()==QGraphicsItem::DeviceCoordinateCache &&
+               inner->viewport()->graphicsEffect()==effect);
+    }
     qputenv("OPENGATE_CLIP_IDENTITY_DISPOSABLE_IDS", "another-id");
     assert(Unbound::inspectDisposableClipMetadata(reinterpret_cast<QObject *>(1), "id")["status"] ==
            "requires-disposable-sdk-id-allowlist");

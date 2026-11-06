@@ -3,6 +3,7 @@
 #include <QGraphicsView>
 #include <QGraphicsObject>
 #include <QGraphicsProxyWidget>
+#include <QGraphicsEffect>
 #include <QMetaMethod>
 #include <QMetaProperty>
 #include <QSet>
@@ -16,6 +17,45 @@ namespace Unbound {
 // Metadata getter inspection is separately restricted to disposable SDK IDs.
 class TimelineContentInspection {
 public:
+    // Compact backend/cache facts for native parity experiments. This does not
+    // render widgets, invalidate caches, attach effects or choose an adapter.
+    static QJsonObject captureRenderState(QGraphicsView *view) {
+        QJsonObject result{{"read_only",true},{"exists",view!=nullptr}};
+        if(!view || !qApp || QThread::currentThread()!=qApp->thread())return result;
+        result["class"]=view->metaObject()->className();
+        result["name"]=view->objectName();
+        result["view_cache_mode"]=int(view->cacheMode());
+        result["viewport_update_mode"]=int(view->viewportUpdateMode());
+        result["device_pixel_ratio"]=view->devicePixelRatioF();
+        result["view_effect"]=effectState(view->graphicsEffect());
+        if(auto viewport=view->viewport())
+            result["viewport"]=QJsonObject{{"class",viewport->metaObject()->className()},
+                {"native",viewport->testAttribute(Qt::WA_NativeWindow)},
+                {"paint_on_screen",viewport->testAttribute(Qt::WA_PaintOnScreen)},
+                {"open_gl_widget",viewport->inherits("QOpenGLWidget")},
+                {"legacy_gl_widget",viewport->inherits("QGLWidget")},
+                {"effect",effectState(viewport->graphicsEffect())}};
+        QJsonArray ancestry;QSet<QGraphicsView *> visited;
+        auto surface=view;bool truncated=false;
+        for(int depth=0;surface; ++depth) {
+            if(depth>=16 || visited.contains(surface)){truncated=true;break;}
+            visited.insert(surface);
+            auto host=static_cast<QWidget *>(surface);
+            while(host && !host->graphicsProxyWidget())host=host->parentWidget();
+            if(!host)break;
+            auto proxy=host->graphicsProxyWidget();
+            const auto parents=proxy->scene()?proxy->scene()->views():QList<QGraphicsView *>{};
+            ancestry.append(QJsonObject{{"proxy_cache_mode",int(proxy->cacheMode())},
+                {"proxy_effect",effectState(proxy->graphicsEffect())},
+                {"host_class",host->metaObject()->className()},
+                {"host_effect",effectState(host->graphicsEffect())},
+                {"scene_view_count",parents.size()}});
+            if(parents.size()!=1){truncated=true;break;}
+            surface=parents.first();
+        }
+        result["proxy_ancestry"]=ancestry;result["ancestry_truncated"]=truncated;
+        return result;
+    }
     static QJsonObject captureClipMembers(QGraphicsObject *container, bool inspectNativeIdentity = false) {
         const bool gui = qApp && QThread::currentThread() == qApp->thread();
         QJsonObject result{{"read_only", true}, {"gui_thread", gui},
@@ -34,7 +74,9 @@ public:
                                {"graphics_parent", QString::number(quintptr(item->parentItem()), 16)},
                                {"scene", QString::number(quintptr(item->scene()), 16)},
                                {"to_graphics_object", item->toGraphicsObject() != nullptr},
-                               {"qobject_cross_cast", object != nullptr}};
+                               {"qobject_cross_cast", object != nullptr},
+                               {"graphics_cache_mode",int(item->cacheMode())},
+                               {"graphics_effect",effectState(item->graphicsEffect())}};
             if (object) {
                 QPointer<QObject> alive = object;
                 member["qobject"] = QString::number(quintptr(object), 16);
@@ -98,6 +140,11 @@ public:
         return {{"views",views},{"truncated",!pending.isEmpty()||itemsLeft==0},{"read_only",true}};
     }
 private:
+    static QJsonObject effectState(QGraphicsEffect *effect) {
+        return effect ? QJsonObject{{"present",true},{"class",effect->metaObject()->className()},
+                                    {"enabled",effect->isEnabled()}}
+                      : QJsonObject{{"present",false}};
+    }
     static QJsonArray rectangle(const QRectF &rect) {return {rect.x(),rect.y(),rect.width(),rect.height()};}
     static QJsonObject interface(QObject *object) {
         QJsonArray classes,methods,properties;
