@@ -2,6 +2,63 @@
 
 ## Recovery checkpoint and next native gate
 
+### November 6 live continuation
+
+Runtime `4d743ff` is installed, transaction
+`75C34AC4-D42A-4349-B9E9-FD05994B0CBC`; all 25 managed payload hashes were
+verified. The receipt is in
+`build/native-color-disposable-render-20261105/closed-install-20261105-214604/`.
+Protected-settings verification happened after Jordan reopened and tested:
+`UI.preset`, `activedb.conf`, `recentprojects.conf`, `config.user.xml` and
+`dblist.conf` differed, as did the trial profile's `Workspace.json`. Those live
+changes were preserved, with a second profile snapshot. Do not describe this
+installation as a 197-file unchanged-settings verification.
+
+The first owned disposable property test stopped at media import. The documented
+`ImportMedia([{'FilePath': path}])` call returned `None`; the harness's `len(None)`
+then masked that failure. Its receipt confirms that only the owned project was
+closed. No clip identity/property round trip, custom metadata history, save/reopen
+assignment or DRP acceptance was established. The generated media decodes
+offline. The replacement test must record the import phase explicitly and run
+mailbox waits outside a connector SDK script; it must preserve the original
+failure separately from cleanup failures and retain the existing ownership gate.
+
+Jordan supplied a working native dropdown baseline with two loaded projects:
+`second test` opens a menu containing `New Project 1`. Jordan reports that entering
+OpenGate and returning to Original Resolve UI stops that previously working menu.
+This is a transition regression, not evidence of an invalid single-project test.
+Read-only inspection found a native `fileSwitchProject` menu attached with two
+entries and unblocked button/menu signals; it does not establish that real mouse
+input or popup presentation survives the transition. On November 6 Jordan
+explicitly lowered this issue's priority. Keep the regression open; stop the live
+dropdown investigation and prioritize color persistence, audio clip precedence
+and thumbnail paint coverage.
+
+The recorded 226×228 palette rejection has a transparent center and is correlated
+with the preceding `UiTiVideoClip` member receipt. It is not an audio body receipt.
+Do not relax transparent-skin rejection or claim it explains audio precedence.
+
+The replacement external phased runner passes five offline guard/phase tests.
+Its November 6 read-only run connected through Resolve's bundled Python in
+18 ms and verified the installed `4d743ff` binary and declared scratch inputs.
+Receipt: `build/native-color-disposable-render-20261105/phases-20261106-075640-2f9b7e/receipt.json`.
+It found Jordan's `WK 29 110526` project open and recorded zero project mutations
+and zero property-write requests. Full testing remains gated on Project Manager;
+the working project was not closed or switched. Loaded-dylib identity, actual
+SDK/native UUID equality and property/history acceptance are not established by
+this read-only result.
+
+Priority is now the end-to-end assignment foundation: actual clip identity and
+reversible metadata access, then project save/reopen and DRP storage, native
+history, and an OpenGate → stock Resolve save/export → OpenGate return. The last
+flow must preserve embedded definitions/assignments and a usable native fallback,
+and respect native recipient edits. Passing a reversible property test alone
+does not close persistence or handoff. Editor/paint polish and dropdown work must
+not substitute for this acceptance.
+
+The paragraphs below are retained checkpoints; their pre-install state is
+historical. Project assignments remain temporary despite the newer installation.
+
 After the tool-server restart, source is clean on
 `integration/native-color-repair-20261105`, runtime source `4d743ff`. Installed
 runtime is still `e9f11fe`; no newer installation transaction exists. The final
