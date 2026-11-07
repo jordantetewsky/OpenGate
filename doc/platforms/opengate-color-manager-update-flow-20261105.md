@@ -2,6 +2,24 @@
 
 ## Recovery checkpoint and next native gate
 
+### November 7 native Undo/abort result and next candidate
+
+The guarded actual tests have now run. The native compound alone fails custom
+metadata Undo and abort: A does not return; B remains. Native abort does restore
+Orange to Blue. Both disposable projects close, and no working project is
+changed. Exact receipts, corrected interpretation and the isolated explicit-key
+history/erase candidate are recorded at the top of `macos-clip-color-metadata.md`.
+
+Current installation remains `070ce9f`/`af8c6477...` below. Normal UI assignments
+are still temporary. The explicit-action candidate is source/guard-fixture only
+until its build and installation receipts exist. Native failure propagation,
+callback release on close, view/model lifetime, ordinary command integration,
+project rebind, paint parity and platform/version gates are not complete.
+The numbered Native entry flow was reread before this candidate; existing actual
+entrypoint/evidence/gap mapping below remains unchanged, with no deliberate flow
+departure. No production state owner, paint path or ordinary command is changed
+by this native-history diagnostic. No merge, push or publication.
+
 ### November 7 corrected diagnostic installed
 
 The corrected history-action helper is now installed from clean source `070ce9f`:

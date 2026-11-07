@@ -1,5 +1,55 @@
 # Custom hue metadata probe
 
+## November 7 actual history result
+
+The corrected helper reaches genuine native `editUndo` in Resolve (1,405 menus
+observed; unique enabled native action). The same-Blue-fallback compound commits
+paint B, but Undo leaves B rather than restoring A. Separate immediate abort
+restores native Orange to Blue, but likewise leaves B. Thus the tested implicit
+metadata-snapshot route does **not** meet native history requirements. In the
+Undo case Blue was both start/end, so its unchanged value alone is not proof of
+a fallback restoration. Both owned projects close successfully; working projects
+remain untouched. Receipts under
+`build/native-color-canonical-history-v2-20261107/`:
+
+- `phases-20261107-101843-46b3b4/receipt.json`, SHA256
+  `b93f0f74d008a9ac1a150e6845a8c76e2353d81021dfcff993c014f021fb1411`.
+- `phases-20261107-101938-4325b1/receipt.json`, SHA256
+  `d34599110f8da79c27a317834276ba0241f5a0ea35f2012d67f6d83a38644857`.
+
+The first run also proves a stale expected-payload hash rejects the write and
+preserves A. No Redo/custom history acceptance follows from this failed Undo.
+The prior save/reopen/DRP carrier result below remains valid.
+
+A new isolated explicit-action prototype is prepared in
+`build/native-color-explicit-history-20261107/`. Its native action owns the A/B
+key state; a separate request-local scope owns the native compound; the service
+only routes. It uses the genuine native UiCustomAction ctor/shared-handle
+lifetime, not copied/patched vtables or a second Undo stack. Independent static
+review verifies native allocation, copied callable ABI, reference ownership,
+target notification/finalizer and pre-adoption deleting destructor. Optimized
+offline guards verify callable copy/destruction counts and no-write rejection of
+invalid bindings. No explicit action has executed yet.
+
+UiCustomAction invokes a void callback and then returns true. The prototype
+therefore latches callback failures separately and discards an owned fixture on
+failure; **native failure propagation is not proved** and normal commands remain
+disconnected. The supported Mac loader retains both bootstrap/helper dlopen
+references for process lifetime. Callback instance counts on actual project close
+must still be checked; model lifetime and view recreation remain separate gates.
+No Windows native-action ABI is accepted.
+
+To restore an originally absent override, a bounded static audit identifies:
+mutable main-map getter `100126394`, single-key erase `100e73360` (map argument is
+getter-result+8, scalar 0/1), and native changed notifier `1001260bc`. The notifier
+matches the setter's clock/owner flags0x300 tail. No raw field/tree patch is used.
+Erase-plus-notification, exact absence versus present-empty, foreign-key
+preservation, save/reopen/DRP and first-assignment Undo/Redo need actual tests
+before this erase path or explicit history is accepted. Evidence manifests are
+under `timeline-content-candidate/build/rea-clip-colors/native-color-transaction-20261105/disposable-bridge/abi-audit/`:
+`explicit-action-ownership-review-20261107`, `custom-action-failure-boundary-20261107`
+and `canonical-key-erase-20261107`.
+
 ## Current per-instance storage gate — November 6, 2026
 
 ### November 7 native compound checkpoint
