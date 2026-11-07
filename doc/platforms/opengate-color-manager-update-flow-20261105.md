@@ -2,6 +2,36 @@
 
 ## Recovery checkpoint and next native gate
 
+### November 7 current checkpoint
+
+Current installed diagnostic: source `c4afa36`, universal O2 binary SHA256
+`0dac45d1cfec5ea83b94d75b6652021be81be008b7603eb1168ad26bc9596772`, transaction
+`27E44D2A-2B78-4C7D-BD46-9A8671219740`. All 25 managed file hashes/signature
+verify. **Post-install protected-settings verification is not established for
+this installation:** Resolve was already running when the closed-session check
+ran, and it correctly refused. An initially generated receipt incorrectly copied
+the pre-capture count as verified; that claim was removed from the receipt.
+The original 203-file capture and previous installed checkpoint remain preserved.
+
+The explicit native compound experiment is compiled; normal assignment writes
+remain disconnected. Actual lookup, key comparison/write and same-Blue-fallback
+compound commit pass on an owned generated-audio fixture. The next Undo step
+stops in the test helper's native-action lookup before sending an Undo command.
+See `macos-clip-color-metadata.md` for the exact receipt and limits. The owned
+project closes; a subsequent abort fixture refuses an editing project before
+any import/write. Jordan confirms the ordinary UI paints still do not persist;
+that requirement is open and has not been claimed implemented.
+
+A corrected menu lookup is prepared in isolated
+`build/native-color-canonical-history-v2-20261107`, with optimized contextual-label,
+600-menu and action-identity guards. No production behavior is changed by this
+helper repair. Existing native entry contract mapping/gaps remain unchanged;
+there is no deliberate flow departure. Native custom Undo/Redo, abort and normal
+saved assignment/rebinding are the next gates. Windows/Intel native private APIs,
+Native paint parity and complete live acceptance remain open. No merge or push.
+
+The paragraphs below are prior checkpoints, superseded by this current status.
+
 ### November 6 live continuation
 
 Evening checkpoint: actual canonical storage now passes in an owned audio

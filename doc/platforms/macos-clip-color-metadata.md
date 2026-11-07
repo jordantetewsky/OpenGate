@@ -2,6 +2,31 @@
 
 ## Current per-instance storage gate — November 6, 2026
 
+### November 7 native compound checkpoint
+
+Actual key lookup now passes absent/present controls and exact payload hashes on
+one owned audio instance. The key-specific compare/write path preserves a second
+unrelated native parameter. A real native compound submits Orange, updates paint
+A to B, then returns to the same Blue fallback. Both native color calls return
+true, commit/destructor complete, and post-commit readback contains exact paint B
+with the unrelated parameter intact. Receipt:
+`build/native-color-canonical-history-20261106/phases-20261107-001232-e64396/receipt.json`,
+SHA256 `605c55031aaf3d6ca1a9343854c4e1430a228ad2b80be683c61b904021bc3e45`.
+
+The run stops **before any Undo trigger**: its menu lookup returns no candidate.
+Custom Undo/Redo and abort are therefore still untested, not disproved. The owned
+project closes successfully. A separate abort attempt then refuses an editing
+project before any import/write; it leaves that project untouched. Normal UI
+assignments remain temporary and do not use the saved carrier.
+
+The next isolated stage uses the previously observed exact native action IDs
+`editUndo`/`editRedo`, independent of contextual display labels and menu ordering.
+Its optimized menu fixture covers 600 menus, alias deduplication, changing labels,
+stale expected text, disabled and ambiguous actions. Six external-coordinator
+checks and five codec tests pass offline, including raw/Zstd semantic equality,
+map-order variation, every truncation, duplicate pairs and the actual saved
+canonical receipt. These are test-helper results, not custom history acceptance.
+
 ### Evening native result: canonical backing carrier passes
 
 The live `ImportExportMetadataBA` Qt write route below is disproved as the editing
@@ -39,9 +64,8 @@ hash equality. The bounded fixture decoder preserves unsupported-field bytes and
 rejects malformed/truncated input; it is not yet a production decoder.
 
 Native key lookup `10012649c` has been identified statically: it returns a borrowed
-BtString pointer, with one static miss object at `slide+11d8a4af0`. Lookup still
-needs its own live validation before use as an existence/value guard. The current
-write fixture uses freshly generated keys with external decoded-baseline checks;
+BtString pointer, with one static miss object at `slide+11d8a4af0`. The first canonical
+write fixture used freshly generated keys with external decoded-baseline checks;
 its raw `before.contains(key)` check cannot prove absence under compression and
 must not be promoted as a production no-overwrite contract. Raw serialized hashes
 also cannot serve as stable revisions for multi-key records. The next native

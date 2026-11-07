@@ -1,3 +1,15 @@
+## November 7 current color gate
+
+Canonical per-instance save/reopen and DRP reimport pass in an owned audio
+fixture; ordinary UI assignments still do not use that carrier and still lose
+paint. Native key lookup/compare/write and a same-fallback compound commit now
+pass. The first custom Undo step stops before invocation because of test menu
+lookup, so custom Undo/Redo and abort remain unaccepted. The next helper repair
+is isolated; active editing projects are refused before import/write. Current
+installation, settings-verification limit, receipts and next gates are recorded
+in [the color update checkpoint](opengate-color-manager-update-flow-20261105.md).
+No user-flow completion, platform parity, merge or publication is claimed.
+
 ## Native Color Manager development — November 3, 2026
 
 November 5 source/fixture follow-up: visible Update/Revert, committed-swatch
