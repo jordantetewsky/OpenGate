@@ -691,3 +691,33 @@ checklist. A fresh Resolve process is required to load it; no user editing proje
 will be closed/switched by the coordinator. Closed-session state capture and
 verification must finish before reopening, so later user activity cannot be
 misreported as an installer settings change.
+
+### Next isolated native history gate — November 6
+
+Canonical storage and stock native QAction history now have separate positive
+receipts in `macos-clip-color-metadata.md`. Normal color assignment remains
+unconnected. The next local diagnostic stage is
+`build/native-color-canonical-history-20261106`: a focused canonical-key helper
+owns native string lifetimes and key-specific compare/write; a separate compound
+helper submits native color events around the metadata change; the existing
+mailbox only routes explicitly owned requests. It replaces the earlier raw
+serialized-hash/substring write guard in this experiment, because native map
+ordering and compression do not provide stable content identity.
+
+The compiled guard fixture passes without GUI/model/private execution. The shared
+external coordinator's default still excludes private history; an overridable
+compiled-flag validator lets this explicitly reviewed experiment require it.
+Five existing offline ownership/coordinator checks pass. No production module or
+normal command writer changes are included. No custom callback or native vtable
+replacement is retained by Resolve.
+
+Planned actual gate: fresh generated audio instance, absent/present key lookup,
+unrelated canonical parameter, paint A -> paint B with the same Blue fallback,
+real native Undo/Redo, aborted paint C, and an adjacent ordinary native color edit.
+Abort readback has no manual compensating metadata write. A failure must be
+reported as a native transaction gap, not hidden by repairing the test state.
+The numbered Native entry contract was reread; its entrypoints/evidence/gaps in
+the table above remain unchanged. This diagnostic introduces no deliberate entry
+flow departure. Windows, Intel-native private APIs, normal paint restoration and
+assembled user acceptance remain open. Best installations and user profiles are
+preserved; a fresh empty/owned session is required before installation/testing.
