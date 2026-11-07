@@ -2,6 +2,33 @@
 
 ## Recovery checkpoint and next native gate
 
+### November 7 corrected diagnostic installed
+
+The corrected history-action helper is now installed from clean source `070ce9f`:
+universal O2 binary SHA256
+`af8c64770f007094ab4e6e73aa12ded7139741b956c9f9378a6316143e88d07f`, transaction
+`B79BC19A-7845-4710-9EC6-7453BD708478`. All 25 installed hashes/signature verify,
+and all 203 protected files verify unchanged **while Resolve is closed, before
+reopening**. The exact previous installation is retained. Stage:
+`build/native-color-canonical-history-v2-20261107/`.
+
+The corrected native run refuses before import/mutation because an editing
+project is loaded. A separate read-only observation identifies `WK 29 110526`
+with 173 timelines; no close/switch/write is attempted on it. Receipt:
+`phases-20261107-002624-90fd73/receipt.json`; summary `current-native-gate.json`.
+An empty session is required to continue. Merely showing Project Manager does
+not establish that no editing project remains loaded.
+
+**Normal UI assignments are still temporary.** The new diagnostic is not the
+finished saved-paint flow. Custom native Undo/Redo and abort remain unaccepted;
+canonical storage/key lookup and same-fallback commit retain the narrower actual
+results below. Production code boundaries are unchanged: palette, local drafts,
+view bindings and paint caches have no added state writer. In the experiment,
+the canonical-key adapter replaces the old serialized-hash/substring write route;
+the service only routes to key/history helpers. Optimized menu/serialization
+fixtures, the install/rollback rehearsal and the actual installed-file review are
+separate from native acceptance. No merge, push or publication.
+
 ### November 7 current checkpoint
 
 Current installed diagnostic: source `c4afa36`, universal O2 binary SHA256
