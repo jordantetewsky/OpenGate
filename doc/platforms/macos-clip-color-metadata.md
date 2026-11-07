@@ -2,6 +2,54 @@
 
 ## Current per-instance storage gate — November 6, 2026
 
+### Evening native result: canonical backing carrier passes
+
+The live `ImportExportMetadataBA` Qt write route below is disproved as the editing
+path: it reads back in memory but is absent from the native saved export. Its
+serialization shadow is distinct from the canonical editable record.
+
+An owned generated-audio test now passes actual insertion, save/close/reopen and
+native DRP export/import through `Sm2TiItemLockableBlob`'s `BtMediaMetadata`
+container. The full JSON paint payload, an unrelated canonical test key, legacy
+metadata fixture entries and native Blue fallback survive. Native clip UUIDs
+change on DRP import; the payload remains on the correct remapped instance via
+its native backing-record owner. No marker carrier or archive patching is used
+for the live writes. Receipt:
+`build/native-color-canonical-write-20261106/phases-20261106-211520-9094b3/receipt.json`,
+SHA256 `5a7a7ba4fa894d69a805a365c2708ba6ba7ccf434f99d543a1d69f07dbd13cef`.
+
+Actual native-menu `editUndo` and `editRedo` also pass the separate stock-color
+Blue/Purple control. Receipt:
+`build/native-color-canonical-write-20261106/phases-20261106-205353-6276d1/receipt.json`.
+This is **not** custom-metadata Undo/Redo acceptance. Normal palette commands do
+not yet use the canonical writer; automatic paint restoration, custom history,
+video instances, native recipient edits, plugin-absent handoff and platform/
+version parity remain open. The carrier is an exact-image experimental native
+API path, not an established public extension contract.
+
+Native `FieldsBlob` contains a QDataStream map with `BlobData`, then a version
+10001 envelope. Its `0x80` raw / `0x81` Zstd marker is outside protobuf data.
+Therefore the observed raw color tag is field **5**, not the earlier tentative
+field640 interpretation that included the marker. Canonical metadata is outer
+field3 containing a version1000001 envelope; named pairs use metadata field3,
+with key/value fields1/2. Multiple named-pair ordering can vary between native
+serializations, changing compression bytes without changing state. Compare exact
+decoded keys/values and all other observed native fields, rather than raw archive
+hash equality. The bounded fixture decoder preserves unsupported-field bytes and
+rejects malformed/truncated input; it is not yet a production decoder.
+
+Native key lookup `10012649c` has been identified statically: it returns a borrowed
+BtString pointer, with one static miss object at `slide+11d8a4af0`. Lookup still
+needs its own live validation before use as an existence/value guard. The current
+write fixture uses freshly generated keys with external decoded-baseline checks;
+its raw `before.contains(key)` check cannot prove absence under compression and
+must not be promoted as a production no-overwrite contract. Raw serialized hashes
+also cannot serve as stable revisions for multi-key records. The next native
+gate is atomic A/B metadata and fallback restoration through real Undo/Redo,
+including same-fallback changes and abort behavior.
+
+The remaining paragraphs record the earlier investigations and their limits.
+
 Jordan clarified that marker custom-data was an analogy for another hidden field:
 **do not create hidden or visible marker carriers**. The saved record should hold
 the current assignment and exact paint/fallback information; native history must

@@ -2336,3 +2336,19 @@ returning non-OpenGate handoff remain open. Do not relabel import-time metadata
 survival or reversible property access as those acceptance results. Offline work
 may continue while Jordan edits; any further native writer test requires an
 empty Project Manager state and a separately verified canonical backing path.
+
+### November 6 evening: canonical storage foundation established
+
+Controlled native audio test passes full payload insertion/save/reopen and DRP
+export/import on the remapped clip instance, preserving the unrelated test entry
+and native fallback. No markers or live archive patches. Separate actual native
+menu stock Undo/Redo control passes. The exact receipts and experimental native
+API/schema limits are in `macos-clip-color-metadata.md` and the update-flow ledger.
+
+Installed local binary `0078430a...` (source `f1f802e`) is verified under transaction
+`987A6579-239F-41D6-832C-32323491738A`; all 25 managed files/signature and 203
+protected files unchanged before launch verify. No automatic assignment writer,
+private history calls, main merge or publication. Custom metadata native Undo/
+Redo, abort, normal command integration, timeline-tab restoration/paint, recipient
+changes and platform/version parity are still acceptance gates. A storage fixture
+pass is not a complete color-feature install.

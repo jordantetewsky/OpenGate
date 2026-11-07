@@ -4,6 +4,38 @@
 
 ### November 6 live continuation
 
+Evening checkpoint: actual canonical storage now passes in an owned audio
+fixture. Exact decoded paint JSON and an unrelated canonical fixture entry
+survive save/reopen and native DRP reimport with regenerated clip IDs; existing
+legacy test entries/native fallback remain intact. Receipt
+`build/native-color-canonical-write-20261106/phases-20261106-211520-9094b3/receipt.json`.
+Separate native-menu stock Undo/Redo passes in
+`phases-20261106-205353-6276d1/receipt.json`. Neither result means custom metadata
+history or normal palette-command persistence is implemented.
+
+Current installed binary is `0078430aef6fadaa180e8f1754859fdd422357d25417f077e6be4ff5efce6f27`
+at source `f1f802e`, transaction `987A6579-239F-41D6-832C-32323491738A`.
+All 25 managed hashes/signature verify; all 203 protected files were unchanged
+before reopening. This supersedes the earlier evening read-probe binary
+`219655f4...`/transaction `A7BCBEF5-AF94-49DE-BEA5-4E67DDC9A1A0` and the
+`1083901` checkpoint below. Personal palette/drafts and original DRP remain intact.
+
+The local candidate compiles an explicitly requested disposable canonical-key
+writer; it performs no automatic assignment writes. Private native history calls
+remain excluded. Native temporary construction, key insertion and exact-instance
+binding now have runtime evidence, while key lookup is still static-only. The
+fixture module boundaries remain separate: target/record inspection, BtString/
+canonical-key API adaptation, native menu history control and mailbox routing.
+No new production assignment owner or command path has been enabled. Windows/
+Intel/version and actual painting acceptance remain open.
+
+Two diagnostic-only failures were corrected without changing native write code:
+compressed contents require the native Zstd envelope decoder, and protobuf map
+pair ordering makes serialized byte equality unstable. The corrected acceptance
+compares exact decoded key/value bytes, the unrelated entry and native fields;
+it does not accept a mere hash change. Details/schema correction and remaining
+history/absence guards: `macos-clip-color-metadata.md`.
+
 Latest installed runtime is now `1083901`, binary SHA256
 `20dd788f5b123f3f90647c312f17961cc9a7732c26dd8fa22761d5c3dd642083`,
 transaction `944C9BF2-FBE5-4EA6-B287-E9F364F66986`. All 25 managed hashes and
