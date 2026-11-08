@@ -43,9 +43,15 @@ public:
     struct Door{QString id,title;std::function<bool()> shown;std::function<void()> toggle;std::function<void(QPoint)> drag={};};
     explicit ToolbarDoors(QObject *owner):QObject(owner){timer.setSingleShot(true);timer.setInterval(50);connect(&timer,&QTimer::timeout,this,[this]{fit();});qApp->installEventFilter(this);}
     ~ToolbarDoors()override{qApp->removeEventFilter(this);for(auto strip:strips)if(strip)delete strip;}
+    void abandonForQuit(){
+        stopped=true;timer.stop();qApp->removeEventFilter(this);
+        for(auto strip:strips)if(strip)for(auto button:strip->findChildren<QToolButton *>())
+            if(auto native=dynamic_cast<NativeUndockButton *>(button))native->drag={};
+        doors.clear();strips.clear();
+    }
     void add(Door door){doors.append(std::move(door));}
     void wire(QWidget *surface){
-        if(!surface)return;
+        if(stopped || !surface)return;
         for(auto row:surface->findChildren<QWidget *>())if(row->objectName().startsWith("frameEditTopBarLeft")&&row->layout()){
             QWidget *strip=nullptr;
             for(auto existing:strips)if(existing && existing->property("openGateNativeToolbarRow").value<QObject *>()==row){strip=existing;break;}
@@ -58,11 +64,11 @@ public:
                     auto button=new NativeUndockButton(controls);button->drag=door.drag;button->setObjectName("openGateToolbarDoor_"+door.id);button->setText(door.title);
                     button->setIcon(QIcon(new DoorGlyph(door.id)));button->setIconSize(QSize(18,18));button->setAutoRaise(true);button->setCheckable(true);button->setFocusPolicy(Qt::NoFocus);
                     button->setToolTip("Show or hide "+door.title+" in its remembered location"+(door.drag?QStringLiteral("; drag to move"):QString()));button->setAccessibleName(door.title);layout->addWidget(button);
-                    connect(button,&QToolButton::clicked,this,[this,door]{QTimer::singleShot(0,this,[door]{logEvent("toolbar.panel-door",{{"panel",door.id}});if(door.toggle)door.toggle();});});
+                    connect(button,&QToolButton::clicked,this,[this,door]{QTimer::singleShot(0,this,[this,door]{if(stopped)return;logEvent("toolbar.panel-door",{{"panel",door.id}});if(door.toggle)door.toggle();});});
                 }
                 auto more=new QToolButton(controls);more->setObjectName("openGateToolbarOverflow");more->setText(QString::fromUtf8("⋯"));more->setToolTip("More OpenGate panels");more->setAccessibleName(more->toolTip());more->setAutoRaise(true);more->setPopupMode(QToolButton::InstantPopup);
                 auto menu=new QMenu(more);menu->setProperty("unboundOwnMenu",true);more->setMenu(menu);
-                for(const auto &door:doors){auto action=menu->addAction(door.title);action->setCheckable(true);connect(action,&QAction::triggered,this,[this,door]{QTimer::singleShot(0,this,[door]{if(door.toggle)door.toggle();});});}
+                for(const auto &door:doors){auto action=menu->addAction(door.title);action->setCheckable(true);connect(action,&QAction::triggered,this,[this,door]{QTimer::singleShot(0,this,[this,door]{if(!stopped && door.toggle)door.toggle();});});}
                 layout->addWidget(more);
                 // Resolve bounds its native left button row to the native buttons.
                 // Reuse the adjacent slot in that same toolbar's box layout;
@@ -86,8 +92,8 @@ protected:
         }return false;
     }
 private:
-    void schedule(){if(!timer.isActive())timer.start();}
-    void fit(){for(auto strip:strips)if(strip){
+    void schedule(){if(!stopped && !timer.isActive())timer.start();}
+    void fit(){if(stopped)return;for(auto strip:strips)if(strip){
         auto row=strip->parentWidget();int start=0;
         for(int i=0;i<row->layout()->count();++i){auto item=row->layout()->itemAt(i);auto widget=item->widget();if(widget&&widget!=strip&&widget->isVisible()&&widget->geometry().right()<strip->geometry().left())start=qMax(start,widget->geometry().right()+1+row->layout()->spacing());}
         // Use the accessory's actual slot, not the ideal position inferred
@@ -115,6 +121,6 @@ private:
                 {"controls_width",controls->width()},{"controls_visible",controls->isVisible()}});
         }
     }}
-    QList<Door> doors;QList<QPointer<QWidget>> strips;QTimer timer;
+    QList<Door> doors;QList<QPointer<QWidget>> strips;QTimer timer;bool stopped=false;
 };
 }

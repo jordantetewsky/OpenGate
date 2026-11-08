@@ -34,13 +34,19 @@ public:
         for (auto host:known) if (host) setNativeHeaderMenu(host,false,{});
         delete primaryButton.data();
     }
+    void abandonForQuit() {
+        stopped=true; timer.stop(); projectWatch.stop(); qApp->removeEventFilter(this);
+        known.clear(); primaryButton=nullptr; projectLabel=nullptr; panels.clear();
+        primary={}; projectSurface={}; primaryHeader={}; panelEntries={}; surfaceControls={}; windows={};
+    }
     void add(Panel panel) { panels.append(std::move(panel)); }
     std::function<QWidget *()> primary,projectSurface,primaryHeader;
     std::function<void(QMenu *)> panelEntries;
     std::function<void(QMenu *,QWidget *)> surfaceControls;
     std::function<QList<Window>()> windows;
-    void schedule() { if (!timer.isActive()) timer.start(); }
+    void schedule() { if (!stopped && !timer.isActive()) timer.start(); }
     void populate(QMenu *menu,QWidget *host) {
+        if(stopped)return;
         menu->clear();
         if(panelEntries)panelEntries(menu);
         else for(const auto &panel:panels) {
@@ -79,6 +85,7 @@ private:
         return projectLabel ? projectLabel->property("text").toString().trimmed() : QString();
     }
     void refresh() {
+        if(stopped)return;
         const auto project=projectName();
         if (!projectScanned || project!=lastProject) logEvent("header.project.source",{{"resolved",!project.isEmpty()},{"source",widgetState(projectLabel)}});
         projectScanned=true;lastProject=project;QSet<QWidget *> current;
@@ -101,7 +108,7 @@ private:
             // Native title-bar layout reserves space; never overlay panel input.
             QPointer<WorkspaceHeaders> alive(this);QPointer<QWidget> window(host);
             setNativeHeaderMenu(host,true,[alive,window] {
-                if (!alive || !window || QApplication::activeModalWidget()) return;
+                if (!alive || alive->stopped || !window || QApplication::activeModalWidget()) return;
                 auto menu=window->findChild<QMenu *>("openGateWindowPanels",Qt::FindDirectChildrenOnly);
                 if (!menu) { menu=new QMenu(window);menu->setObjectName("openGateWindowPanels");menu->setProperty("unboundOwnMenu",true); }
                 alive->populate(menu,window);menu->popup(window->mapToGlobal(QPoint(qMax(0,window->width()-240),0)));
@@ -114,6 +121,6 @@ private:
     QList<Panel> panels;QList<QPointer<QWidget>> known;QPointer<QWidget> projectLabel;
     QPointer<QToolButton> primaryButton;
     NativeProjectSelectorInspection *projectInspection=nullptr;
-    QString lastProject;QTimer timer,projectWatch;bool projectScanned=false;
+    QString lastProject;QTimer timer,projectWatch;bool projectScanned=false,stopped=false;
 };
 }

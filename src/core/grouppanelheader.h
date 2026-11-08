@@ -34,6 +34,7 @@ public:
     ~GroupPanelHeader() override { nativeHeader.restore();park(); }
     void abandonForQuit() {
         nativeHeader.abandonForQuit(); detachAction={}; hideAction={}; extrasAction={};
+        if(button)button->drag={};
         tabs=nullptr; controls=nullptr; bar=nullptr;
     }
     void borrowNativeHeader(QWidget *surface,const QString &id){nativeHeader.acquire(surface,id);}

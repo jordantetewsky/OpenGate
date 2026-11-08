@@ -552,7 +552,7 @@ public:
         nativeNavigation->scanActions(Unbound::resolveMainWindow());
         qApp->installEventFilter(this);
         installEventFilter(this);
-        connect(qApp, &QCoreApplication::aboutToQuit, this, [this] { shutdown(); });
+        connect(qApp, &QCoreApplication::aboutToQuit, this, [this] { shutdown(true); });
         connect(qApp, &QGuiApplication::screenRemoved, this, [this] { keepGripsReachable(); });
         auto watchScreen = [this](QScreen *screen) {
             connect(screen, &QScreen::availableGeometryChanged, this, [this] { if (constrain->isChecked()) keepGripsReachable(); });
@@ -1227,16 +1227,20 @@ private:
         source.main=Unbound::resolveMainWindow(); source.mainPlacement=&mainPlacementRecord;
         return source;
     }
-    void save(bool retainSelection=false)
+    Unbound::WorkspacePersistence::Result persistWorkspace(bool retainSelection,bool applicationQuit=false)
     {
-        if (quitting) return;
         Unbound::WorkspaceSnapshot options;
         options.pinControls=pin->isChecked(); options.hideBackground=background->isChecked();
         options.selected=presets->currentData().toString(); options.chrome=style->currentIndex();
         options.panelHierarchy=hierarchyOption->isChecked(); options.snapWindows=snap->isChecked();
         options.keepOnScreen=constrain->isChecked(); options.controls=geometry();
-        const auto result=persistence.save({quitting,workspaceRestore && workspaceRestore->savingBlocked(),
+        return persistence.save({quitting && !applicationQuit,workspaceRestore && workspaceRestore->savingBlocked(),
             restoringNative,retainSelection,layoutMode},persistenceSources(),options);
+    }
+    void save(bool retainSelection=false)
+    {
+        if (quitting) return;
+        const auto result=persistWorkspace(retainSelection);
         if (!result.performed) return;
         if (!result.success) status->setText(QStringLiteral("Could not save the workspace. Check the diagnostic log."));
         QElapsedTimer phases;phases.start();
@@ -1259,9 +1263,28 @@ private:
         for (const auto &panel:panels) surfaces.append({panel.name,Unbound::panelSurface(root,panel.name),panel.session,panel.label.endsWith("Toolbar")});
         nativePresentation.reconcile(Unbound::resolveMainWindow(),root,nativeSizing,nativeWorkspace && nativeWorkspace->active(),surfaces,background->isChecked(),layoutMode=="managed");
     }
-    void shutdown()
+    void shutdown(bool applicationQuit=false)
     {
         if (quitting) return;
+        if(applicationQuit) {
+            // Resolve's renderer is already shutting down. Persist the logical
+            // expansion checkpoint without restoring or refreshing any widgets.
+            quitting=true; ++bulkVersion; saveTimer.stop(); restoreTimer.stop();
+            persistWorkspace(false,true);
+            if(workspaceRestore)workspaceRestore->cancel();
+            expansionController->abandonForQuit();
+            if(headers)headers->abandonForQuit();
+            if(toolbarDoors)toolbarDoors->abandonForQuit();
+            if(workspaceHeader)workspaceHeader->abandonForQuit();
+            if(footer)footer->abandonForQuit();
+            groupReserve->abandonForQuit();
+            for(auto group:groups)if(group)group->abandonForQuit();
+            if(nativeWorkspace)nativeWorkspace->abandonForQuit();
+            for(auto &panel:panels)panel.session->abandonForQuit();
+            if(nativeSizing)nativeSizing->abandonForQuit();
+            Unbound::logEvent("workspace.application-quit.disarmed",{{"layout_restored",false}});
+            return;
+        }
         restoreExpanded(); save(); quitting = true; saveTimer.stop(); restoreTimer.stop();
         if (workspaceRestore) workspaceRestore->cancel();
         if (workspaceHeader) workspaceHeader->shutdown();
