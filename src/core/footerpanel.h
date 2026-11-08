@@ -39,9 +39,16 @@ public:
     std::function<void(bool,bool)> placementChanged;
     std::function<QList<QWidget *>()> surfaceHosts;
     void shutdown() {
+        if(stopped)return;
         stopped=true;timer.stop();qApp->removeEventFilter(this);nativeLease.release();
         for(auto view:views)if(view)delete view;views.clear();
         if(nativeFooter){QScopedValueRollback<bool> guard(applyingPlacement,true);nativeFooter->setVisible(nativeVisibility?nativeVisibility->isChecked():shown);}
+    }
+    void abandonForQuit() {
+        stopped=true; timer.stop(); qApp->removeEventFilter(this); nativeLease.abandonForQuit();
+        changed={}; geometryChanged={}; placementChanged={};
+        for(auto view:views)if(view)view->activate={};
+        views.clear(); nativeFooter=nullptr;
     }
     bool releaseNative(){return nativeLease.release();}
     void refreshSurfaces(){refresh();}
@@ -85,16 +92,18 @@ protected:
         return false;
     }
 private:
-    void schedule(){if(!timer.isActive())timer.start();}
+    void schedule(){if(!stopped && !timer.isActive())timer.start();}
     void publish(){if(state.contains("hidden") && state["hidden"].toBool()==!shown)return;state["hidden"]=!shown;if(changed)changed();}
     void defer(std::function<void()> operation) {
         auto wait=new QTimer(this);wait->setSingleShot(true);auto attempts=std::make_shared<int>(0);
-        connect(wait,&QTimer::timeout,this,[wait,attempts,operation] {
+        connect(wait,&QTimer::timeout,this,[this,wait,attempts,operation] {
+            if(stopped){wait->deleteLater();return;}
             if(QApplication::activePopupWidget() && ++*attempts<600){wait->start(25);return;}
             if(!QApplication::activePopupWidget())operation();wait->deleteLater();
         });wait->start(0);
     }
     QString requestVisibility(bool value) {
+        if(stopped)return {};
         logEvent("footer.visibility.request",{{"visible",value}});
         discover();
         if(nativeVisibility) {
@@ -172,7 +181,7 @@ private:
                     if(!button || !nativeFooter || !nativeFooter->isAncestorOf(button))return;
                     QPointer<QAbstractButton> target=button;
                     logEvent("footer.control.request",{{"target",button->objectName()},{"route","complete-native-footer-mirror"}});
-                    QTimer::singleShot(0,this,[this,target]{if(target && target->isEnabled()){
+                    QTimer::singleShot(0,this,[this,target]{if(!stopped && target && target->isEnabled()){
                         const auto name=target->objectName();target->click();schedule();
                         logEvent("footer.control.dispatched",{{"target",name},{"target_alive",bool(target)}});
                     }});

@@ -15,6 +15,7 @@ class NativeRootLayout : public QObject {
 public:
     explicit NativeRootLayout(QObject *owner=nullptr) : QObject(owner) {}
     ~NativeRootLayout() override { restore(); }
+    void abandonForQuit() { clear(); }
     bool active() const { return page && nativeLayout && customLayout; }
     static bool ownsParkedWidget(QWidget *widget,QWidget *nativePage) {
         if(!widget || !nativePage || widget==nativePage)return false;

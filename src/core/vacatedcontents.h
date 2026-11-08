@@ -10,6 +10,7 @@ namespace Unbound {
 class VacatedContents : public QObject {
 public:
     ~VacatedContents() { restore(); }
+    void abandonForQuit() { if(original)original->removeEventFilter(this); original=nullptr; }
     void hide(QWidget *slot) {
         restore(); original=slot;
         if (original) {

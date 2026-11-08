@@ -9,6 +9,7 @@ namespace Unbound {
 class NativePanelHeaderLease {
 public:
  ~NativePanelHeaderLease(){restore();}
+ void abandonForQuit(){hidden.clear();}
  void acquire(QWidget *surface,const QString &id) {
   restore();if(!surface)return;
   for(auto child:surface->findChildren<QWidget *>()) {

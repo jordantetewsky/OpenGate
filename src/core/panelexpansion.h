@@ -10,6 +10,7 @@ class PanelExpansion : public QObject
 public:
     PanelExpansion() { qApp->installEventFilter(this); }
     ~PanelExpansion() override { restore(); if (qApp) qApp->removeEventFilter(this); }
+    void abandonForQuit() { current=nullptr; if(qApp)qApp->removeEventFilter(this); }
     void foreground(QWidget *host)
     {
         restore(); current = host;

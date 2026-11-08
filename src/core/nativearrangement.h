@@ -24,6 +24,16 @@ public:
         }
         if (anchorSession) anchorSession->releaseOriginalPosition={};
     }
+    void abandonForQuit() {
+        changing=true; restored={}; prepareRestore={}; tearOff={}; detachRequested={}; tearOffSection={};
+        unregisterNativeDockSurfaces(host); disconnect(ownerDestroyed); ownerDestroyed={};
+        for(auto header:headers)if(header)header->abandonForQuit();
+        for(auto session:sessions)if(session)session->abandonForQuit();
+        if(anchorSession)anchorSession->abandonForQuit();
+        lease.abandonForQuit(); scopedLease.abandonForQuit(); position.abandonForQuit();
+        sessions.clear(); cells.clear(); headers.clear(); anchorSession=nullptr; anchorId.clear();
+        host=nullptr; root=nullptr; pageOwner=nullptr; visibility.reset();
+    }
     static QString nativeLeaf() { return nativeRemainderId(); }
     bool active() const { return lease.active() || scopedLease.active(); }
     bool positionPrepared() const { return position.active(); }

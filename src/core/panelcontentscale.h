@@ -13,6 +13,9 @@ public:
         timeline.changed=[this]{if(changed)changed();};
     }
     std::function<void()> changed;
+    void abandonForQuit() {
+        changed={}; metrics.abandonForQuit(); timeline.abandonForQuit(); mediaPool.abandonForQuit();
+    }
     QPoint scrollOffset() const { return mediaPool.offset(); }
     void restoreScrollOffset(QPoint value) { mediaPool.restoreOffset(value); }
     QJsonObject snapshot() const {

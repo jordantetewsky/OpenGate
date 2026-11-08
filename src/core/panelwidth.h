@@ -11,6 +11,7 @@ class PanelWidthAllowance
 {
 public:
     ~PanelWidthAllowance() { restore(); }
+    void abandonForQuit() { widget=nullptr; layout=nullptr; }
     void apply(QWidget *surface, int width = 240)
     {
         restore();

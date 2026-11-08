@@ -16,6 +16,9 @@ public:
         qApp->installEventFilter(this);
     }
     ~GroupHostReserve() override { qApp->removeEventFilter(this); clear(); }
+    void abandonForQuit() {
+        timer.stop(); qApp->removeEventFilter(this); ready=nullptr; nativeOwner=nullptr;
+    }
     void request(QWidget *owner)
     {
         if (!owner) return;

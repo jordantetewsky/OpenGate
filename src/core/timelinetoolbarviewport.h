@@ -8,6 +8,7 @@ namespace Unbound {
 class TimelineToolbarViewport {
 public:
     ~TimelineToolbarViewport(){restore();}
+    void abandonForQuit() { position.abandonForQuit(); overflow.forget(); }
     void attach(QWidget *timeline) {
         if(position.active() || !timeline || timeline->objectName()!="frameConformTimelines")return;
         auto toolbar=timeline->findChild<QWidget *>("frameEditToolbarTop");

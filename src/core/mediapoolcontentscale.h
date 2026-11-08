@@ -6,9 +6,15 @@
 #include "diagnostics.h"
 namespace Unbound {
 // Lease only Media Pool's bins/clip canvas. Native title and toolbar stay compact.
-class MediaPoolContentScale {
+class MediaPoolContentScale : public QObject {
 public:
-    ~MediaPoolContentScale(){restore();}
+    ~MediaPoolContentScale() override {restore();}
+    void abandonForQuit() {
+        ++offsetVersion; changed={};
+        if(viewport)for(auto bar:{viewport->horizontalScrollBar(),viewport->verticalScrollBar()})
+            disconnect(bar,nullptr,this,nullptr);
+        position.abandonForQuit(); viewport=nullptr;
+    }
     std::function<void()> changed;
     int canvasWidth() const {return viewport?viewport->logicalCanvasWidth():savedWidth;}
     void restoreCanvasWidth(int width) {savedWidth=qBound(0,width,32768);if(viewport)viewport->restoreCanvasWidth(savedWidth);}
@@ -58,7 +64,7 @@ public:
             layout->addWidget(viewport);viewport->show();slot->show();
             if(focus)focus->setFocus(Qt::OtherFocusReason);
             for(auto bar:{viewport->horizontalScrollBar(),viewport->verticalScrollBar()})
-                QObject::connect(bar,&QScrollBar::actionTriggered,viewport,[this]{if(changed)changed();});
+                QObject::connect(bar,&QScrollBar::actionTriggered,this,[this]{if(changed)changed();});
         }
         if(!viewport || !viewport->owns(position.content()))return false;
         viewport->setContentScale(factor);savedOffset=wanted;scheduleOffset();
@@ -83,7 +89,7 @@ private:
     void scheduleOffset() {
         if(!viewport)return;
         QPointer<ScalableContentViewport> alive=viewport;const auto wanted=savedOffset;const auto version=++offsetVersion;
-        QTimer::singleShot(0,viewport,[this,alive,wanted,version] {
+        QTimer::singleShot(0,this,[this,alive,wanted,version] {
             if(!alive || version!=offsetVersion)return;
             alive->horizontalScrollBar()->setValue(wanted.x());
             alive->verticalScrollBar()->setValue(wanted.y());

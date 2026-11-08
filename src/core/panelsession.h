@@ -49,6 +49,19 @@ public:
         });
     }
     ~ManagedPanelSession() override { changed = {}; arrangementChanged = {}; dock(); }
+    void abandonForQuit() {
+        if(quitAbandoned)return;
+        quitAbandoned=true; ++generation; arrangeTimer.stop(); recoveryQueued=false;
+        changed={}; arrangementChanged={}; expandedClosed={}; attachRequested={};
+        releaseGroup={}; releaseOriginalPosition={}; beforeLayoutTransfer={};
+        disconnect(parentDestroyed); parentDestroyed={};
+        for(auto widget:{host.data(),content.data(),originalPage.data(),groupContainer.data(),expandedHost.data()})
+            if(widget)widget->removeEventFilter(this);
+        contentScale.abandonForQuit(); timelinePresentation.release(); timelineToolbar.abandonForQuit();
+        widthAllowance.abandonForQuit(); groupWidth.abandonForQuit(); vacatedContents.abandonForQuit();
+        overflow.forget();
+        // Do not clear()/dock(): live native content keeps its present Qt parent.
+    }
     // active() is retained for compatibility: it means original content is leased.
     bool active() const { return !host.isNull(); }
     PanelPlacement placement() const {
@@ -132,6 +145,7 @@ public:
     }
     void detachFromGroup(bool deferHostShow = false)
     {
+        if(quitAbandoned)return;
         endGroupedExpansion();
         if (!grouped()) return;
         if (!host) return;
@@ -423,6 +437,7 @@ public:
 
     QString dock()
     {
+        if(quitAbandoned)return {};
         if (releaseOriginalPosition) {
             const auto release=releaseOriginalPosition; const auto error=release();
             if (!error.isEmpty()) return error;
@@ -547,6 +562,7 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
+        if(quitAbandoned)return false;
         if (event->type() == QEvent::Close && (object == expandedHost ||
             (object == host && host->property("unboundExpanded").toBool()))) {
             // Temporary expansion returns to its previous placement, including
@@ -696,6 +712,7 @@ private:
     QPointer<QLayout> placeholderLayout;
     bool transferredLayout = false;
     QPointer<QWidget> transferredSurface;
+    bool quitAbandoned=false;
     bool userHidden = false;
     bool constrain = true;
     bool snapping = true;

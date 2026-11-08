@@ -8,6 +8,7 @@ namespace Unbound {
 class PanelExpansionConstraints {
 public:
  ~PanelExpansionConstraints(){restore();}
+ void abandonForQuit(){content=nullptr;}
  void acquire(const QString &panel,QWidget *surface) {
   restore();if(panel!="frameEditAudioMeter"||!surface)return;
   content=surface->findChild<QWidget *>("frameEditAudioMixer");

@@ -57,6 +57,10 @@ public:
         return true;
     }
     int index() const { return current; }
+    void abandonForQuit() {
+        ++version; current=-1; target={}; originalGroup=nullptr; originalGroupState={};
+        constraints.abandonForQuit(); priority.abandonForQuit();
+    }
     void sessionInactive(int index) { if (current==index) {constraints.restore();priority.restore();current=-1;} }
     QJsonObject panelSnapshot(int index,const QJsonObject &value) const { return current==index ? target.saved : value; }
     QJsonObject groupSnapshot(PanelGroup *group) const

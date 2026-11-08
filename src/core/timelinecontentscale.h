@@ -20,6 +20,16 @@ public:
         });
     }
     ~TimelineContentScale() override { restore(); }
+    void abandonForQuit() {
+        pending.stop();
+        for(auto widget:watched)if(widget)widget->removeEventFilter(this);
+        watched.clear(); changed={}; root=nullptr;
+        for(auto &entry:entries) {
+            if(entry->viewport)entry->viewport->changed={};
+            entry->position.abandonForQuit();
+        }
+        entries.clear();
+    }
     std::function<void()> changed;
     static QList<QGraphicsView *> surfaces(QWidget *root) {
         QList<QGraphicsView *> result;

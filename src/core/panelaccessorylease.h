@@ -13,6 +13,12 @@ class PanelAccessoryLease : public QObject {
 public:
     explicit PanelAccessoryLease(QObject *owner) : QObject(owner) {}
     ~PanelAccessoryLease() override { release(); }
+    void abandonForQuit() {
+        disconnect(ownerDestroyed); ownerDestroyed={};
+        if(viewport)disconnect(viewport->horizontalScrollBar(),nullptr,this,nullptr);
+        position.abandonForQuit(); content=nullptr; destination=nullptr;
+        destinationLayout=nullptr; viewport=nullptr;
+    }
     bool active() const { return position.active() && viewport; }
     QWidget *ownerSurface() const { return destination; }
     QRect visibleBounds() const {

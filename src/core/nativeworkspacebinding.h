@@ -25,6 +25,12 @@ public:
         };
     }
     ~NativeWorkspaceBinding() override { if (nativeTargetPage) unregisterNativeDockSurfaces(nativeTargetPage); }
+    void abandonForQuit() {
+        busy=true; pending={}; changed={}; beforeMount={}; prepareMount={}; failed={}; sectionDetached={};
+        if(nativeTargetPage)unregisterNativeDockSurfaces(nativeTargetPage);
+        nativeTargetPage=nullptr; nativeTargets.clear();
+        arrangement.abandonForQuit(); registry.clear();
+    }
     std::function<void()> changed;
     std::function<void()> beforeMount;
     std::function<QString()> prepareMount;
