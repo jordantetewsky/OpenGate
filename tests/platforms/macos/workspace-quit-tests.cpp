@@ -107,6 +107,11 @@ int main(int argc,char **argv) {
     check(savedWorkspace().value("header").toObject().value("visible").toBool(true),"header change is not already saved");
     // Do not settle: this change must be committed by the quit path, not a timer.
     if(header)header->setShown(false);
+    QList<QPointer<Unbound::WorkspaceFloatingHost>> callbackHosts;
+    for(auto widget:main->findChildren<QWidget *>())
+        if(auto owned=dynamic_cast<Unbound::WorkspaceFloatingHost *>(widget))
+            if(owned->attachRequested)callbackHosts.append(owned);
+    check(!callbackHosts.isEmpty(),"production session/group hosts retain real drop callbacks before quit");
     QPointer<QWidget> sourceParent=source->parentWidget(),timelineParent=timeline->parentWidget(),viewParent=view->parentWidget();
     bool observed=false;
     QObject::connect(&app,&QCoreApplication::aboutToQuit,&mutations,[&] {
@@ -119,6 +124,8 @@ int main(int argc,char **argv) {
         if(!floating)check(saved.value("native_arrangement").toObject()==nativeBeforeExpansion,
             "quit saves the retained pre-expansion native arrangement");
         check(expansion && expansion->index()<0,"quit cancels the expansion owner without restoring widgets");
+        for(auto owned:callbackHosts)check(owned && !owned->attachRequested,
+            "quit clears only the session/group-owned host callback wrappers");
         mutations.noNewWidgets();
     });
     QTimer::singleShot(0,&app,&QCoreApplication::quit);
@@ -130,10 +137,17 @@ int main(int argc,char **argv) {
     check(source->parentWidget()==sourceParent && timeline->parentWidget()==timelineParent && view->parentWidget()==viewParent,
         "queued recovery and refresh callbacks leave native parents intact");
     mutations.noNewWidgets();
+    // Match the existing host-context delayed drop delivery: it must inspect
+    // an empty owner callback after the coordinator/session has been destroyed.
+    for(auto owned:callbackHosts)if(owned)QTimer::singleShot(0,owned,[owned,timeline] {
+        if(owned && owned->attachRequested)owned->attachRequested(timeline,Qt::RightEdge);
+    });
     mutations.phase="controller destruction";
     delete controls; // Repeated shutdown/destructor must not retry restoration.
+    mutations.phase="callbacks after controller destruction";settle(300);
     check(source->parentWidget()==sourceParent && timeline->parentWidget()==timelineParent && view->parentWidget()==viewParent,
         "controller destruction after quit does not transfer native content");
+    mutations.noNewWidgets();
     check(mutations.mutations==0,"quit and lease teardown create/show/reparent no windows or content");
     mutations.armed=false;
     delete main; // Ordinary Qt-owned surface destruction is a separate phase.

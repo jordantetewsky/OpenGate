@@ -57,6 +57,9 @@ public:
         disconnect(parentDestroyed); parentDestroyed={};
         for(auto widget:{host.data(),content.data(),originalPage.data(),groupContainer.data(),expandedHost.data()})
             if(widget)widget->removeEventFilter(this);
+        // Both undock paths install this session's wrapper on its private host.
+        // A queued host-context drop may outlive the session during app teardown.
+        if(host)static_cast<WorkspaceFloatingHost *>(host.data())->attachRequested={};
         contentScale.abandonForQuit(); timelinePresentation.release(); timelineToolbar.abandonForQuit();
         widthAllowance.abandonForQuit(); groupWidth.abandonForQuit(); vacatedContents.abandonForQuit();
         overflow.forget();

@@ -33,9 +33,9 @@ public:
     }
     ~PanelGroup() override { changed = {}; dissolve(); }
     void abandonForQuit() {
-        timer.stop(); changed={}; sectionDetached={};
+        timer.stop(); changed={}; sectionDetached={}; attachRequested={};
         if(page)page->removeEventFilter(this);
-        if(host)host->removeEventFilter(this);
+        if(host){host->removeEventFilter(this);host->attachRequested={};}
         for(auto header:headers)if(header)header->abandonForQuit();
         for(auto member:members)if(member) {
             if(member->window())member->window()->removeEventFilter(this);
