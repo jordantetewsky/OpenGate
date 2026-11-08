@@ -1,3 +1,17 @@
+## November 8 current checkpoint
+
+The explicit native history action/erase trial has not executed cleanly: its
+first setup was interrupted by shortcut input. A new external input-evidence
+guard distinguishes this from metadata/history failure. A real application-quit
+Metal abort was captured and repaired in isolated source by saving without UI
+refresh and abandoning restoration callbacks on quit. Native/floating quit,
+ASAN, queued post-controller callbacks, assembled entry and retained
+Close/restart/Native-return fixtures pass. Actual Resolve quit and color history
+still need a fresh, untouched disposable test. Ordinary paints do not yet save
+assignments. Current installed source remains `18153f7`; the quit repair is
+integrated source-only. See [current evidence](opengate-color-manager-update-flow-20261105.md).
+No feature-completion, Windows parity, main merge or publication is claimed.
+
 ## November 7 current color gate
 
 Canonical per-instance save/reopen and DRP reimport pass in an owned audio

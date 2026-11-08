@@ -2,6 +2,59 @@
 
 ## Recovery checkpoint and next native gate
 
+### November 8 input interference, shutdown repair and next live gate
+
+The explicit action candidate was installed from source `18153f7`, binary
+`efc3179957fce1a0234ffe92d43b1b662488a4a9e0f6e94d6070fc296bd725c6`, transaction
+`126B5EF0-7395-4109-B0D4-B50F1B25B53B`; all 25 managed hashes/signature and 203
+protected files verified unchanged while Resolve was closed, before reopening.
+Normal UI paints remain temporary.
+
+The first run (`native-color-explicit-history-20261107/phases-20261108-000000-f852c5`)
+is contaminated: the retained event log records Red plus repeated native
+Undo/Redo during the seed setup. Blue reverted to Orange, but no metadata-defect
+conclusion follows. Neither erase nor the explicit history action executed. A
+separate saved-Blue control could not connect after Resolve exited and made zero
+project mutations. A focused external input-evidence guard now classifies
+interleaved shortcut/timeline input at phase boundaries; six offline tests pass.
+It observes existing trial logs and never blocks keyboard/mouse input.
+
+Resolve's log also records a real shutdown abort:
+`PanelControls::shutdown -> release(true) -> restoreOwned -> detachFromGroup ->
+setLayout/reparent -> MetalRenderer NSException`. Full preserved evidence:
+`build/native-color-explicit-history-20261107/cleanup-abort-20261108/`.
+The quit-only source repair is isolated on `fix/shutdown-native-leases-20261108`
+and integrated locally as `04698d2`, `a3f58d4`, `e0d4e5e`, `db83836`. It reuses
+pure `WorkspacePersistence` capture/commit, then disarms each existing lease,
+header/session/group and queued callback. Qt retains its current widget parents
+for application teardown; ordinary Native return/helper destruction retains the
+existing restore path. No new global owner, snapshot writer, or color assignment
+controller is introduced. A proven retained host drag callback is cleared by its
+own Session/Group, and Media Pool callbacks use their actual QObject context.
+
+Executed hidden Cocoa fixtures pass: native/floating grouped-and-expanded quit;
+both cases under ASAN (leak detection disabled); queued host delivery after
+controller destruction; assembled Native entry; and the existing retained
+Close/recall/fresh-process restart/Native-return/Dock flow. The latter's obsolete
+quit-Dock assertion now checks unchanged Qt parents. Individual owner jobs and
+actual destructor/deferred paths are recorded in the isolated worktree's
+`build/macos/quit-repair-evidence/ownership-inventory.json`. These are Qt fixtures,
+not actual Resolve Metal or Windows acceptance. Final review confirms 28 existing
+production ownership modules with small terminal lifecycle methods; the oversized
+coordinator only delegates and reuses extracted persistence. No painting path or
+normal color state writer changes.
+
+The next stage `build/native-color-history-quit-repair-20261108/` combines the
+reviewed quit repair with the unchanged explicit native history/erase probe. It
+requires a fresh process and an untouched disposable session for genuine erase
+save/reopen/DRP, exact absence restoration, custom A/B Undo/Redo, abort, neighboring
+native events, callable release, and actual Resolve quit/relaunch. Native void
+callback failure propagation, model/view recreation, normal command persistence,
+Native paint parity and platform/version gates remain open. The numbered entry
+contract was reread: first-open/unsaved persistence and ordinary Native return
+have the fixture paths above; actual native pointer/GPU/keys/pages/Metal quit
+remain unaccepted. No main merge, push or publication.
+
 ### November 7 native Undo/abort result and next candidate
 
 The guarded actual tests have now run. The native compound alone fails custom
