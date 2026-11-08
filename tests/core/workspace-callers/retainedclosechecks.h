@@ -128,10 +128,14 @@ inline void checkRetainedClose(PanelControls &controls, QWidget &main, QStackedW
     inspector->window()->close();settle(300);button("dock_widgetEditInspector");
     check(!inspector->active(),"explicit Dock restores a closed panel to its original native slot");
     restoration->preset(store.find(id),true);settle(2000);
-    // Shutdown has its own direct release path; it must not use Close to dock.
+    // Application quit preserves current Qt ownership for native renderer
+    // teardown. Ordinary Native return/Dock were checked immediately above.
+    QVector<QPair<QPointer<QWidget>,QPointer<QWidget>>> quitParents;
+    for(auto widget:main.findChildren<QWidget *>())quitParents.append(qMakePair(QPointer<QWidget>(widget),QPointer<QWidget>(widget->parentWidget())));
     QMetaObject::invokeMethod(qApp,"aboutToQuit",Qt::DirectConnection);settle(100);
-    check(!binding->active(),"shutdown releases the native workspace");
-    for(auto child:controls.children())if(auto value=dynamic_cast<ManagedPanelSession *>(child))check(!value->active(),"shutdown docks every retained session");
+    check(!binding->active(),"shutdown disarms the native workspace leases");
+    for(const auto &entry:quitParents)check(entry.first && entry.first->parentWidget()==entry.second,
+        "shutdown preserves retained content parents for Qt teardown");
     WorkspaceSettings afterQuit;check(afterQuit.pageView("edit")["groups"]==checkpoint["groups"],"shutdown preserves the closed group checkpoint before releasing ownership");
     check(main.isVisible(),"fixture never closes the native main window");
 }
