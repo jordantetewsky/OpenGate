@@ -21,6 +21,7 @@ public:
         QPointer<QWidget> workspace;
         PanelGroup *group=nullptr;
         QJsonObject saved,native;
+        bool floatingScreen=false;
         std::function<bool()> pending;
         std::function<void()> undock,cancelPending,restored;
         std::function<void(QJsonObject)> restoreSaved;
@@ -37,8 +38,8 @@ public:
         // A standalone primary surface already fills its own workspace. Its
         // layout expands/reclaims content when bands are hidden or shown; never
         // resize that window into its own child rectangle (recursive shrinking).
-        const bool standalone=wasFloating && !wasGrouped;
-        if(!standalone && target.workspace==window)return true;
+        const bool standalone=target.floatingScreen && wasFloating && !wasGrouped;
+        if(target.workspace==window)return true;
         const auto margins=window->windowHandle()?window->windowHandle()->frameMargins():QMargins();
         QRect bounds;
         if(contentBounds && !standalone) {

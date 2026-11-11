@@ -895,6 +895,7 @@ private:
         auto &panel=panels[i];
         Unbound::PanelExpansionController::Target target;
         target.index=i; target.name=panel.name; target.session=panel.session; target.group=groupFor(i);
+        target.floatingScreen=panel.layoutIndependent;
         target.workspace=panel.session->grouped()?panel.session->window()->window():
             (footer->primarySurface?footer->primarySurface():nullptr);
         if(!target.workspace)target.workspace=page()->window();

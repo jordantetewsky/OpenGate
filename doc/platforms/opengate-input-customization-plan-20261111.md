@@ -396,3 +396,9 @@ teardown and abandoning UI restoration on quit. PanelControls wires these
 components. No new profile/settings writer, color reader, assignment/history
 implementation or hardware input dispatcher was added. Shared callers compile
 on Mac; Windows runtime and actual second-display behavior remain unverified.
+
+The broader native-entry regression caught three old-panel expansion assertions:
+applying screen bounds to every standalone floating panel changed their existing
+workspace behavior. Screen expansion is now an explicit Target policy enabled
+only for the layout-independent input panel. Ordinary native/workspace/group
+panels retain their existing content-viewport expansion behavior.
