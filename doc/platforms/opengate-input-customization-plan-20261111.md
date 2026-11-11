@@ -267,7 +267,7 @@ Implemented boundaries:
 
 Evidence: universal Mac runtime build passes; hidden input-customization fixture
 passes native-like lifetime/Save callback retention, tab switching, hide/recall,
-group attach/detach, native return parking, metric scale/reset, restored minimum
+group attach/detach, explicit session parking, metric scale/reset, restored minimum
 and narrow-host overflow. Diagram fixture and rendered layout checks pass.
 These use a fixture dialog; they do not validate actual native construction,
 painted keyboard scaling, model coverage, Save/Cancel or app teardown in Resolve.
@@ -295,7 +295,7 @@ and incorporate its current source before any combined installation.
 | --- | --- | --- |
 | 1. First/restored launch | Existing PanelControls inventory; new panel gated by experiment flag | Actual first open and restored native editor not tested |
 | 2. Workspace presets | Existing WorkspacePresetPolicy untouched | New panel placement saved/reloaded in real preset not tested |
-| 3. Original Resolve UI | Existing session dock parks owned surface; fixture passes | Actual native editor return/lifetime not tested |
+| 3. Original Resolve UI | Input panel is retained independently during Native return; same session/store | Actual native editor return/lifetime not tested |
 | 4. Native hotkeys/temporary maximize | Existing command routing retained; own shortcut editor route targets panel | Ordinary Resolve menu still opens its modal editor; live key contexts untested |
 | 5. Native-origin dragging | Existing session/group callbacks retained | Direct dragging from original native editor not implemented |
 | 6–7. Pinned bands | Existing workspace owners untouched | New panel with every band combination not exercised live |
@@ -307,3 +307,45 @@ and incorporate its current source before any combined installation.
 
 This is the first visible prototype milestone. It is not full acceptance of the
 numbered contract or of Speed Editor remapping/profile persistence.
+
+### Size persistence in either mode — November 11 follow-up
+
+Jordan explicitly requires the keyboard panel's size and scale to persist in
+both OpenGate and Native modes. For this owned customization window, opening
+and moving it must leave Native mode selected. Explicit docking/grouping with a
+workspace surface still enters OpenGate. This is a deliberate scoped exception
+to contract item 5, which continues to apply to native workspace panels.
+
+`PanelControls` coordinates the existing retained session across mode changes;
+`LayoutIndependentPanelState` transforms an incoming workspace preset around
+the panel's existing saved record and removes conflicting preset group/native
+membership. It owns no state and writes no settings. Existing workspace settings
+remain the only persistence path. Native return detaches an explicitly grouped
+customization panel back to its saved floating frame instead of parking it.
+
+The caller fixture exercises actual PanelControls entry, Native return, close /
+recall, workspace selection and coordinator recreation with a fixture editor.
+These checks do not replace actual Resolve restart and native-editor acceptance.
+The preview remains Edit-page scoped; both modes does not yet mean every page.
+
+Expanded caller result: `panel caller flow failures=0`. It covers conflicting
+preset size/scale, floating and native preset membership, Native close/recall,
+explicit docking and Native extraction, and actual coordinator teardown /
+recreation. The internal title-drag path uses a synthetic header wired by the
+existing decoration lifecycle; real native decoration remains a live check.
+Universal arm64/x86_64 build and strict signature verify, with preview enabled.
+Runtime SHA-256: `2a893bbff7be300acf1eebecbae51a04b15165d9debcc85828c4d2f0935bdebe`.
+The existing input-customization regression and assembled native-entry regression
+also pass: `input customization failures=0`, `native entry flow failures=0`.
+
+Organization review: incoming-preset projection lives in the stateless policy
+module; PanelControls retains coordination only. The former direct overwrite of
+every panel record is replaced by the policy-transformed workspace. No settings
+writer, profile store or native command dispatcher was added. Shared behavior is
+exercised on Mac; Windows runtime remains unverified and its native factory is
+unavailable.
+
+The explicit local build option `OPENGATE_INPUT_CUSTOMIZATION_PREVIEW=1` enables
+the existing experiment at process startup and is recorded in the build
+manifest. This makes an installed preview reachable on ordinary relaunch without
+modifying global launch settings. Default builds retain the opt-in gate.

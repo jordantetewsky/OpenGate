@@ -47,6 +47,7 @@
 #include "attachedtoolbarreveal.h"
 #include "pinnedworkspaceheader.h"
 #include "workspaceheadermigration.h"
+#include "layoutindependentpanelstate.h"
 #include "viewermodecommand.h"
 #include "arrangementcontrols.h"
 #include "workspacearrangements.h"
@@ -69,13 +70,15 @@ class PanelControls : public QWidget
     struct Panel {
         QString label, name, toggle;
         bool contents = false, desired = false, pending = false;
+        bool layoutIndependent = false;
         unsigned requestVersion = 0;
         Unbound::ManagedPanelSession *session = nullptr;
         QPushButton *undock = nullptr, *dock = nullptr, *show = nullptr, *hide = nullptr, *expand = nullptr, *center = nullptr;
         QJsonObject saved = {};
     };
 public:
-    PanelControls() : QWidget(nullptr, Qt::Window)
+    explicit PanelControls(Unbound::InputCustomizationPanel::Factory keyboardFactory=Unbound::NativeKeyboardEditor::create)
+        : QWidget(nullptr, Qt::Window), inputCustomizationPanel(std::move(keyboardFactory))
     {
         setObjectName(QStringLiteral("unboundPanelTest"));
         setWindowTitle(QStringLiteral("OpenGate Panel Manager"));
@@ -105,8 +108,8 @@ public:
         workspaceRestore->dock=[this] {
             ++bulkVersion; ++groupVersion; restoreExpanded();
             const QScopedValueRollback<bool> transaction(restoringNative,true);
-            const auto error=dockAll(false);if(!error.isEmpty())return error;
-            for (const auto &panel:panels) if (panel.session->active()) return panel.name;
+            const auto error=dockAll(false,true);if(!error.isEmpty())return error;
+            for (const auto &panel:panels) if (!panel.layoutIndependent && panel.session->active()) return panel.name;
             return QString();
         };
         workspaceRestore->apply=[this](const QJsonObject &value) { return applyWorkspace(value); };
@@ -213,8 +216,10 @@ public:
         };
         if(colorManagerEnabled)
             panels.append(Panel{Unbound::ColorManagerPanel::label(),Unbound::ColorManagerPanel::id(),"",false});
-        if(inputCustomizationEnabled)
-            panels.append(Panel{Unbound::InputCustomizationPanel::label(),Unbound::InputCustomizationPanel::id(),"",false});
+        if(inputCustomizationEnabled) {
+            Panel input{Unbound::InputCustomizationPanel::label(),Unbound::InputCustomizationPanel::id(),"",false};
+            input.layoutIndependent=true;panels.append(input);
+        }
         settings.data=Unbound::migrateWorkspaceHeader(settings.data);
         const QJsonObject savedPanels = settings.data["panels"].toObject();
         pendingGroups = settings.data["groups"].toArray();
@@ -460,7 +465,7 @@ public:
                 Unbound::logEvent("workspace.native-return.request",{{"page",activePage}});
                 ++bulkVersion;restoreExpanded();save();
                 const auto previousMode=layoutMode;layoutMode="native";
-                const auto error=dockAll();
+                const auto error=dockAll(true,true);
                 if(!error.isEmpty()) {
                     layoutMode=previousMode;status->setText(error);
                     Unbound::logEvent("workspace.native-return.failed",{{"page",activePage},{"error",error}});
@@ -709,7 +714,7 @@ private:
     {
         if(panels[i].name=="frameEditToolbarTop")return;
         if(workspaceHeader && panels[i].name=="unboundWorkspaceToolbar"){workspaceHeader->setShown(!workspaceHeader->shown());return;}
-        enterManagedFromGesture(panels[i].name);
+        if(!panels[i].layoutIndependent)enterManagedFromGesture(panels[i].name);
         if (nativeWorkspace->contains(panels[i].name)) { nativeWorkspace->detach(panels[i].name); readyNativeDrag(i); save(); }
         else if(auto group=groupFor(i)){group->detachMember(panels[i].session);save();}
         else if(panels[i].session->active() && nativeWorkspace->active())dockNative(i);
@@ -725,6 +730,7 @@ private:
     void dockNative(int i,QWidget *target=nullptr,Qt::Edge edge=Qt::RightEdge)
     {
         if (quitting || QApplication::activeModalWidget() || !page() || !page()->isVisible()) return;
+        enterManagedFromGesture(panels[i].name);
         restoreExpanded(); auto group=groupFor(i);
         const auto direction=edge==Qt::Edge(0) ? Qt::Orientation(0) : edge==Qt::TopEdge || edge==Qt::BottomEdge ? Qt::Vertical : Qt::Horizontal;
         const auto error=nativeWorkspace->dockSelection(page(),panels[i].name,group,
@@ -749,7 +755,8 @@ private:
     }
     void beginPanelDrag(int i) {
         if(quitting || QApplication::activeModalWidget() || !page() || !page()->isVisible())return;
-        enterManagedFromGesture(panels[i].name);restoreExpanded();nativeDrag->begin(panels[i].name);
+        if(!panels[i].layoutIndependent)enterManagedFromGesture(panels[i].name);
+        restoreExpanded();nativeDrag->begin(panels[i].name);
         if(nativeWorkspace->contains(panels[i].name))nativeWorkspace->detach(panels[i].name);
         else if(auto group=groupFor(i))group->detachMember(panels[i].session);
         if(!panels[i].session->active())requestUndock(i);
@@ -801,6 +808,9 @@ private:
     QString applyWorkspace(QJsonObject value)
     {
         value=Unbound::migrateWorkspaceHeader(Unbound::fitStarterWorkspace(value));
+        QJsonObject retained;
+        for(const auto &panel:panels)if(panel.layoutIndependent)retained[panel.name]=panel.saved;
+        value=Unbound::LayoutIndependentPanelState::preserve(value,retained);
         if(value.contains("selected_arrangement")) {
             const QSignalBlocker block(presets);presets->setCurrentIndex(qMax(0,presets->findData(value["selected_arrangement"].toString())));
         }
@@ -911,7 +921,7 @@ private:
             QString error;
             if(!inputCustomizationPanel.ensure(root,error)){outcome("undock",i,error);return;}
         }
-        if (!restoring) { enterManagedFromGesture(p.name);p.saved["hidden"] = false; }
+        if (!restoring) { if(!p.layoutIndependent)enterManagedFromGesture(p.name);p.saved["hidden"] = false; }
         if(p.name==Unbound::ColorManagerPanel::id())colorManagerPanel.ensure(root);
         QWidget *target = Unbound::panelSurface(root, p.name);
         if (!restoring && p.name=="frameEditToolbarTop" && panels[1].session->active() && target && !target->isVisible()) {
@@ -924,7 +934,7 @@ private:
             Unbound::setNativePanelVisibility(Unbound::resolveMainWindow(),p.toggle,true);
             finishUndock(i);return;
         }
-        if (nativeSizing && expansionController->index()<0 && root && root->isVisible()) nativeSizing->prepare(root->window(),root);
+        if (!p.layoutIndependent && nativeSizing && expansionController->index()<0 && root && root->isVisible()) nativeSizing->prepare(root->window(),root);
         if (p.name == QLatin1String("widgetEditSourcePlayer") && root && root->isVisible() &&
             Unbound::prepareSourceViewer(root, target)) {
             p.pending = true; updateRow(i);
@@ -1037,7 +1047,7 @@ private:
         if(workspaceHeader && !workspaceHeader->release())return QStringLiteral("Could not restore the workspace header before changing the workspace.");
         return {};
     }
-    QString dockAll(bool cancelRestore=true) {
+    QString dockAll(bool cancelRestore=true,bool preserveIndependent=false) {
         QString error;
         {
             // Intermediate session callbacks must not replace the last complete
@@ -1046,6 +1056,22 @@ private:
             restoreTimer.stop();
             if (cancelRestore && workspaceRestore) workspaceRestore->cancel();
             error=releaseWorkspaceBands();
+            if(error.isEmpty() && preserveIndependent) {
+                // These sessions belong to the user, not to a workspace mode.
+                // Release any explicit grouping before restoring native owners.
+                for(int i=0;i<panels.size();++i) {
+                    auto &panel=panels[i];
+                    if(!panel.layoutIndependent || !panel.session->active())continue;
+                    const auto frame=panel.session->floatingGeometry();
+                    const bool hidden=panel.session->hiddenByUser();
+                    if(nativeWorkspace->contains(panel.name) && !nativeWorkspace->detach(panel.name)) {
+                        error=QStringLiteral("Could not detach independent panel: ")+panel.label;break;
+                    }
+                    if(auto group=groupFor(i))group->detachMember(panel.session);
+                    panel.session->setFloatingGeometry(frame);
+                    panel.session->setHiddenByUser(hidden,false);
+                }
+            }
             if(error.isEmpty() && nativeWorkspace && !nativeWorkspace->release(true))
                 error=QStringLiteral("The native layout changed; restoration was stopped.");
             if(error.isEmpty()) {
@@ -1053,8 +1079,8 @@ private:
                 if (nativeSizing) nativeSizing->restore();
                 {const QSignalBlocker block(background);background->setChecked(false);}
                 applyBackgroundVisibility(false);++groupVersion;pendingGroups={};
-                for(int i=panels.size()-1;i>=0;--i)dockOne(i);
-                for(const auto &panel:panels)if(panel.session->active()) {
+                for(int i=panels.size()-1;i>=0;--i)if(!preserveIndependent || !panels[i].layoutIndependent)dockOne(i);
+                for(const auto &panel:panels)if(panel.session->active() && (!preserveIndependent || !panel.layoutIndependent)) {
                     error=QStringLiteral("Could not restore native panel: ")+panel.label;break;
                 }
             }
@@ -1106,6 +1132,7 @@ private:
     QString combinePanels(int a, int b, Qt::Orientation orientation, bool before = true, const QString &targetLeaf = {}, const QRect &destination = {})
     {
         if(panels[a].name=="unboundWorkspaceToolbar" || panels[b].name=="unboundWorkspaceToolbar")return QStringLiteral("Workspace Toolbar is pinned above the surface; use Show or Hide.");
+        enterManagedFromGesture(panels[a].name);
         auto left = groupFor(a), right = groupFor(b);
         if (left && left == right) return QStringLiteral("Those panels already share a group.");
         if (right && left) return right->merge(left, orientation, before, targetLeaf);
@@ -1275,7 +1302,7 @@ private:
             (nativeWorkspace && !nativeWorkspace->requiredPanels().isEmpty())) return;
         auto root=page();
         QList<Unbound::NativeWorkspacePresentation::Surface> surfaces;
-        for (const auto &panel:panels) surfaces.append({panel.name,Unbound::panelSurface(root,panel.name),panel.session,panel.label.endsWith("Toolbar")});
+        for (const auto &panel:panels) if(!panel.layoutIndependent)surfaces.append({panel.name,Unbound::panelSurface(root,panel.name),panel.session,panel.label.endsWith("Toolbar")});
         nativePresentation.reconcile(Unbound::resolveMainWindow(),root,nativeSizing,nativeWorkspace && nativeWorkspace->active(),surfaces,background->isChecked(),layoutMode=="managed");
     }
     void shutdown(bool applicationQuit=false)

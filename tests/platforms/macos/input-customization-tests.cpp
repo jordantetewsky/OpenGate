@@ -98,7 +98,7 @@ int main(int argc,char **argv) {
         check(session.attachToGroup(&container).isEmpty() && session.grouped(),"tabbed customization joins existing panel groups");
         session.detachFromGroup();
         check(!session.grouped() && session.active(),"panel group detach restores original managed host");
-        check(session.dock().isEmpty() && !content->isVisible(),"Native return parks retained customization surface");
+        check(session.dock().isEmpty() && !content->isVisible(),"explicit session docking parks retained customization surface");
     }
     check(native.isNull(),"native editor has one deletion owner after session release");
     QPointer<QTabWidget> abandonedTabs;

@@ -10,6 +10,21 @@ inner-tab/restart draft restoration remain gaps. See
 [the plan and acceptance mapping](opengate-input-customization-plan-20261111.md).
 No installation or change to the other thread's live color runtime occurred.
 
+The size-persistence follow-up keeps this owned panel active in Native and
+OpenGate modes, preserving its frame and scale through preset selection and
+Native return. The caller harness exercises the actual coordinator and existing
+settings store with a fixture native editor. The universal preview build and
+strict signature verify; actual Resolve relaunch remains unverified. The explicit
+local preview build flag makes the experiment available on ordinary relaunch.
+
+Installation is blocked on the color task's live-session/source handoff. That
+task is paused at an approval prompt. Its installed `35ef8ec2…` runtime contains
+uncommitted color work absent from this feature branch; its latest worktree also
+contains newer unsuccessful reader experiments. Do not replace that runtime
+with this older-base feature binary or silently ship the newer color experiments.
+The requested handoff must identify a combined source baseline and release the
+live Resolve session before the already-authorized installation proceeds.
+
 ## November 8 current checkpoint
 
 The explicit native history action/erase trial has not executed cleanly: its

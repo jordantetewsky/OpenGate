@@ -6,6 +6,9 @@ qt="${1:-$root/build/macos/qtbase-source}"
 app="${2:-/Applications/DaVinci Resolve/DaVinci Resolve.app}"
 out="${OPENGATE_WIDGET_PROBE_OUT:-$root/build/macos/ofx-probe/UnboundLoadingProbe.ofx.bundle/Contents/MacOS}"
 development_flags=(-std=c++17)
+if [[ "${OPENGATE_INPUT_CUSTOMIZATION_PREVIEW:-0}" == 1 ]]; then
+    development_flags+=(-DOPENGATE_INPUT_CUSTOMIZATION_PREVIEW)
+fi
 if [[ "${OPENGATE_DEVELOPMENT_ENTRY:-0}" == 1 ]]; then
     development_flags+=(-DOPENGATE_DEVELOPMENT_ENTRY)
 fi
