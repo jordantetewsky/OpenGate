@@ -2,6 +2,8 @@
 #pragma once
 #include "../platform/nativekeyboardeditor.h"
 #include "speededitorcustomization.h"
+#include "inputcustomizationtabs.h"
+#include "embeddeddialoganchor.h"
 #include <QPointer>
 #include <QTabWidget>
 #include <QTabBar>
@@ -34,15 +36,17 @@ public:
         parking=parked;
         editor->ensurePolished();
         const auto nativeSize=editor->size().expandedTo(editor->minimumSizeHint());
-        auto tabs=new QTabWidget(parked);content=tabs;keyboard=editor;
+        auto tabs=new InputCustomizationTabs(parked);content=tabs;keyboard=editor;
         tabs->setObjectName(id());tabs->setProperty("openGateReachableOverflow",true);
         tabs->setProperty("openGateMinimumContentScale",1.0);
+        tabs->setProperty("openGatePersistSelectedTab",true);
         tabs->setDocumentMode(true);
         tabs->setPalette(editor->palette());tabs->setFont(editor->font());
         editor->setParent(tabs,Qt::Widget);
         editor->setWindowModality(Qt::NonModal);
         editor->setMinimumSize(nativeSize);
         tabs->addTab(editor,"Keyboard Customization");
+        new EmbeddedDialogAnchor(editor);
         auto device=new SpeedEditorCustomization(tabs);speedEditor=device;
         tabs->addTab(device,"Speed Editor Customization");
         device->bindNativeCommands(editor);
@@ -55,6 +59,7 @@ public:
             if(index==1 && keyboard)device->bindNativeCommands(keyboard);
         });
         tabs->resize(nativeSize.width(),nativeSize.height()+tabs->tabBar()->sizeHint().height());
+        tabs->setProperty("openGateFloatingMinimumSize",tabs->size());
         tabs->hide();
         return tabs;
     }

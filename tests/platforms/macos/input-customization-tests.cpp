@@ -2,6 +2,7 @@
 #include "../../../src/core/inputcustomizationpanel.h"
 #include "../../../src/core/panelsession.h"
 #include "../../core/input-customization/diagramchecks.h"
+#include "../../core/input-customization/hostingchecks.h"
 #include <QApplication>
 #include <QStandardItemModel>
 #include <QTemporaryDir>
@@ -77,15 +78,26 @@ int main(int argc,char **argv) {
         check(!session.setInterfaceScale(.9) && session.setInterfaceScale(1.0),"native baseline is the minimum content scale");
         check(native->minimumSize()==nativeMinimum && native->findChild<QLabel *>("fixtureNativeLabel")->font()==font,
               "reset restores native control metrics without drift");
+        session.setInterfaceScale(1.5);
         session.window()->resize(560,420);QApplication::processEvents();
         auto area=session.window()->findChild<QScrollArea *>();
-        check(area && area->horizontalScrollBar()->maximum()>0 && area->verticalScrollBar()->maximum()>0,
-              "small host reaches full native minimum through existing overflow");
+        check(session.window()->size().width()>=session.window()->minimumWidth() &&
+              session.window()->size().height()>=session.window()->minimumHeight() &&
+              area && area->horizontalScrollBar()->maximum()>0 && area->verticalScrollBar()->maximum()>0,
+              "host respects usable minimum while enlarged native content remains reachable through overflow");
+        OpenGateTest::inputHostingChecks(tabs,native,area,check);
+        session.setInterfaceScale(1.0);
         native->findChild<QPushButton *>("fixtureNativeSave")->click();
         check(saves==1,"native Save connection survives hosting");
         tabs->setCurrentIndex(1);QApplication::processEvents();
         check(!native->isVisible() && tabs->currentWidget()->objectName()=="openGateSpeedEditorCustomization",
               "device tab is selectable without replacing native keyboard ownership");
+        auto diagram=dynamic_cast<Unbound::SpeedEditorDiagram *>(tabs->currentWidget()->findChild<QWidget *>("openGateSpeedEditorDiagram"));
+        diagram->button("dial")->click();
+        QMouseEvent outside(QEvent::MouseButtonPress,QPointF(1,1),Qt::LeftButton,Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(tabs->currentWidget(),&outside);
+        check(diagram->selectedKey().isEmpty() && !diagram->button("dial")->isChecked(),
+              "clicking empty device-page background also clears selection");
         if(const auto path=qEnvironmentVariable("OPENGATE_INPUT_PREVIEW_SNAPSHOT");!path.isEmpty()) {
             auto device=tabs->currentWidget();device->resize(device->sizeHint().expandedTo(QSize(1200,1000)));
             check(device->grab().save(path),"device page render is captured");

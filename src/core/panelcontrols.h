@@ -57,6 +57,7 @@
 #include "clipcolorpreviewcommands.h"
 #include "colormanagerpanel.h"
 #include "inputcustomizationpanel.h"
+#include "nativekeyboardentryroute.h"
 #include "panelcommandmenu.h"
 #include "nativeeditcommands.h"
 #include "nativepaneltoggles.h"
@@ -422,6 +423,14 @@ public:
             colorTextures=new Unbound::ColorTextureToolbar(this,*display,[this]{commands->invoke("color-display.toggle-textures","opengate-command-toolbar");});
         }
         if(inputCustomizationEnabled) {
+            nativeKeyboardEntry=new Unbound::NativeKeyboardEntryRoute(this);
+            nativeKeyboardEntry->enabled=[this]{return !quitting && page() && page()->isVisible() && !QApplication::activeModalWidget();};
+            nativeKeyboardEntry->shortcutOwners=[this](const QKeySequence &key){return commands->nativeShortcutOwners(key);};
+            nativeKeyboardEntry->openPanel=[this]{
+                QString error;
+                if(!inputCustomizationPanel.ensure(page(),error)){status->setText(error);return false;}
+                revealOwnedPanel(Unbound::InputCustomizationPanel::id());return true;
+            };
             commands->customizationPanelRequested=[this]{revealOwnedPanel(Unbound::InputCustomizationPanel::id());};
             inputCustomizationPanel.closeRequested=[this]{
                 for(int i=0;i<panels.size();++i)if(panels[i].name==Unbound::InputCustomizationPanel::id())showPanel(i,false);
@@ -1313,6 +1322,7 @@ private:
             // expansion checkpoint without restoring or refreshing any widgets.
             quitting=true; ++bulkVersion; saveTimer.stop(); restoreTimer.stop();
             inputCustomizationPanel.abandonForQuit();
+            if(nativeKeyboardEntry)nativeKeyboardEntry->abandonForQuit();
             persistWorkspace(false,true);
             if(workspaceRestore)workspaceRestore->cancel();
             expansionController->abandonForQuit();
@@ -1359,6 +1369,7 @@ private:
     QList<Panel> panels;
     Unbound::ColorManagerPanel colorManagerPanel;
     Unbound::InputCustomizationPanel inputCustomizationPanel;
+    Unbound::NativeKeyboardEntryRoute *nativeKeyboardEntry=nullptr;
     Unbound::NativeSurfaceDoors nativeSurfaceDoors;
     Unbound::NativePanelToggles *nativeToggles=nullptr;
     Unbound::NativePanelNavigation *nativeNavigation=nullptr;

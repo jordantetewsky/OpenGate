@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include <QAbstractButton>
-#include <QButtonGroup>
+#include <QFocusEvent>
 #include <QFontMetricsF>
 #include <QMap>
 #include <QPainter>
+#include <QMouseEvent>
 #include <QResizeEvent>
 #include <QtMath>
 #include <QWidget>
@@ -30,6 +31,17 @@ public:
     Tone keyTone() const { return tone; }
 
 protected:
+    void focusInEvent(QFocusEvent *event) override {
+        keyboardFocus=event->reason()==Qt::TabFocusReason || event->reason()==Qt::BacktabFocusReason ||
+                      event->reason()==Qt::ShortcutFocusReason;
+        QAbstractButton::focusInEvent(event);update();
+    }
+    void focusOutEvent(QFocusEvent *event) override {
+        keyboardFocus=false;QAbstractButton::focusOutEvent(event);update();
+    }
+    void mousePressEvent(QMouseEvent *event) override {
+        keyboardFocus=false;QAbstractButton::mousePressEvent(event);update();
+    }
     void paintEvent(QPaintEvent *) override {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
@@ -82,10 +94,11 @@ protected:
     }
 
 private:
+    bool keyboardFocus=false;
     QString alternate;
     Tone tone;
     void paintSelection(QPainter &painter, const QRectF &rect, qreal radius, qreal line) {
-        if (!isChecked() && !hasFocus()) return;
+        if (!isChecked() && !keyboardFocus) return;
         painter.setBrush(Qt::NoBrush);
         painter.setPen(QPen(QColor("#f0f0f0"), line * 1.7,
                             isChecked() ? Qt::SolidLine : Qt::DashLine));
@@ -124,17 +137,14 @@ public:
     explicit SpeedEditorDiagram(QWidget *parent = nullptr) : QWidget(parent) {
         setObjectName("openGateSpeedEditorDiagram");
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        auto group = new QButtonGroup(this);
-        group->setExclusive(true);
         using T = SpeedEditorKey::Tone;
         const auto add = [&](QString id, QString text, QString alternate,
                              T tone, qreal x, qreal y, qreal width = 1., qreal height = 1.) {
             auto key = new SpeedEditorKey(id, text, alternate, tone, this);
-            group->addButton(key);
             keys.insert(id, key);
             positions.append({key, QRectF(x, y, width, height)});
-            connect(key, &QAbstractButton::clicked, this, [this, id] {
-                current = id;
+            connect(key, &QAbstractButton::clicked, this, [this, id](bool checked) {
+                setSelectedKey(checked?id:QString());
                 if (selected) selected(current);
             });
         };
@@ -187,10 +197,16 @@ public:
     QString selectedKey() const { return current; }
     bool setSelectedKey(const QString &id) {
         auto key = keys.value(id);
-        if (!key) return false;
+        if (!id.isEmpty() && !key) return false;
         current = id;
-        key->setChecked(true);
+        for(auto candidate:keys)candidate->setChecked(candidate==key);
         return true;
+    }
+    void clearSelection() {
+        if(current.isEmpty())return;
+        setSelectedKey({});
+        for(auto key:keys)key->clearFocus();
+        if(selected)selected(current);
     }
     SpeedEditorKey *button(const QString &id) const { return keys.value(id); }
     QStringList keyIds() const { return keys.keys(); }
@@ -202,6 +218,10 @@ public:
     QSize sizeHint() const override { return minimumSizeHint(); }
 
 protected:
+    void mousePressEvent(QMouseEvent *event) override {
+        if(event->button()==Qt::LeftButton){clearSelection();event->accept();return;}
+        QWidget::mousePressEvent(event);
+    }
     void resizeEvent(QResizeEvent *) override { arrange(); }
     void changeEvent(QEvent *event) override {
         QWidget::changeEvent(event);

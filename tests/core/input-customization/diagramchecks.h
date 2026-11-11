@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "../../../src/core/speededitordiagram.h"
+#include <QApplication>
 
 namespace OpenGateTest {
 template <typename Check> void speedEditorDiagramChecks(Check check) {
@@ -16,16 +17,28 @@ template <typename Check> void speedEditorDiagramChecks(Check check) {
               diagram.button("dial")->keyTone() == Tone::Dial,
           "distinct hardware control colors are preserved");
     int selections = 0;
+    QString lastSelection;
     diagram.selected = [&](QString id) {
         ++selections;
-        check(id == "cam_7", "camera selection publishes its stable owned ID");
+        lastSelection=id;
     };
     diagram.button("cam_7")->click();
-    check(selections == 1 && diagram.selectedKey() == "cam_7" &&
+    check(selections == 1 && lastSelection=="cam_7" && diagram.selectedKey() == "cam_7" &&
               diagram.button("cam_7")->isChecked() && !diagram.button("roll")->isChecked(),
           "physical controls share one selected key without dispatching hardware commands");
     check(!diagram.setSelectedKey("missing") && diagram.selectedKey() == "cam_7",
           "unknown control cannot replace selected key");
+    diagram.button("cam_7")->click();
+    check(selections==2 && lastSelection.isEmpty() && diagram.selectedKey().isEmpty() &&
+              !diagram.button("cam_7")->isChecked(),"clicking selected key again clears editor selection");
+    diagram.button("dial")->click();diagram.button("dial")->click();
+    check(diagram.selectedKey().isEmpty() && !diagram.button("dial")->isChecked(),
+          "clicking selected dial again clears its highlight");
+    diagram.button("jog")->click();
+    QMouseEvent background(QEvent::MouseButtonPress,QPointF(2,2),Qt::LeftButton,Qt::LeftButton,Qt::NoModifier);
+    QApplication::sendEvent(&diagram,&background);
+    check(diagram.selectedKey().isEmpty() && lastSelection.isEmpty() && !diagram.button("jog")->isChecked(),
+          "clicking diagram gray background clears selected control");
     bool accessible = true;
     for (const auto &id : diagram.keyIds()) {
         const auto key = diagram.button(id);

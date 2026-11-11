@@ -31,6 +31,8 @@
 #include "cinemaviewer.h"
 #include "uiworktiming.h"
 #include "sourceplayerpresentation.h"
+#include "paneltabselection.h"
+#include "panelfloatingminimum.h"
 
 namespace Unbound {
 // Managed native-content session. Each instance owns one host and preserves one slot.
@@ -41,9 +43,11 @@ public:
     {
         contentScale.changed=[this]{if(arrangementChanged)arrangementChanged();};
         timelinePresentation.changed=[this]{if(arrangementChanged)arrangementChanged();};
+        tabSelection.changed=[this]{if(arrangementChanged)arrangementChanged();};
         arrangeTimer.setSingleShot(true);
         arrangeTimer.setInterval(180);
         connect(&arrangeTimer, &QTimer::timeout, this, [this] {
+            applyPanelFloatingMinimum(scaleSurface(),host);
             if (constrain && window()) keepOnDisplay(window()->window());
             if (arrangementChanged) arrangementChanged();
         });
@@ -60,6 +64,7 @@ public:
         // Both undock paths install this session's wrapper on its private host.
         // A queued host-context drop may outlive the session during app teardown.
         if(host)static_cast<WorkspaceFloatingHost *>(host.data())->attachRequested={};
+        tabSelection.release();tabSelection.changed={};
         contentScale.abandonForQuit(); timelinePresentation.release(); timelineToolbar.abandonForQuit();
         widthAllowance.abandonForQuit(); groupWidth.abandonForQuit(); vacatedContents.abandonForQuit();
         overflow.forget();
@@ -207,21 +212,23 @@ public:
     }
     QJsonObject interfaceState() const {
         auto saved=contentScale.snapshot();
+        const auto tabs=tabSelection.snapshot();
+        for(auto it=tabs.begin();it!=tabs.end();++it)saved[it.key()]=it.value();
         const auto bands=timelinePresentation.snapshot();
         for(auto it=bands.begin();it!=bands.end();++it)saved[it.key()]=it.value();
         return saved;
     }
     bool restoreInterfaceState(const QJsonObject &saved) {
-        const auto previous=interfaceState();contentScale.restoreState(saved);timelinePresentation.restoreState(saved);
+        const auto previous=interfaceState();contentScale.restoreState(saved);timelinePresentation.restoreState(saved);tabSelection.restore(saved);
         if(refreshMetricScale())return true;
-        contentScale.restoreState(previous);timelinePresentation.restoreState(previous);refreshMetricScale();return false;
+        contentScale.restoreState(previous);timelinePresentation.restoreState(previous);tabSelection.restore(previous);refreshMetricScale();return false;
     }
     bool supportsContentScale() const { return active() && PanelContentScale::supported(scaleSurface()); }
     bool hiddenByUser() const { return userHidden; }
     QPoint overflowOffset() const { return overflow.offset(); }
     void restoreOverflowOffset(QPoint position) { overflow.restoreOffset(position); }
     void setConstrained(bool enabled) { constrain = enabled; if (enabled && window()) keepOnDisplay(window()->window()); }
-    void bringOnScreen() { if (window()) keepOnDisplay(window()->window()); if (arrangementChanged) arrangementChanged(); }
+    void bringOnScreen() { applyPanelFloatingMinimum(scaleSurface(),host);if (window()) keepOnDisplay(window()->window()); if (arrangementChanged) arrangementChanged(); }
     void centerOnCurrentDisplay()
     {
         if (!window()) return;
@@ -229,6 +236,7 @@ public:
         auto top = window()->window(); top->showNormal();
         auto screen = QGuiApplication::screenAt(QCursor::pos()); if (!screen) screen = QGuiApplication::primaryScreen();
         if (!screen) return;
+        applyPanelFloatingMinimum(scaleSurface(),host,screen->availableGeometry());
         QRect frame(QPoint(), top->frameGeometry().size().boundedTo(screen->availableGeometry().size()));
         frame.moveCenter(screen->availableGeometry().center());
         const auto decoration = top->frameGeometry().size() - top->size();
@@ -237,7 +245,7 @@ public:
         logEvent(QStringLiteral("panel.center"), {{"host", widgetState(top)}});
         if (arrangementChanged) arrangementChanged();
     }
-    void setFloatingGeometry(const QRect &r) { if (grouped()) { if (r.isValid()) detachedGeometry = r; } else if (host && r.isValid()) { host->setGeometry(r); if (constrain) keepOnDisplay(host); } }
+    void setFloatingGeometry(const QRect &r) { if (grouped()) { if (r.isValid()) detachedGeometry = r; } else if (host && r.isValid()) { applyPanelFloatingMinimum(scaleSurface(),host,r);host->setGeometry(r); if (constrain) keepOnDisplay(host); } }
     void setHiddenByUser(bool hide, bool activate = true)
     {
         userHidden = hide;
@@ -695,6 +703,7 @@ private:
         placeholderLayout = nullptr;
         userHidden = false;
         arrangeTimer.stop();
+        tabSelection.release();
         recoveryQueued = false; pendingDock = false;
     }
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
@@ -705,9 +714,13 @@ private:
     }
     bool refreshMetricScale() {
         if (!active()) return contentScale.suspend();
-        return contentScale.apply(scaleSurface());
+        tabSelection.attach(scaleSurface());
+        const bool applied=contentScale.apply(scaleSurface());
+        if(applied)applyPanelFloatingMinimum(scaleSurface(),host);
+        return applied;
     }
     PanelContentScale contentScale;
+    PanelTabSelection tabSelection;
     PanelOverflow overflow;
     TimelineToolbarViewport timelineToolbar;
     TimelineAttachedPresentation timelinePresentation;

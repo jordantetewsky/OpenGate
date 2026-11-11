@@ -37,14 +37,16 @@ public:
         // A standalone primary surface already fills its own workspace. Its
         // layout expands/reclaims content when bands are hidden or shown; never
         // resize that window into its own child rectangle (recursive shrinking).
-        if(target.workspace==window)return true;
+        const bool standalone=wasFloating && !wasGrouped;
+        if(!standalone && target.workspace==window)return true;
         const auto margins=window->windowHandle()?window->windowHandle()->frameMargins():QMargins();
         QRect bounds;
-        if(contentBounds) {
+        if(contentBounds && !standalone) {
             if(!target.workspace){if(report)report(QStringLiteral("The original workspace is no longer available."));return false;}
             bounds=contentBounds(target.workspace);
         } else {
-            // Legacy standalone controller fixtures do not supply a workspace.
+            // An existing independent float expands on its own screen. Native
+            // and grouped panels continue using their workspace content bounds.
             auto screen=window->screen();if(!screen)screen=QApplication::primaryScreen();
             if(screen)bounds=screen->availableGeometry();
         }
@@ -52,7 +54,7 @@ public:
         if(bounds.isEmpty()){report(QStringLiteral("The workspace content area is unavailable for this panel."));return false;}
         if(window->geometry()!=bounds) {
             window->setGeometry(bounds);
-            logEvent("panel.expand.bounds",{{"panel",target.name},{"x",bounds.x()},{"y",bounds.y()},{"width",bounds.width()},{"height",bounds.height()},{"scope",contentBounds?"workspace-viewport":"legacy-screen"}});
+            logEvent("panel.expand.bounds",{{"panel",target.name},{"x",bounds.x()},{"y",bounds.y()},{"width",bounds.width()},{"height",bounds.height()},{"scope",standalone?"floating-screen":contentBounds?"workspace-viewport":"legacy-screen"}});
         }
         return true;
     }
@@ -62,7 +64,15 @@ public:
         constraints.abandonForQuit(); priority.abandonForQuit();
     }
     void sessionInactive(int index) { if (current==index) {constraints.restore();priority.restore();current=-1;} }
-    QJsonObject panelSnapshot(int index,const QJsonObject &value) const { return current==index ? target.saved : value; }
+    QJsonObject panelSnapshot(int index,const QJsonObject &value) const {
+        if(current!=index)return value;
+        auto original=target.saved;
+        // Expansion preserves placement, not changes the user makes to the
+        // panel's content presentation while it is expanded.
+        const auto presentation=target.session->interfaceState();
+        for(auto it=presentation.begin();it!=presentation.end();++it)original[it.key()]=it.value();
+        return original;
+    }
     QJsonObject groupSnapshot(PanelGroup *group) const
     { return current>=0 && group==originalGroup ? originalGroupState : group->snapshot(); }
     QJsonObject nativeSnapshot(const QJsonObject &value) const

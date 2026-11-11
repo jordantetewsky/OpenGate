@@ -32,9 +32,12 @@ public:
         auto selectedBox=new QWidget(this);auto details=new QVBoxLayout(selectedBox);
         details->addWidget(new QLabel("Active Key",selectedBox));
         active=new QLabel(selectedBox);active->setObjectName("openGateSpeedEditorActiveKey");details->addWidget(active);
-        details->addWidget(new QLabel("Behavior",selectedBox));
-        behavior=new QComboBox(selectedBox);behavior->addItems({"Native","Gesture button","Mode selector"});
+        details->addWidget(new QLabel("Button behavior",selectedBox));
+        behavior=new QComboBox(selectedBox);behavior->addItems({"Native","Action button","Dial mode button"});
         behavior->setEnabled(false);details->addWidget(behavior);
+        auto modeHelp=new QLabel("A dial mode button chooses what the jogwheel controls until another mode is selected. "
+                                "Only one dial mode can be active; a mode button has no separate press or hold actions.",selectedBox);
+        modeHelp->setWordWrap(true);details->addWidget(modeHelp);
         details->addWidget(new QLabel("Gesture",selectedBox));
         gesture=new QComboBox(selectedBox);gesture->addItems({"Single press","Double press","Hold","Hold + dial left","Hold + dial right"});
         gesture->setEnabled(false);details->addWidget(gesture);
@@ -51,13 +54,18 @@ public:
     }
     bool bindNativeCommands(QWidget *editor) {return browser->bind(editor);}
     std::function<void()> closeRequested;
+protected:
+    void mousePressEvent(QMouseEvent *event) override {
+        if(event->button()==Qt::LeftButton){diagram->clearSelection();event->accept();return;}
+        QWidget::mousePressEvent(event);
+    }
 private:
     SpeedEditorDiagram *diagram;
     NativeCommandBrowser *browser;
     QComboBox *profiles,*behavior,*gesture;
     QLabel *active;
     void select(const QString &key) {
-        auto button=diagram->button(key);active->setText(button?button->text():key);
+        auto button=diagram->button(key);active->setText(button?button->text():QString("Select a button or the dial."));
         const bool mode=key=="shtl"||key=="jog"||key=="scrl";
         behavior->setToolTip(mode?"Native dial mode selector":"Native button behavior is preserved");
     }

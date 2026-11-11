@@ -10,6 +10,7 @@
 #include <cstdio>
 #include "panelcontrols.h"
 #include "../../core/input-customization/modeindependentchecks.h"
+#include "../../core/input-customization/floatingpresentationchecks.h"
 static void settle(int ms=600){QElapsedTimer t;t.start();while(t.elapsed()<ms){QApplication::processEvents();QThread::msleep(1);}}
 template<class T>T *component(QObject *owner){for(auto child:owner->children())if(auto v=dynamic_cast<T *>(child))return v;return nullptr;}
 int main(int argc,char **argv){
@@ -71,6 +72,12 @@ int main(int argc,char **argv){
  check(!binding->active()&&page->layout()==native,"Native return restores original layout after caller operations");
  check(buttons["MediaPool"]->isChecked()==nativePanels["frameEditPageMediaPool"]->isVisible()&&buttons["EditIndex"]->isChecked()==nativePanels["frameEditPageEditIndex"]->isVisible(),"Native return reflects native slot visibility rather than stale OpenGate door state");
  OpenGateTest::inputModeIndependentChecks(controls,ui,callers,&main,nativePanels["frameConformTimelines"],check,settle);
+ if(auto input=OpenGateTest::inputSession(controls)){
+  input->setHiddenByUser(false);settle(100);
+  auto tabs=input->window()->findChild<QTabWidget *>(Unbound::InputCustomizationPanel::id());
+  OpenGateTest::inputFloatingPresentationChecks(controls,input,tabs,check,settle);
+  input->setHiddenByUser(true);settle(400);
+ }
  }
  OpenGateTest::inputModeIndependentRestartChecks(check,settle);
  if(failures){files.setAutoRemove(false);std::fprintf(stderr,"logs: %s\n",qPrintable(files.path()));}

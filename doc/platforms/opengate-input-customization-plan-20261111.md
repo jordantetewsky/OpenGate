@@ -349,3 +349,50 @@ The explicit local build option `OPENGATE_INPUT_CUSTOMIZATION_PREVIEW=1` enables
 the existing experiment at process startup and is recorded in the build
 manifest. This makes an installed preview reachable on ordinary relaunch without
 modifying global launch settings. Default builds retain the opt-in gate.
+
+### Live preview corrections — November 11, 18:30 follow-up
+
+Jordan's screenshots established that the native editor and device tab open in
+Resolve. They also exposed cropped tab text, an embedded dialog that can move
+inside its tab, and selection highlights that cannot be cleared. Those are bugs,
+not accepted preview behavior.
+
+The agreed correction keeps two entry points (Resolve's native Keyboard
+Customization action/assigned shortcut and Panels) for the same retained editor.
+Dockability is not being redesigned in this pass. Floating tilde expansion uses
+the current screen's usable area and restores the original frame. The owned
+editor gets a screen-bounded baseline host minimum; enlarged content continues
+using bounded overflow. Position, size, scale and selected tab use the existing
+session/settings path in either UI mode.
+
+The owned tab bar measures complete labels and retains native tab chrome. A
+focused embedded-dialog guard prevents native header movement from displacing
+content within the page while leaving native preset/command/Save input intact.
+The device diagram allows empty selection: a second click or empty-background
+click clears the selection. This is editor selection, not active hardware mode.
+
+The button-behavior terminology is Action button and Dial mode button. The
+latter persistently chooses what the jogwheel controls, permits only one active
+mode, and excludes other button gesture assignments. Current Native profile
+remains read-only in this UI preview; input dispatch/profile writing is still
+outstanding. A lazy, optionally visible device activity/mode monitor is a later
+part of this feature and is not included in these UI corrections.
+
+Correction verification before build/install: `input customization failures=0`,
+`panel caller flow failures=0`, `native keyboard entry route failures=0`.
+The tests exercise a deliberately narrow tab style at multiple font scales,
+embedded native-dialog displacement, empty selection on repeated/background
+clicks, current-screen expansion through the real coordinator, exact restore,
+minimum sizing, selected-tab persistence through coordinator recreation, native
+menu/assigned-shortcut routing, fallback, and queued requests after quit.
+These are fixture results; the replacement is not yet installed at this entry.
+
+Organization review: InputCustomizationTabBar owns label measurement/painting;
+EmbeddedDialogAnchor owns only embedded positioning. PanelTabSelection binds to
+existing session snapshots; applyPanelFloatingMinimum supplies only screen-bounded
+host constraints. NativeKeyboardEntryRoute leases the existing native menu row
+and handles its assigned shortcut, restoring original connections on normal
+teardown and abandoning UI restoration on quit. PanelControls wires these
+components. No new profile/settings writer, color reader, assignment/history
+implementation or hardware input dispatcher was added. Shared callers compile
+on Mac; Windows runtime and actual second-display behavior remain unverified.

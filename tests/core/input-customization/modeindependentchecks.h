@@ -128,6 +128,9 @@ void inputModeIndependentRestartChecks(Check check,Settle settle) {
     check(session && session->active() && session->hiddenByUser(),
           "coordinator restart restores retained hidden customization in Native mode");
     if(!session)return;
+    auto tabs=session->window()->findChild<QTabWidget *>(Unbound::InputCustomizationPanel::id());
+    check(tabs && tabs->currentIndex()==1 && tabs->currentWidget()->objectName()==before["selected_tab"].toString(),
+          "coordinator restart restores selected Speed Editor tab from session record");
     check(Unbound::PageWorkspaceState::mode(savedInputWorkspace())=="native" &&
               session->floatingGeometry()==Unbound::WorkspaceSettings::rectangle(before) &&
               session->interfaceScale()==before["interface_scale"].toDouble(),
