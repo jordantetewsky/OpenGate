@@ -63,9 +63,11 @@ public:
     }
     void showEditor()
     {
+        if(customizationPanelRequested){customizationPanelRequested();return;}
         if (!nativeEditor.open("OpenGate"))
             logEvent("keyboard.native.unavailable",{{"origin","opengate-command-menu"},{"duplicate_editor_opened",false}});
     }
+    std::function<void()> customizationPanelRequested;
     QStringList nativeShortcutOwners(const QKeySequence &sequence) const {
         if(!preset || currentWorkspacePage(resolveMainWindow())!="edit" ||
            !preset->snapshot().error.isEmpty() || !preset->snapshot().present)return {};

@@ -1,3 +1,15 @@
+## November 11 input-customization preview checkpoint
+
+A separate feature candidate preserves the actual native keyboard editor inside
+an existing managed panel session, with a physical Speed Editor preview tab.
+Universal Mac compilation and hidden session/diagram checks pass; actual native
+factory invocation, painted-key scaling, catalog coverage, Save/Cancel and quit
+remain live checks. Device mapping/profile writes are disabled, and the native
+Speed Editor command category is not registered. Original Resolve menu entry and
+inner-tab/restart draft restoration remain gaps. See
+[the plan and acceptance mapping](opengate-input-customization-plan-20261111.md).
+No installation or change to the other thread's live color runtime occurred.
+
 ## November 8 current checkpoint
 
 The explicit native history action/erase trial has not executed cleanly: its

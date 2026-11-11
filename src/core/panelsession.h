@@ -195,6 +195,10 @@ public:
     void setSnapping(bool enabled) { snapping = enabled; if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setSnapping(enabled); }
     double interfaceScale() const { return contentScale.value(); }
     bool setInterfaceScale(double value) {
+        if(auto surface=scaleSurface()) {
+            const auto minimum=surface->property("openGateMinimumContentScale");
+            if(minimum.isValid() && value<minimum.toDouble())return false;
+        }
         const auto previous=contentScale.value();
         if (!contentScale.setValue(value)) return false;
         if (!refreshMetricScale()) { contentScale.setValue(previous);refreshMetricScale();return false; }
@@ -399,7 +403,8 @@ public:
         // direct presentation parent, as before 50f7498. Other overflow paths,
         // native minima, ownership/recovery and command behavior are unchanged.
         // This is not evidence that native footage loading has been repaired.
-        const bool scrollContent=scrollInspector || scrollToolbar || scrollMediaPool;
+        const bool scrollContent=scrollInspector || scrollToolbar || scrollMediaPool ||
+            widget->property("openGateReachableOverflow").toBool();
         box->addWidget(scrollContent ? overflow.wrap(widget,host,scrollToolbar) : widget);
         relaxedWidth = widget->objectName() == QLatin1String("widgetEditInspector") ||
             widget->objectName() == QLatin1String("frameEditPageMediaPool");
