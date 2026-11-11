@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "clipcolorpresetcommands.h"
+#include "clipcolornativecommands.h"
 #include "isolatednativeaction.h"
 #include "mediapoolclipcolorpreview.h"
 #include "menuactioncolorswatch.h"
@@ -17,9 +18,10 @@ class ClipColorPreviewCommands : public QObject {
   public:
     ClipColorPreviewCommands(QObject *owner, PanelCommands *commands,
                              std::function<void()> manager = {}, bool preview = true,
-                             ColorPalette *palette = nullptr)
+                             ColorPalette *palette = nullptr,
+                             ClipColorAssignmentBackend *document = nullptr)
         : QObject(owner), commands(commands), pool(this), openManager(std::move(manager)),
-          previewEnabled(preview), sharedPalette(palette) {
+          previewEnabled(preview), sharedPalette(palette), document(document) {
         QPointer<ClipColorPreviewCommands> alive = this;
         if (previewEnabled)
             for (const auto &surface : surfaces())
@@ -41,6 +43,8 @@ class ClipColorPreviewCommands : public QObject {
         if (palette)
             presets = new ClipColorPresetCommands(
                 this, commands, *palette, [this](QWidget *origin) { return timeline(origin); });
+        nativeAssignments = new ClipColorNativeCommands(this,
+            [this](QWidget *origin) { return timeline(origin); });
         nativeColors = new NativeClipColorActions(
             this, [this](QAction *action) { nativeColorTriggered(action); });
         new NativeClipColorMenus(this,
@@ -70,8 +74,10 @@ class ClipColorPreviewCommands : public QObject {
     std::function<void()> openManager;
     bool previewEnabled = true;
     ColorPalette *sharedPalette = nullptr;
+    QPointer<ClipColorAssignmentBackend> document;
     ClipColorPresetCommands *presets = nullptr;
     NativeClipColorActions *nativeColors = nullptr;
+    ClipColorNativeCommands *nativeAssignments = nullptr;
     QHash<QGraphicsView *, QPointer<TimelineClipColorPreview>> timelines;
     QHash<QMenu *, Menu> menus;
     static QList<Surface> surfaces() {
@@ -109,7 +115,7 @@ class ClipColorPreviewCommands : public QObject {
         if (!view)
             return nullptr;
         if (!timelines.value(view)) {
-            timelines[view] = new TimelineClipColorPreview(view, view, sharedPalette);
+            timelines[view] = TimelineClipColorPreview::ensure(view, sharedPalette, document);
             connect(view, &QObject::destroyed, this, [this, view] { timelines.remove(view); });
         }
         return timelines.value(view);
@@ -179,6 +185,8 @@ class ClipColorPreviewCommands : public QObject {
     }
     void prepare(QMenu *menu, QWidget *origin) {
         const auto panel = target(origin).panel;
+        if (nativeAssignments)
+            nativeAssignments->prepare(menu, origin, panel == "frameConformTimelines" ? timeline(origin) : nullptr);
         if (presets)
             presets->prepare(menu, origin);
         const bool managerSupported =

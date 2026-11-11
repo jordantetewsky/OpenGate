@@ -50,6 +50,11 @@ public:
     }
     bool apply(QWidget *surface) {
         if (!surface) return suspend();
+        // Restored workspace state can precede surface discovery. Enforce a
+        // native baseline at attachment too, not only on interactive +/- calls.
+        const auto minimum=surface->property("openGateMinimumContentScale");
+        if(minimum.isValid() && qIsFinite(minimum.toDouble()))
+            factor=qMax(factor,qBound(.7,minimum.toDouble(),3.0));
         if(isTimeline(surface)) {
             metrics.restore();
             if(!mediaPool.restore())return false;

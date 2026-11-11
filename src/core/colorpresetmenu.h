@@ -17,7 +17,7 @@ class ColorPresetMenu : public QObject {
     }
     void prepare(QMenu *menu, const ColorPalette &palette, const QString &selected,
                  std::function<bool(const ColorPreset &)> enabled,
-                 std::function<void(QString)> invoke) {
+                 std::function<void(QString)> invoke, bool documentBacked = false) {
         if (!menus.contains(menu)) {
             menus.insert(menu, {});
             menus[menu].scroll = QSharedPointer<MenuScrollableStyleLease>::create(menu);
@@ -76,6 +76,11 @@ class ColorPresetMenu : public QObject {
                 it.value()->setVisible(true);
                 it.value()->setEnabled(preset && enabled && enabled(*preset));
                 it.value()->setChecked(it.key() == selected);
+                if (preset)
+                    it.value()->setToolTip(!preset->opaque()
+                        ? "Translucent native clip rendering is not verified yet"
+                        : documentBacked ? "Apply this paint to the selected clips"
+                                         : "Temporary rendering trial; project saving and native Undo are not connected");
             }
     }
     void hide(QMenu *menu) {

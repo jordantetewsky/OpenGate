@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "colorpalette.h"
+#include "colorcategorytree.h"
 #include "colorpresetpaint.h"
 #include <QDropEvent>
 #include <QInputDialog>
@@ -18,7 +19,7 @@ class ColorCategoryEditor : public QWidget {
         auto box = new QVBoxLayout(this);
         box->setContentsMargins(4, 4, 4, 4);
         box->setSpacing(8);
-        tree = new Tree(this);
+        tree = new ColorCategoryTree(this);
         tree->setHeaderHidden(true);
         tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
         tree->setIconSize(QSize(34, 14));
@@ -128,6 +129,14 @@ class ColorCategoryEditor : public QWidget {
         });
     }
     void setData(const ColorPalette::Data &data, const QString &selection = {}) {
+        QHash<QString, bool> expanded;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            const auto item = tree->topLevelItem(i);
+            expanded.insert(item->data(0, Qt::UserRole).toString(), item->isExpanded());
+        }
+        const auto current = tree->currentItem();
+        const auto selectedId = selection.isEmpty() && current
+            ? current->data(0, Qt::UserRole).toString() : selection;
         model = data;
         const QSignalBlocker blocked(tree);
         tree->clear();
@@ -136,6 +145,7 @@ class ColorCategoryEditor : public QWidget {
             group->setIcon(0, gripIcon());
             group->setToolTip(0, "Drag to reorder this category and its swatches");
             group->setData(0, Qt::UserRole, c.id);
+            if (c.id == selectedId) tree->setCurrentItem(group);
             group->setFlags(group->flags() | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled);
             for (const auto &p : data.presets)
                 if (p.category == c.id) {
@@ -144,27 +154,15 @@ class ColorCategoryEditor : public QWidget {
                     row->setFlags((row->flags() | Qt::ItemIsDragEnabled) & ~Qt::ItemIsDropEnabled);
                     row->setIcon(0, gripIcon(&p));
                     row->setToolTip(0, "Drag to reorder or move this swatch to another category");
-                    if (p.id == selection)
+                    if (p.id == selectedId)
                         tree->setCurrentItem(row);
                 }
-            group->setExpanded(true);
+            group->setExpanded(expanded.value(c.id, true));
         }
     }
 
   private:
-    class Tree : public QTreeWidget {
-      public:
-        using QTreeWidget::QTreeWidget;
-        std::function<void()> dropped;
-
-      protected:
-        void dropEvent(QDropEvent *event) override {
-            QTreeWidget::dropEvent(event);
-            if (dropped)
-                dropped();
-        }
-    };
-    Tree *tree;
+    ColorCategoryTree *tree;
     ColorPresetPaint paint;
     QIcon gripIcon(const ColorPreset *preset = nullptr) {
         QPixmap icon(34, 14);

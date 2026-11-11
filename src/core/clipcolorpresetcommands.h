@@ -40,7 +40,7 @@ class ClipColorPresetCommands : public QObject {
                     QScopedValueRollback<QPointer<QWidget>> guard(explicitFocus, origin);
                     commands->invoke(commandId(id), "opengate-command-menu");
                 });
-            });
+            }, target->persistent());
     }
 
   private:

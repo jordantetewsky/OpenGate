@@ -2,6 +2,7 @@
 #pragma once
 #include "colorpreset.h"
 #include "perceptualcolormatch.h"
+#include "clipcolorstock.h"
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -44,14 +45,7 @@ class ColorStockComparison : public QWidget {
             if (best >= 0)
                 colors->setCurrentIndex(best);
         });
-        const QVector<QPair<QString, QString>> values{
-            {"Orange", "#EB6E01"},   {"Apricot", "#FFA833"}, {"Yellow", "#D4AD1F"},
-            {"Lime", "#9FC615"},     {"Olive", "#5F9921"},   {"Green", "#448F65"},
-            {"Teal", "#019899"},     {"Navy", "#005278"},    {"Blue", "#4376A1"},
-            {"Purple", "#9972A0"},   {"Violet", "#D0568D"},  {"Pink", "#E98CB5"},
-            {"Tan", "#B9AF97"},      {"Beige", "#C4A07C"},   {"Brown", "#996601"},
-            {"Chocolate", "#8C5A3F"}};
-        for (const auto &entry : values) {
+        for (const auto &entry : clipColorStockReferences()) {
             QPixmap icon(18, 12);
             icon.fill(QColor(entry.second));
             colors->addItem(QIcon(icon), entry.first, QColor(entry.second));

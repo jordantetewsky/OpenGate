@@ -9,11 +9,14 @@
 #include <QSaveFile>
 #include <QUuid>
 #include <functional>
+#include <memory>
 namespace Unbound {
 // One owner of the personal palette, category ordering and validated interchange.
 // This is deliberately not clip assignment or project-portable metadata storage.
 class ColorPalette {
   public:
+    ColorPalette(const ColorPalette &) = delete;
+    ColorPalette &operator=(const ColorPalette &) = delete;
     struct Category {
         QString id, name;
     };
@@ -46,6 +49,7 @@ class ColorPalette {
     quint64 revision() const {
         return version;
     }
+    std::weak_ptr<const int> lifetime() const { return alive; }
     // Consumers observe committed definitions only. Weak owners make the
     // feature's model/widget destruction order independent of subscriptions.
     void subscribe(QObject *owner, std::function<void()> changed) {
@@ -211,6 +215,7 @@ class ColorPalette {
     }
 
   private:
+    const std::shared_ptr<const int> alive = std::make_shared<const int>(0);
     QString path, lastError;
     Data data;
     struct Listener {

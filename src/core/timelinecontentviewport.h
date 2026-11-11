@@ -5,6 +5,7 @@
 #include <QtCore/qscopeguard.h>
 #include "timelinescenerenderer.h"
 #include "timelineclipcolorpaint.h"
+#include "timelineclipcolorpreview.h"
 #include "timelinetrackheaderlayout.h"
 #include "timelinetrackheadercontrols.h"
 #include "timelineinputrouter.h"
@@ -54,11 +55,12 @@ public:
         };
         renderer.paintNative=[this](QPainter *p,const std::function<void(QPainter *)> &native){clipPaint.render(view,p,native);};
         updates=new TimelineSceneUpdates(view,this);
+        QPointer<TimelineClipColorPreview> colors=TimelineClipColorPreview::ensure(view);
         updates->suspended=[this]{if(!rendering)renderer.releasePixels();};
         updates->capturing=[this]{return rendering;};
         updates->headerMovesWithTime=[this]{return !pinned;};
         updates->commandObserved=[this](const QString &source){evidence.requested(source,renderer.revision());};
-        updates->layoutChanged=[this]{if(!arranging && !rendering)arrange();};
+        updates->layoutChanged=[this,colors]{if(!arranging && !rendering)arrange();if(colors)colors->requestReload();};
         updates->damaged=[this](const QList<QRectF> &rects) {
             if(rects.isEmpty()){renderer.invalidateAll();updates->schedulePaint(QRegion(layer->rect()));return;}
             QRegion visible;

@@ -140,7 +140,12 @@ int main(int argc, char **argv) {
     put(owner+0x100, std::uintptr_t(0));
     assert(inspect(reader, ui, slide, [] { return true; }).status ==
            std::string("await-existing-sdk-proxy"));
+    const auto withoutProxy = inspect(reader, ui, slide, [] { return true; }, false);
+    assert(withoutProxy.valid && withoutProxy.id == expected && withoutProxy.model == owner);
     put(owner+0x100, proxy);
+    put(proxy+0x30, weak+8);
+    assert(!inspect(reader, ui, slide, [] { return true; }, false).valid);
+    put(proxy+0x30, weak);
     put(data+4, std::int32_t(10000));
     assert(!inspect(reader, ui, slide, [] { return true; }).valid);
     put(data+4, std::int32_t(expected.size()));

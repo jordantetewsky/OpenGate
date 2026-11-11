@@ -1,3 +1,59 @@
+## November 11 additive keyboard preview installed
+
+Jordan explicitly requested adding the keyboard branches while preserving the
+installed color behavior, custom colors and an exact rollback. The combined
+candidate is installed: runtime SHA-256
+`048017e43c42aec13bfd146d21225c4c20002131daf0d3a3a9672a5b2065b499`.
+All 25 installed file hashes and the strict bundle signature verify. All 203
+protected settings/palette files matched the closed-session checkpoint before
+Resolve reopened. No project command or color reassignment was performed.
+
+Rollback transaction: `580BA32A-9968-48A8-97C2-623F231A4DFB`, under
+`/Library/Application Support/CineWaltz/OpenGate/Transactions/`. Its
+`Restore Previous OpenGate.command` restores the exact `35ef8ec2…` installation.
+The install/exact-rollback rehearsal also passed before the real installation.
+
+Color provenance is recorded in
+[the preserved baseline review](opengate-keyboard-color-baseline-20261111.md).
+The combined input-customization and color-assignment fixtures pass; universal
+Mac compilation and signing pass. Resolve reopened as PID 69170 and OpenGate
+startup events are present. Actual native editor scaling, Save/Cancel and device
+preview acceptance remain Jordan's live test. Device mapping/profile writes
+remain disabled. Original Resolve Keyboard Customization menu parity is still
+pending; use the Edit page's Panels entry for this preview.
+
+The binary was compiled from this combined source before committing, so its
+embedded build label is `809c747-dirty`; the SHA above and retained source audit
+identify it. The keyboard-only branch at `5a1a0fa` is pushed to personal GitHub.
+No main merge or release publication occurred.
+
+## November 11 input-customization preview checkpoint (before installation)
+
+A separate feature candidate preserves the actual native keyboard editor inside
+an existing managed panel session, with a physical Speed Editor preview tab.
+Universal Mac compilation and hidden session/diagram checks pass; actual native
+factory invocation, painted-key scaling, catalog coverage, Save/Cancel and quit
+remain live checks. Device mapping/profile writes are disabled, and the native
+Speed Editor command category is not registered. Original Resolve menu entry and
+inner-tab/restart draft restoration remain gaps. See
+[the plan and acceptance mapping](opengate-input-customization-plan-20261111.md).
+No installation or change to the other thread's live color runtime occurred.
+
+The size-persistence follow-up keeps this owned panel active in Native and
+OpenGate modes, preserving its frame and scale through preset selection and
+Native return. The caller harness exercises the actual coordinator and existing
+settings store with a fixture native editor. The universal preview build and
+strict signature verify; actual Resolve relaunch remains unverified. The explicit
+local preview build flag makes the experiment available on ordinary relaunch.
+
+Installation is blocked on the color task's live-session/source handoff. That
+task is paused at an approval prompt. Its installed `35ef8ec2…` runtime contains
+uncommitted color work absent from this feature branch; its latest worktree also
+contains newer unsuccessful reader experiments. Do not replace that runtime
+with this older-base feature binary or silently ship the newer color experiments.
+The requested handoff must identify a combined source baseline and release the
+live Resolve session before the already-authorized installation proceeds.
+
 ## November 8 current checkpoint
 
 The explicit native history action/erase trial has not executed cleanly: its

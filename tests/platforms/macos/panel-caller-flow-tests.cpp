@@ -9,12 +9,14 @@
 #include <QThread>
 #include <cstdio>
 #include "panelcontrols.h"
+#include "../../core/input-customization/modeindependentchecks.h"
 static void settle(int ms=600){QElapsedTimer t;t.start();while(t.elapsed()<ms){QApplication::processEvents();QThread::msleep(1);}}
 template<class T>T *component(QObject *owner){for(auto child:owner->children())if(auto v=dynamic_cast<T *>(child))return v;return nullptr;}
 int main(int argc,char **argv){
  QApplication app(argc,argv);app.setQuitOnLastWindowClosed(false);QTemporaryDir files(OpenGateTest::evidenceTemplate("panel-caller-flow-tests"));OpenGateTest::retainEvidence(files);
  const bool restart=false;
  if(!restart){qputenv("UNBOUND_DIAGNOSTICS_DIR",files.path().toUtf8());qputenv("UNBOUND_WORKSPACE_FILE",(files.path()+"/Workspace.json").toUtf8());qputenv("UNBOUND_ARRANGEMENTS_FILE",(files.path()+"/Arrangements.json").toUtf8());}qputenv("UNBOUND_TEST_HIDDEN_HOSTS","1");
+ qputenv("OPENGATE_EXPERIMENTAL_INPUT_CUSTOMIZATION","1");
  int failures=0;auto check=[&](bool ok,const char *why){if(!ok){++failures;std::fprintf(stderr,"FAIL: %s\n",why);}};
  QWidget main;main.setAttribute(Qt::WA_DontShowOnScreen);main.setObjectName("UiMainWindow");main.resize(1400,900);auto outer=new QVBoxLayout(&main);
  auto bar=new QMenuBar(&main);bar->setNativeMenuBar(false);outer->setMenuBar(bar);auto workspace=bar->addMenu("Workspace");workspace->setObjectName("workspace");
@@ -40,7 +42,7 @@ int main(int argc,char **argv){
  int nativeCalls=0;for(auto button:buttons)QObject::connect(button,&QPushButton::clicked,[&]{++nativeCalls;});
  main.show();settle();
  {
- PanelControls controls;settle(1800);auto binding=component<Unbound::NativeWorkspaceBinding>(&controls);
+ PanelControls controls(OpenGateTest::inputEditorFixture);settle(1800);auto binding=component<Unbound::NativeWorkspaceBinding>(&controls);
  auto callers=component<Unbound::PanelCallerMenu>(&controls);auto ui=bar->findChild<QMenu *>("unboundWorkspaceUI");
  auto checked=[&](const QString &title){QMenu menu;callers->populateFlat(&menu);for(auto action:menu.actions())if(action->text()==title)return action->isChecked();check(false,"caller exists");return false;};
  auto call=[&](const QString &title){QMenu menu;callers->populateFlat(&menu);for(auto action:menu.actions())if(action->text()==title){action->trigger();break;}settle(250);};
@@ -68,7 +70,9 @@ int main(int argc,char **argv){
  auto nativeReturn=ui?ui->findChild<QAction *>("unboundRestoreNativeWorkspace"):nullptr;if(nativeReturn)nativeReturn->trigger();settle(450);
  check(!binding->active()&&page->layout()==native,"Native return restores original layout after caller operations");
  check(buttons["MediaPool"]->isChecked()==nativePanels["frameEditPageMediaPool"]->isVisible()&&buttons["EditIndex"]->isChecked()==nativePanels["frameEditPageEditIndex"]->isVisible(),"Native return reflects native slot visibility rather than stale OpenGate door state");
+ OpenGateTest::inputModeIndependentChecks(controls,ui,callers,&main,nativePanels["frameConformTimelines"],check,settle);
  }
+ OpenGateTest::inputModeIndependentRestartChecks(check,settle);
  if(failures){files.setAutoRemove(false);std::fprintf(stderr,"logs: %s\n",qPrintable(files.path()));}
  std::printf("panel caller flow failures=%d\n",failures);return failures?1:0;
 }

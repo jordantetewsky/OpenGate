@@ -6,6 +6,9 @@ qt="${1:-$root/build/macos/qtbase-source}"
 app="${2:-/Applications/DaVinci Resolve/DaVinci Resolve.app}"
 out="${OPENGATE_WIDGET_PROBE_OUT:-$root/build/macos/ofx-probe/UnboundLoadingProbe.ofx.bundle/Contents/MacOS}"
 development_flags=(-std=c++17)
+if [[ "${OPENGATE_INPUT_CUSTOMIZATION_PREVIEW:-0}" == 1 ]]; then
+    development_flags+=(-DOPENGATE_INPUT_CUSTOMIZATION_PREVIEW)
+fi
 if [[ "${OPENGATE_DEVELOPMENT_ENTRY:-0}" == 1 ]]; then
     development_flags+=(-DOPENGATE_DEVELOPMENT_ENTRY)
 fi
@@ -24,6 +27,13 @@ if [[ -n "${OPENGATE_NATIVE_COLOR_PROBE_HEADER:-}" ]]; then
     }
     probe_literal="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$OPENGATE_NATIVE_COLOR_PROBE_HEADER")"
     development_flags+=("-DOPENGATE_NATIVE_COLOR_PROBE_HEADER=$probe_literal")
+fi
+if [[ "${OPENGATE_LOCAL_PERSISTENT_CLIP_COLORS:-0}" == 1 ]]; then
+    [[ -n "${OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY:-}" ]] || {
+        echo 'Local persistent clip colors require an explicit color trial profile.' >&2
+        exit 1
+    }
+    development_flags+=(-DOPENGATE_LOCAL_PERSISTENT_CLIP_COLORS)
 fi
 if [[ ! -f "$qt/src/corelib/global/qconfig.h" || ! -f "$qt/include/QtWidgets/QApplication" || ! -d "$out" ]]; then
     echo 'Configure Qt 5.15.2 headers and build the OpenFX probe first.' >&2

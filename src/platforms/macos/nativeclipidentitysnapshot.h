@@ -46,7 +46,7 @@ bool read(const Reader &reader, std::uintptr_t base, std::size_t offset, T &valu
     return reader(base + offset, &value, sizeof(value));
 }
 inline Snapshot inspect(const Reader &reader, std::uintptr_t object, std::uintptr_t slide,
-                        const std::function<bool()> &alive) {
+                        const std::function<bool()> &alive, bool requireSdkProxy = true) {
     auto fail = [](const char *status) { return Snapshot{{}, status, 0, false}; };
     if (!reader || !alive || !alive())
         return fail("expired-ui-object");
@@ -62,11 +62,11 @@ inline Snapshot inspect(const Reader &reader, std::uintptr_t object, std::uintpt
         (ownerV != slide + 0x11d2d78f0ULL && ownerV != slide + 0x11d2d9908ULL &&
          ownerV != slide + 0x11d2d8938ULL))
         return fail("unsupported-model-vtable");
-    if (!read(reader, owner, 0x100, proxy) || !proxy)
+    if (!read(reader, owner, 0x100, proxy) || (requireSdkProxy && !proxy))
         return fail("await-existing-sdk-proxy");
-    if (!read(reader, proxy, 0, proxyV) || proxyV != slide + 0x11d4e6de0ULL)
+    if (proxy && (!read(reader, proxy, 0, proxyV) || proxyV != slide + 0x11d4e6de0ULL))
         return fail("unsupported-script-proxy");
-    if (!read(reader, proxy, 0x30, proxyWeak) || proxyWeak != weak)
+    if (proxy && (!read(reader, proxy, 0x30, proxyWeak) || proxyWeak != weak))
         return fail("proxy-owner-mismatch");
     std::uintptr_t data = 0;
     std::int32_t count = 0;
@@ -96,8 +96,8 @@ inline Snapshot inspect(const Reader &reader, std::uintptr_t object, std::uintpt
         !read(reader, weak, 0, owner2) || owner2 != owner ||
         !read(reader, owner, 0, ownerV2) || ownerV2 != ownerV ||
         !read(reader, owner, 0x100, proxy2) || proxy2 != proxy ||
-        !read(reader, proxy, 0, proxyV2) || proxyV2 != proxyV ||
-        !read(reader, proxy, 0x30, proxyWeak2) || proxyWeak2 != weak ||
+        (proxy && (!read(reader, proxy, 0, proxyV2) || proxyV2 != proxyV ||
+                   !read(reader, proxy, 0x30, proxyWeak2) || proxyWeak2 != weak)) ||
         !read(reader, owner, 0x18, data2) || data2 != data ||
         !read(reader, data, 4, count2) || count2 != count ||
         !read(reader, data, 16, offset2) || offset2 != offset)

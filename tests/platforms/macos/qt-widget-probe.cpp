@@ -55,6 +55,9 @@ extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets()
     QTimer::singleShot(30000, qApp, [] { captureWidgets(3); });
     const auto start=[] {
         if (qApp->findChild<QObject *>(QStringLiteral("unboundControlService"))) return;
+#ifdef OPENGATE_INPUT_CUSTOMIZATION_PREVIEW
+        qputenv("OPENGATE_EXPERIMENTAL_INPUT_CUSTOMIZATION", "1");
+#endif
 #ifdef OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY
         if (!Unbound::ColorVisualTrial::activate(QString::fromUtf8(OPENGATE_COLOR_VISUAL_TRIAL_DIRECTORY))) {
             Unbound::logEvent("color-trial.activation.failed",{{"reason","trial-profile-unavailable"}});
