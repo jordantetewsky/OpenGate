@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #import <AppKit/AppKit.h>
 #include "../../platform/nativekeyboardmenuroute.h"
+#include "../../core/diagnostics.h"
 #include <QPointer>
 #include <QTimer>
 
@@ -17,13 +18,20 @@
 @end
 @implementation OpenGateKeyboardMenuTarget
 - (void)invoke:(id)sender {
-    if(openPanel && openPanel())return;
+    const bool opened=openPanel && openPanel();
+    Unbound::logEvent("keyboard.native-menu.invoked",{{"panel_opened",opened},{"responder_chain",previousTarget==nil}});
+    if(opened)return;
     if(previousAction)[NSApp sendAction:previousAction to:previousTarget from:sender];
 }
 - (BOOL)validateMenuItem:(NSMenuItem *)sender {
-    if([previousTarget respondsToSelector:@selector(validateMenuItem:)])
-        return [previousTarget validateMenuItem:sender];
-    return sender.enabled;
+    // Qt deliberately leaves the target nil and resolves it through AppKit's
+    // responder chain. Resolve the ORIGINAL selector, never our invoke: bridge.
+    id validator=previousTarget ?: [NSApp targetForAction:previousAction to:nil from:sender];
+    if([validator respondsToSelector:@selector(validateMenuItem:)])
+        return [validator validateMenuItem:sender];
+    if([validator respondsToSelector:@selector(validateUserInterfaceItem:)])
+        return [validator validateUserInterfaceItem:sender];
+    return validator && sender.enabled;
 }
 - (void)dealloc {
     [item release];[previousTarget release];[super dealloc];
@@ -76,12 +84,13 @@ private:
             if(target->item.target==target){target->item.target=target->previousTarget;target->item.action=target->previousAction;}
             [target release];target=nil;
         }
-        if(!item.action || !item.target)return;
+        if(!item.action)return;
         target=[[OpenGateKeyboardMenuTarget alloc] init];
         target->item=[item retain];target->previousTarget=[item.target retain];target->previousAction=item.action;
         QPointer<MacKeyboardMenuRoute> alive(this);
         target->openPanel=[alive]{return alive && !alive->stopped && alive->open && alive->open();};
         item.target=target;item.action=@selector(invoke:);
+        logEvent("keyboard.native-menu.leased",{{"responder_chain",target->previousTarget==nil}});
     }
     void stopObserving() {
         if(observer){[[NSNotificationCenter defaultCenter] removeObserver:observer];observer=nil;}

@@ -9,6 +9,30 @@ support for native device remapping.
 
 ## UI repair checkpoint after planning consolidation
 
+### Live follow-up and keyboard-only merge scope
+
+Jordan reports the other UI fixes working, but the native application-menu entry
+still opens the original dialog on `6cfb407`. This explicitly fails entry parity;
+the prior fixture pass is not live acceptance of that route. Source inspection
+found the Mac adapter rejected nil targets, whereas the local Qt Cocoa source
+(`QCocoaMenuItem::resolveTargetAction`) deliberately uses nil for responder-chain
+dispatch. The adapter now accepts that case and resolves native validation using
+the original selector. A focused fixture covers nil-target routing, native target
+refresh, enablement, fallback and restoration; it passes. Small route diagnostics
+record whether a native-menu invocation opened the panel. Live causal confirmation
+and acceptance of this correction are still pending; no runtime attach was made
+because no Resolve process was present during the check.
+
+Jordan's merge scope is keyboard/Speed Editor UI only. The relevant branches are
+`feature/keyboard-customization-panel-20261111` (initial panel and cross-mode
+persistence) and `fix/input-customization-panel-20261111` (UI/entry corrections).
+Their ancestry includes earlier non-keyboard work, so branch names alone do not
+define a safe main merge. Prepare keyboard-only commits against current main with
+the necessary shared panel dependencies explicitly reviewed. Do not merge the
+combined `integration/keyboard-color-preview-20261111` trial or clip-color changes
+under this approval. The remaining native-entry check gates the keyboard UI merge;
+profile persistence and hardware remapping stay subsequent feature work.
+
 Clean source `6cfb407` is now installed and loaded in Resolve PID 76286 after
 Jordan quit for installation. Live UI acceptance remains pending. All 25 managed
 file hashes and the strict bundle signature verify. The closed-session comparison

@@ -1,3 +1,20 @@
+## November 11 native menu follow-up and keyboard-only merge scope
+
+Jordan accepts the other UI fixes but reports the native application-menu entry
+still opens the original dialog on installed `6cfb407`. Entry parity remains open.
+The Mac adapter's explicit-target requirement excluded Qt's nil-target responder
+chain. The correction stays within the platform menu adapter, reuses the existing
+panel callback, preserves native fallback/validation and adds bounded routing
+diagnostics. The extended native keyboard route fixture passes, including target
+refresh and teardown. There is no new state owner, profile writer or shared/Windows
+interface change. This correction has not yet been installed or live-accepted.
+
+Merge discussion covers only `feature/keyboard-customization-panel-20261111` and
+`fix/input-customization-panel-20261111` keyboard/Speed Editor work. Both inherit
+non-keyboard history: isolate the keyboard commits and review shared panel
+dependencies against current main before proposing the merge. Clip-color changes
+and the combined keyboard/color trial are outside this approval. No merge occurred.
+
 ## November 11 UI repair installed checkpoint
 
 Jordan quit Resolve and authorized installation. Clean source `6cfb407` is now
