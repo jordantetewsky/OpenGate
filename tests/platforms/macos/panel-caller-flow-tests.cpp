@@ -86,8 +86,9 @@ int main(int argc,char **argv){
   check(saved.recordPage("edit",expandedCheckpoint).isEmpty() && saved.save(),"expanded checkpoint is available for startup regression");
   PanelControls controls(OpenGateTest::inputEditorFixture);settle(1000);
   auto input=OpenGateTest::inputSession(controls);
-  check(input && input->hiddenByUser() && input->window()->property("unboundExpanded").toBool(),
-        "startup restores an expanded hidden customization without showing it");
+  check(input && input->hiddenByUser() && !input->window()->property("unboundExpanded").toBool() &&
+        OpenGateTest::savedInputWorkspace()["panels"].toObject()[Unbound::InputCustomizationPanel::id()].toObject()["expanded"].toBool(),
+        "startup retains hidden expansion preference without acquiring temporary-expansion ownership");
   if(input) {
    const auto before=expandedCheckpoint["panels"].toObject()[Unbound::InputCustomizationPanel::id()].toObject();
    controls.invokeWorkflowCommand("panel.toggle."+Unbound::InputCustomizationPanel::id());settle(300);

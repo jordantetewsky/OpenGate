@@ -307,6 +307,7 @@ public:
                 nativeWorkspace->queueRestore(page());
                 nativeWorkspace->refreshNativeTargets(page());
                 syncNativeToggles();
+                if(toolbarDoors)toolbarDoors->wire(Unbound::panelSurface(page(),"unboundWorkspaceToolbar"));
                 if (viewerMode && page()) viewerMode->refresh(page()->window());
                 updateRow(i); updateNativeSizing(); readyNativeDrag(i); if (!quitting) saveTimer.start();
             };
@@ -658,6 +659,10 @@ private:
     {
         if(visible&&panels[i].name==Unbound::InputCustomizationPanel::id())inputCustomizationPanel.recalled();
         if(visible&&(panels[i].name==Unbound::ColorManagerPanel::id()||panels[i].name==Unbound::InputCustomizationPanel::id())&&!panels[i].session->active()){requestUndock(i);return;}
+        if(!visible && expansionController->retainsExpansionOnHide(i)){expansionController->close(i);return;}
+        if(visible && panels[i].layoutIndependent && panels[i].saved["expanded"].toBool() &&
+           panels[i].session->active() && !panels[i].session->grouped() && expansionController->index()!=i)
+            toggleExpanded(i);
         if(workspaceHeader && panels[i].name=="unboundWorkspaceToolbar"){workspaceHeader->setShown(visible);return;}
         if (visible) if (auto group=groupFor(i)) if (group->windowHidden()) group->setWindowHidden(false,activate);
         if (!panels[i].session->active()) {
@@ -1026,7 +1031,7 @@ private:
             p.session->restoreInterfaceState(p.saved);
             p.session->setPinned(p.name=="unboundWorkspaceToolbar" ? p.saved["toolbar_float_pinned"].toBool(true) : p.saved["pinned"].toBool());
             if (p.saved["hidden"].toBool()) p.session->setHiddenByUser(true);
-            if(p.layoutIndependent && p.saved["expanded"].toBool() && expansionController->index()!=i)
+            if(p.layoutIndependent && p.saved["expanded"].toBool() && !p.saved["hidden"].toBool() && expansionController->index()!=i)
                 toggleExpanded(i,false);
             if (background->isChecked()) QTimer::singleShot(0, this, [this] {
                 if (!quitting && background->isChecked()) applyBackgroundVisibility(true);

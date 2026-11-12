@@ -37,10 +37,15 @@ void inputFloatingPresentationChecks(PanelControls &controls,Unbound::ManagedPan
           "tab selection persists during expansion without replacing its original rectangle");
     host->close();settle(400);
     const auto hiddenSaved=savedInputWorkspace()["panels"].toObject()[Unbound::InputCustomizationPanel::id()].toObject();
-    check(session->hiddenByUser() && !host->isVisible() && host->property("unboundExpanded").toBool() &&
-          host->geometry()==available && hiddenSaved["expanded"].toBool() && hiddenSaved["hidden"].toBool(),
-          "expanded Close immediately hides and persists expansion without restoring normal size");
+    check(session->hiddenByUser() && !host->isVisible() && !host->property("unboundExpanded").toBool() &&
+          hiddenSaved["expanded"].toBool() && hiddenSaved["hidden"].toBool() &&
+          Unbound::WorkspaceSettings::rectangle(hiddenSaved)==original,
+          "expanded Close immediately hides and persists expansion while releasing temporary-expansion ownership");
     if(expandedCheckpoint)*expandedCheckpoint=savedInputWorkspace();
+    controls.invokeWorkflowCommand("panel.expand.frameConformTimelines");settle(350);
+    check(session->hiddenByUser() && savedInputWorkspace()["panels"].toObject()[Unbound::InputCustomizationPanel::id()].toObject()["expanded"].toBool(),
+          "expanding Timeline while editor is hidden preserves the editor's saved expansion preference");
+    controls.invokeWorkflowCommand("panel.expand.frameConformTimelines");settle(350);
     QToolButton *toggle=nullptr;
     for(auto widget:QApplication::allWidgets())if(widget->objectName()=="openGateToolbarDoor_"+Unbound::InputCustomizationPanel::id())
         toggle=qobject_cast<QToolButton *>(widget);

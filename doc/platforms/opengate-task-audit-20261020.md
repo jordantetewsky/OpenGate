@@ -1,5 +1,12 @@
 ## November 11 UI repair source and fixture checkpoint
 
+Final review found that retaining a hidden editor's active expansion transaction
+would intercept timeline tilde. Hidden expansion is now a saved preference, with
+the global transaction released until recall. The geometry serializer preserves
+that field, and toolbar checks update immediately on visibility changes. The
+expanded-hide -> expand Timeline -> restore Timeline -> recall editor sequence
+and saved-hidden startup now pass, alongside the broader native-entry regression.
+
 The [repair checkpoint](opengate-input-customization-plan-20261111.md#ui-repair-checkpoint-after-planning-consolidation)
 implements expanded Close as retained hide/recall, saved normal-frame plus
 expansion state, the third toolbar toggle next to Program Monitor, the agreed

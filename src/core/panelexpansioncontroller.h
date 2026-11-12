@@ -66,7 +66,10 @@ public:
     void close(int index) {
         if(current!=index)return;
         if(retainsExpansionOnHide(index)) {
-            target.session->setHiddenByUser(true);update(index);save();
+            target.session->setHiddenByUser(true);
+            // Hidden independent panels retain their preference in the existing
+            // snapshot, not ownership of the shared temporary-expansion slot.
+            restore(true);
         } else restore();
     }
     void abandonForQuit() {
@@ -123,11 +126,13 @@ public:
             });
         update(target.index);
     }
-    void restore()
+    void restore(bool retainIndependentExpansion=false)
     {
         if (current<0) return;
-        if(retainsExpansionOnHide(current))
+        if(retainsExpansionOnHide(current)) {
             target.saved["hidden"]=target.session->hiddenByUser();
+            target.saved["expanded"]=retainIndependentExpansion;
+        }
         const int index=current; constraints.restore();priority.restore(); ++version; current=-1;
         target.cancelPending(); QString error;
         bool groupRebuilt=false;

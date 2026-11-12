@@ -27,10 +27,12 @@ native assigned shortcut route remains in place.
 The toolbar now registers Keyboard & Speed Editor immediately after the existing
 Source Monitor / Program Monitor toggles, reusing their visibility callbacks,
 checked-state synchronization and narrow-toolbar overflow. The existing expansion
-controller retains hidden expansion for the independent input editor and stores
-its normal frame plus expansion flag through the existing workspace record.
-The formerly unconditional restore in the visibility-toggle path is bypassed for
-this retained independent expansion. Ordinary native/group expansion policy is
+controller retains the independent editor's expansion preference and normal frame
+through the existing workspace record. Hiding releases the temporary expansion
+slot; recalling reacquires it, so a hidden editor cannot intercept timeline tilde
+or block another panel's expansion. WorkspaceSnapshot preserves that preference
+when rebuilding the geometry record, and toolbar checks update on visibility
+changes rather than waiting for a settings write. Ordinary native/group expansion policy is
 preserved. Startup from a hidden expanded checkpoint is tested; actual Resolve
 relaunch and second-display behavior remain live checks.
 
@@ -43,7 +45,8 @@ Verification: input customization, panel caller flow, native keyboard entry rout
 and native entry flow fixtures all report zero failures. Coverage includes the
 actual AppKit target/action route in an isolated test process, native fallback and
 validation, Command–Shift–K's page conflict policy, expand/X-hide/toolbar recall/
-command recall/restore, saved-expanded startup, and the agreed dropdown visibility.
+command recall/restore, Timeline expansion while the editor is hidden,
+saved-expanded startup, and the agreed dropdown visibility.
 These results do not establish the new route works in live Resolve yet.
 
 Organization review: NativeKeyboardMenuRoute is the platform contract;
