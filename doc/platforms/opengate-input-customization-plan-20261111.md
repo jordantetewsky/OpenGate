@@ -7,6 +7,55 @@ Reuse OpenGate’s panel and persistence mechanisms. This document records the
 agreed experience and the implementation gates; it does not establish runtime
 support for native device remapping.
 
+## UI repair checkpoint after planning consolidation
+
+Source now includes the next repair pass; it is not yet installed or accepted
+live. Direct inspection of installed `954a467` reproduced the native macOS
+application-menu entry opening a separate modal keyboard dialog. The Qt menu
+lease did not cover that AppKit-owned route. A focused Mac target/action lease
+now forwards that menu item to the same retained panel, retaining native
+validation, shortcut display and original fallback. Normal teardown restores the
+item; application quit disarms callbacks without rewriting the native menu.
+
+Jordan requested **Command–Shift–K** as an entry. The inspected saved preset
+currently assigns Command–Option–K to `resolveCustomizedActions`, while
+Command–Shift–K belongs to a Fairlight timeline operation. The additional shortcut
+is Edit-scoped and checks active-page conflicts/text/modal contexts; it does not
+rewrite the keyboard preset or take over Fairlight's assignment. The existing
+native assigned shortcut route remains in place.
+
+The toolbar now registers Keyboard & Speed Editor immediately after the existing
+Source Monitor / Program Monitor toggles, reusing their visibility callbacks,
+checked-state synchronization and narrow-toolbar overflow. The existing expansion
+controller retains hidden expansion for the independent input editor and stores
+its normal frame plus expansion flag through the existing workspace record.
+The formerly unconditional restore in the visibility-toggle path is bypassed for
+this retained independent expansion. Ordinary native/group expansion policy is
+preserved. Startup from a hidden expanded checkpoint is tested; actual Resolve
+relaunch and second-display behavior remain live checks.
+
+The device preview now exposes Button actions / Jogwheel mode, all five action
+gestures, left/right mode directions, conditional mode help, and the Native
+assignment preview per action gesture. Save/reset remain disabled; preview choices
+are transient and do not edit the protected profile or send device input.
+
+Verification: input customization, panel caller flow, native keyboard entry route
+and native entry flow fixtures all report zero failures. Coverage includes the
+actual AppKit target/action route in an isolated test process, native fallback and
+validation, Command–Shift–K's page conflict policy, expand/X-hide/toolbar recall/
+command recall/restore, saved-expanded startup, and the agreed dropdown visibility.
+These results do not establish the new route works in live Resolve yet.
+
+Organization review: NativeKeyboardMenuRoute is the platform contract;
+MacKeyboardMenuRoute owns only the AppKit menu lease. NativeKeyboardEntryRoute
+coordinates native/menu/shortcut entry; PanelExpansionController owns expansion
+state; ToolbarDoors supplies the existing visibility UI; SpeedEditorCustomization
+owns the transient preview. PanelControls wires callbacks and startup restoration.
+No new settings/profile writer, hardware interpreter or color implementation was
+introduced. The replaced unconditional expanded-close/door-restore paths now use
+the expansion owner's policy. Shared changes have Mac fixture coverage; Windows
+runtime remains unverified, with the OS-menu adapter explicitly a no-op there.
+
 ## Agreed interface
 
 | Area | Keyboard Customization | Speed Editor Customization |

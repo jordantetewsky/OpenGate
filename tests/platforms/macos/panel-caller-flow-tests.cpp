@@ -42,6 +42,7 @@ int main(int argc,char **argv){
  QButtonGroup radio;radio.addButton(buttons["MediaPool"]);radio.addButton(buttons["EditIndex"]);radio.setExclusive(true);
  int nativeCalls=0;for(auto button:buttons)QObject::connect(button,&QPushButton::clicked,[&]{++nativeCalls;});
  main.show();settle();
+ QJsonObject expandedCheckpoint;
  {
  PanelControls controls(OpenGateTest::inputEditorFixture);settle(1800);auto binding=component<Unbound::NativeWorkspaceBinding>(&controls);
  auto callers=component<Unbound::PanelCallerMenu>(&controls);auto ui=bar->findChild<QMenu *>("unboundWorkspaceUI");
@@ -75,11 +76,26 @@ int main(int argc,char **argv){
  if(auto input=OpenGateTest::inputSession(controls)){
   input->setHiddenByUser(false);settle(100);
   auto tabs=input->window()->findChild<QTabWidget *>(Unbound::InputCustomizationPanel::id());
-  OpenGateTest::inputFloatingPresentationChecks(controls,input,tabs,check,settle);
+  OpenGateTest::inputFloatingPresentationChecks(controls,input,tabs,check,settle,&expandedCheckpoint);
   input->setHiddenByUser(true);settle(400);
  }
  }
  OpenGateTest::inputModeIndependentRestartChecks(check,settle);
+ if(!expandedCheckpoint.isEmpty()) {
+  Unbound::WorkspaceSettings saved;
+  check(saved.recordPage("edit",expandedCheckpoint).isEmpty() && saved.save(),"expanded checkpoint is available for startup regression");
+  PanelControls controls(OpenGateTest::inputEditorFixture);settle(1000);
+  auto input=OpenGateTest::inputSession(controls);
+  check(input && input->hiddenByUser() && input->window()->property("unboundExpanded").toBool(),
+        "startup restores an expanded hidden customization without showing it");
+  if(input) {
+   const auto before=expandedCheckpoint["panels"].toObject()[Unbound::InputCustomizationPanel::id()].toObject();
+   controls.invokeWorkflowCommand("panel.toggle."+Unbound::InputCustomizationPanel::id());settle(300);
+   check(!input->hiddenByUser() && input->window()->property("unboundExpanded").toBool(),"startup recall retains expansion");
+   controls.invokeWorkflowCommand("panel.expand."+Unbound::InputCustomizationPanel::id());settle(300);
+   check(input->floatingGeometry()==Unbound::WorkspaceSettings::rectangle(before),"startup restore uses saved normal frame rather than screen rectangle");
+  }
+ }
  if(failures){files.setAutoRemove(false);std::fprintf(stderr,"logs: %s\n",qPrintable(files.path()));}
  std::printf("panel caller flow failures=%d\n",failures);return failures?1:0;
 }

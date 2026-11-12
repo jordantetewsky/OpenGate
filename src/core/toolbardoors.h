@@ -19,7 +19,12 @@ public:
     void paint(QPainter *p,const QRect &r,QIcon::Mode mode,QIcon::State)override{
         p->save();p->setRenderHint(QPainter::Antialiasing);p->translate(r.topLeft());p->scale(r.width()/20.,r.height()/20.);
         p->setPen(QPen(mode==QIcon::Active?QColor(235,235,235):QColor(175,175,175),1.5));
-        if(id.contains("Timeline")){p->drawRect(QRectF(2,3,16,14));p->drawLine(2,7,18,7);p->drawLine(6,7,6,17);p->drawLine(8,10,15,10);p->drawLine(8,14,12,14);}
+        if(id=="openGateInputCustomizationPanel") {
+            p->drawRoundedRect(QRectF(1,5,18,11),1,1);
+            for(int y:{8,11})for(int x:{4,7,10,13,16})p->drawPoint(x,y);
+            p->drawLine(6,14,14,14);
+        }
+        else if(id.contains("Timeline")){p->drawRect(QRectF(2,3,16,14));p->drawLine(2,7,18,7);p->drawLine(6,7,6,17);p->drawLine(8,10,15,10);p->drawLine(8,14,12,14);}
         else if(id.contains("navigation",Qt::CaseInsensitive)){for(int x:{3,8,13})p->drawRect(QRectF(x,7,3,6));}
         else {p->drawRect(QRectF(2,3,16,12));p->drawLine(7,18,13,18);p->drawLine(10,15,10,18);
             if(id.contains("Source")){p->drawLine(6,7,10,7);p->drawLine(6,7,6,11);}else{p->drawLine(10,7,14,9);p->drawLine(14,9,10,11);p->drawLine(10,11,10,7);}}

@@ -32,23 +32,32 @@ public:
         auto selectedBox=new QWidget(this);auto details=new QVBoxLayout(selectedBox);
         details->addWidget(new QLabel("Active Key",selectedBox));
         active=new QLabel(selectedBox);active->setObjectName("openGateSpeedEditorActiveKey");details->addWidget(active);
-        details->addWidget(new QLabel("Button behavior",selectedBox));
-        behavior=new QComboBox(selectedBox);behavior->addItems({"Native","Action button","Dial mode button"});
+        details->addWidget(new QLabel("Button behavior (preview)",selectedBox));
+        behavior=new QComboBox(selectedBox);behavior->addItems({"Button actions","Jogwheel mode"});
+        behavior->setObjectName("openGateSpeedEditorBehaviorPreview");
         behavior->setEnabled(false);details->addWidget(behavior);
-        auto modeHelp=new QLabel("A dial mode button chooses what the jogwheel controls until another mode is selected. "
-                                "Only one dial mode can be active; a mode button has no separate press or hold actions.",selectedBox);
+        modeHelp=new QLabel("Jog, Shuttle, and Scroll change how the wheel navigates the timeline. "
+                            "A custom mode can control zoom, move between edits or markers, or adjust another directional value. "
+                            "Press to activate it; the mode stays active after release until another mode is selected.",selectedBox);
+        modeHelp->setObjectName("openGateSpeedEditorModeHelp");
         modeHelp->setWordWrap(true);details->addWidget(modeHelp);
-        details->addWidget(new QLabel("Gesture",selectedBox));
-        gesture=new QComboBox(selectedBox);gesture->addItems({"Single press","Double press","Hold","Hold + dial left","Hold + dial right"});
+        gestureLabel=new QLabel("Gesture",selectedBox);details->addWidget(gestureLabel);
+        gesture=new QComboBox(selectedBox);gesture->setObjectName("openGateSpeedEditorGesturePreview");
         gesture->setEnabled(false);details->addWidget(gesture);
+        assignmentLabel=new QLabel("Assignment",selectedBox);details->addWidget(assignmentLabel);
+        assignment=new QComboBox(selectedBox);assignment->setObjectName("openGateSpeedEditorAssignmentPreview");
+        assignment->addItem("Native — preserve Resolve's behavior","native");
+        assignment->setToolTip("Native applies independently to this gesture. Custom assignment and saving are not enabled in this preview.");
+        details->addWidget(assignment);
         auto reset=new QPushButton("Reset Key to Native",selectedBox);reset->setEnabled(false);details->addWidget(reset);
-        auto notice=new QLabel("Preview — device mappings remain native.",selectedBox);notice->setWordWrap(true);
+        auto notice=new QLabel("Preview only — explore behavior and gesture options. No assignments are saved; device mappings remain native.",selectedBox);notice->setWordWrap(true);
         details->addStretch();details->addWidget(notice);lower->addWidget(selectedBox,1);
         browser=new NativeCommandBrowser(this);lower->addWidget(browser,3);layout->addLayout(lower,1);
         auto footer=new QHBoxLayout;footer->addStretch();
         auto close=new QPushButton("Close",this);auto save=new QPushButton("Save",this);save->setEnabled(false);
         footer->addWidget(close);footer->addWidget(save);layout->addLayout(footer);
         connect(close,&QPushButton::clicked,this,[this]{if(closeRequested)closeRequested();});
+        connect(behavior,qOverload<int>(&QComboBox::currentIndexChanged),this,[this]{refreshPreview();});
         diagram->selected=[this](const QString &key){select(key);};
         diagram->setSelectedKey("roll");select("roll");
     }
@@ -62,12 +71,30 @@ protected:
 private:
     SpeedEditorDiagram *diagram;
     NativeCommandBrowser *browser;
-    QComboBox *profiles,*behavior,*gesture;
-    QLabel *active;
+    QComboBox *profiles,*behavior,*gesture,*assignment;
+    QLabel *active,*modeHelp,*gestureLabel,*assignmentLabel;
     void select(const QString &key) {
         auto button=diagram->button(key);active->setText(button?button->text():QString("Select a button or the dial."));
         const bool mode=key=="shtl"||key=="jog"||key=="scrl";
         behavior->setToolTip(mode?"Native dial mode selector":"Native button behavior is preserved");
+        behavior->setCurrentIndex(mode?1:0);
+        refreshPreview();
+    }
+    void refreshPreview() {
+        const auto key=diagram->selectedKey();
+        const bool selected=!key.isEmpty(),dial=key=="dial";
+        const bool mode=selected && !dial && behavior->currentIndex()==1;
+        const bool action=selected && !dial && behavior->currentIndex()==0;
+        behavior->setEnabled(selected && !dial);
+        modeHelp->setVisible(mode);
+        gesture->clear();
+        if(dial||mode)gesture->addItems({"Dial left","Dial right"});
+        else if(action)gesture->addItems({"Single press","Double press","Hold","Hold + dial left","Hold + dial right"});
+        gestureLabel->setText(dial||mode?"Dial direction":"Gesture");
+        gestureLabel->setVisible(dial||mode||action);
+        gesture->setVisible(dial||mode||action);
+        gesture->setEnabled(dial||mode||action);
+        assignmentLabel->setVisible(action);assignment->setVisible(action);
     }
 };
 }

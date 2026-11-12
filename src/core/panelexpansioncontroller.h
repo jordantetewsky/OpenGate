@@ -21,7 +21,7 @@ public:
         QPointer<QWidget> workspace;
         PanelGroup *group=nullptr;
         QJsonObject saved,native;
-        bool floatingScreen=false;
+        bool floatingScreen=false,reveal=true;
         std::function<bool()> pending;
         std::function<void()> undock,cancelPending,restored;
         std::function<void(QJsonObject)> restoreSaved;
@@ -60,6 +60,15 @@ public:
         return true;
     }
     int index() const { return current; }
+    bool retainsExpansionOnHide(int index) const {
+        return current==index && target.floatingScreen && wasFloating && !wasGrouped;
+    }
+    void close(int index) {
+        if(current!=index)return;
+        if(retainsExpansionOnHide(index)) {
+            target.session->setHiddenByUser(true);update(index);save();
+        } else restore();
+    }
     void abandonForQuit() {
         ++version; current=-1; target={}; originalGroup=nullptr; originalGroupState={};
         constraints.abandonForQuit(); priority.abandonForQuit();
@@ -72,6 +81,10 @@ public:
         // panel's content presentation while it is expanded.
         const auto presentation=target.session->interfaceState();
         for(auto it=presentation.begin();it!=presentation.end();++it)original[it.key()]=it.value();
+        if(retainsExpansionOnHide(index)) {
+            original["expanded"]=true;
+            original["hidden"]=target.session->hiddenByUser();
+        }
         return original;
     }
     QJsonObject groupSnapshot(PanelGroup *group) const
@@ -81,6 +94,7 @@ public:
     void begin(Target value,QWidget *page)
     {
         target=std::move(value);
+        if(target.floatingScreen)target.saved["expanded"]=false;
         originalOffset=target.session->overflowOffset();
         wasFloating=target.session->active(); wasGrouped=target.session->grouped();
         originalGroup=target.group;
@@ -101,7 +115,9 @@ public:
                 }
                 constraints.acquire(target.name,window);
                 if(!refreshGeometry()){restore();return;}
-                target.session->setHiddenByUser(false); priority.foreground(window); update(target.index);
+                const bool hidden=!target.reveal && target.session->hiddenByUser();
+                priority.foreground(window,!hidden);
+                target.session->setHiddenByUser(hidden,!hidden);update(target.index);
                 if(presentationChanged)presentationChanged();
                 logEvent("panel.expand",{{"panel",target.name},{"originally_floating",wasFloating}});
             });
@@ -110,6 +126,8 @@ public:
     void restore()
     {
         if (current<0) return;
+        if(retainsExpansionOnHide(current))
+            target.saved["hidden"]=target.session->hiddenByUser();
         const int index=current; constraints.restore();priority.restore(); ++version; current=-1;
         target.cancelPending(); QString error;
         bool groupRebuilt=false;

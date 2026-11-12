@@ -50,7 +50,7 @@ if [[ -n "$(git -C "$root" status --porcelain)" ]]; then revision="$revision-dir
 OPENGATE_RESOLVE_APP="$app" OPENGATE_WIDGET_OPTIMIZATION=O2 python3 "$root/infrastructure/macos/build-manifest.py" "$generated"
 objects="$root/build/macos/widget-probe-objects"
 mkdir -p "$objects"
-for source in "$root/tests/platforms/macos/qt-widget-probe.cpp" "$root/src/platforms/macos/nativechrome.mm"; do
+for source in "$root/tests/platforms/macos/qt-widget-probe.cpp" "$root/src/platforms/macos/nativechrome.mm" "$root/src/platforms/macos/nativekeyboardmenuroute.mm"; do
     object="$objects/$(basename "$source").o"
     xcrun clang++ "${opengate_macos_flags[@]}" "${development_flags[@]}" -Wall -Wextra -Werror -O2 -g -fvisibility=hidden \
         -include "$generated/unboundbuildmanifest.h" \
@@ -58,7 +58,7 @@ for source in "$root/tests/platforms/macos/qt-widget-probe.cpp" "$root/src/platf
         -I "$generated" -I "$qt/include" -I "$qt/include/QtCore" -I "$qt/include/QtGui" -I "$qt/include/QtWidgets" \
         -I "$root/src/platforms/macos" -c "$source" -o "$object"
 done
-xcrun clang++ "${opengate_macos_flags[@]}" -dynamiclib "$objects/qt-widget-probe.cpp.o" "$objects/nativechrome.mm.o" -framework AppKit -framework CoreGraphics \
+xcrun clang++ "${opengate_macos_flags[@]}" -dynamiclib "$objects/qt-widget-probe.cpp.o" "$objects/nativechrome.mm.o" "$objects/nativekeyboardmenuroute.mm.o" -framework AppKit -framework CoreGraphics \
     -L "$app/Contents/Frameworks" -lQt5Widgets.5 -lQt5Gui.5 -lQt5Core.5 \
     -Wl,-rpath,"$app/Contents/Frameworks" -o "$out/UnboundWidgetProbe.dylib"
 xcrun dsymutil "$out/UnboundWidgetProbe.dylib" -o "$out/UnboundWidgetProbe.dylib.dSYM"

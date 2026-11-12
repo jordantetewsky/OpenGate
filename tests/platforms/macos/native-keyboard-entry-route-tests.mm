@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
+#import <AppKit/AppKit.h>
 #include <QApplication>
 #include <QTemporaryDir>
 #include <cstdio>
 #include "../../../src/core/nativekeyboardentryroute.h"
+#include "../../core/input-customization/nativekeyboardmenuchecks.h"
 
 int main(int argc,char **argv) {
     QApplication app(argc,argv);QTemporaryDir logs;
@@ -23,6 +25,7 @@ int main(int argc,char **argv) {
     QObject::connect(&shortcut,&QShortcut::activated,[&]{++nativeCalls;});
     QStringList owners{original->objectName()};
     auto settle=[] {for(int i=0;i<5;++i)QApplication::processEvents();};
+    OpenGateTest::nativeKeyboardMenuChecks(check,settle);
     {
         Unbound::NativeKeyboardEntryRoute route;
         route.enabled=[&]{return enabled;};
@@ -71,5 +74,23 @@ int main(int argc,char **argv) {
               "quit abandonment does not rewrite native menu ownership");
     }
     check(!menu.actions().contains(original),"quit destruction never reinserts native menu action");
+    {
+        Unbound::NativeKeyboardEntryRoute route;
+        int aliasCalls=0;bool edit=true;
+        route.enabled=[&]{return edit;};route.openPanel=[&]{++aliasCalls;return true;};
+        QStringList aliasOwners{"FairlightTimeline.trimExtendEditSelectionToPreviousEdit"};
+        route.shortcutOwners=[&](const QKeySequence &){return aliasOwners;};
+        QApplication::setActiveWindow(&window);window.setFocus();
+        const auto press=[&] {
+            QKeyEvent override(QEvent::ShortcutOverride,Qt::Key_K,Qt::ControlModifier|Qt::ShiftModifier);
+            QApplication::sendEvent(&window,&override);
+            QKeyEvent key(QEvent::KeyPress,Qt::Key_K,Qt::ControlModifier|Qt::ShiftModifier);
+            QApplication::sendEvent(&window,&key);settle();
+        };
+        press();check(aliasCalls==1,"Command Shift K opens customization on Edit despite a disjoint Fairlight binding");
+        edit=false;press();check(aliasCalls==1,"Command Shift K keeps its native behavior outside the Edit context");
+        edit=true;aliasOwners=QStringList{"EditTimeline.otherCommand"};press();
+        check(aliasCalls==1,"Command Shift K refuses an overlapping Edit binding");
+    }
     std::printf("native keyboard entry route failures=%d\n",failures);return failures?1:0;
 }

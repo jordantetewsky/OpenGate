@@ -1,4 +1,4 @@
 #!/bin/bash
 set -eu
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM=1 UNBOUND_TEST_HEADLESS=1 UNBOUND_TEST_NAME=native-keyboard-entry-route-tests UNBOUND_TEST_SOURCE="$root/tests/platforms/macos/native-keyboard-entry-route-tests.cpp" bash "$root/infrastructure/macos/test-panel-sessions.sh" "$@"
+QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM=1 UNBOUND_TEST_HEADLESS=1 UNBOUND_TEST_NAME=native-keyboard-entry-route-tests UNBOUND_TEST_SOURCE="$root/tests/platforms/macos/native-keyboard-entry-route-tests.mm" bash "$root/infrastructure/macos/test-panel-sessions.sh" "$@"

@@ -3,6 +3,9 @@
 #include "keyboardlauncher.h"
 #include "isolatednativeaction.h"
 #include "menutrackingcommand.h"
+#include "panelcommandcontext.h"
+#include "nativeshortcutcontext.h"
+#include "../platform/nativekeyboardmenuroute.h"
 #include <QActionEvent>
 #include <QShortcut>
 #include <QShortcutEvent>
@@ -15,6 +18,7 @@ class NativeKeyboardEntryRoute : public QObject {
 public:
     explicit NativeKeyboardEntryRoute(QObject *owner=nullptr):QObject(owner) {
         qApp->installEventFilter(this);
+        nativeMenu=createNativeKeyboardMenuRoute(this,[this]{return invokePanel();});
         refresh();
     }
     ~NativeKeyboardEntryRoute() override {
@@ -26,6 +30,7 @@ public:
     std::function<QStringList(const QKeySequence &)> shortcutOwners;
     void abandonForQuit() {
         abandoned=true;enabled={};openPanel={};shortcutOwners={};
+        if(nativeMenu)nativeMenu->abandonForQuit();
         if(qApp)qApp->removeEventFilter(this);
     }
     void refresh() {
@@ -43,6 +48,22 @@ public:
 protected:
     bool eventFilter(QObject *object,QEvent *event) override {
         if(abandoned)return false;
+#ifdef Q_OS_MAC
+        if(event->type()==QEvent::ShortcutOverride || event->type()==QEvent::KeyPress) {
+            auto key=static_cast<QKeyEvent *>(event);
+            const QKeySequence pressed(key->key()|int(key->modifiers() & ~Qt::KeypadModifier));
+            if(pressed==QKeySequence(Qt::CTRL|Qt::SHIFT|Qt::Key_K) && eligible() &&
+               PanelCommandContext::blocked().isEmpty() && aliasAvailable(pressed)) {
+                event->accept();
+                if(event->type()==QEvent::KeyPress && !key->isAutoRepeat())
+                    QTimer::singleShot(0,this,[this,pressed]{
+                        if(!eligible() || !aliasAvailable(pressed) || !PanelCommandContext::blocked().isEmpty())return;
+                        if(!invokePanel())if(auto action=nativeAction())action->trigger();
+                    });
+                return true;
+            }
+        }
+#endif
         if(event->type()==QEvent::ActionAdded || event->type()==QEvent::Show) {
             if(!changing && !refreshQueued) {
                 refreshQueued=true;
@@ -69,11 +90,27 @@ protected:
         event->accept();return true;
     }
 private:
+    NativeKeyboardMenuRoute *nativeMenu=nullptr;
     QSet<QMenu *> menus;
     QPointer<QMenu> leasedMenu;
     QPointer<QAction> original,mirror;
     bool changing=false,dispatching=false,refreshQueued=false,abandoned=false;
     bool eligible() const {return !abandoned && openPanel && (!enabled || enabled());}
+    bool invokePanel() {
+        if(dispatching || !eligible())return false;
+        const QScopedValueRollback<bool> routing(dispatching,true);
+        restore();return openPanel();
+    }
+    bool aliasAvailable(const QKeySequence &key) const {
+        if(!shortcutOwners)return false;
+        const auto native=nativeAction();
+        for(const auto &owner:shortcutOwners(key)) {
+            if(native && owner==native->objectName())continue;
+            const auto scope=NativeShortcutContext::describe(owner);
+            if(!scope.known || scope.page.isEmpty() || scope.page=="edit")return false;
+        }
+        return true;
+    }
     QAction *nativeAction() const {
         return original ? original.data() : nativeKeyboardCustomizationAction();
     }

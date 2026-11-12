@@ -310,7 +310,7 @@ public:
                 if (viewerMode && page()) viewerMode->refresh(page()->window());
                 updateRow(i); updateNativeSizing(); readyNativeDrag(i); if (!quitting) saveTimer.start();
             };
-            panel.session->expandedClosed = [this, i] { if (expansionController->index() == i) restoreExpanded(); };
+            panel.session->expandedClosed = [this, i] { expansionController->close(i); };
             panel.session->arrangementChanged = [this] { if (!quitting) saveTimer.start(); };
             connect(panel.undock, &QPushButton::clicked, this, [this, i] { action("undock", panels[i].label); if (nativeWorkspace->contains(panels[i].name)) nativeWorkspace->detach(panels[i].name); else requestUndock(i); });
             connect(panel.dock, &QPushButton::clicked, this, [this, i] { action("dock", panels[i].label); dockOne(i); });
@@ -496,6 +496,10 @@ public:
                 [this,i] { return panelShown(i); },
                 [this,i] { if (!quitting && !QApplication::activeModalWidget())togglePanelDoor(i); },
                 [this,i](QPoint) {beginPanelDrag(i);}});
+        if(inputCustomizationEnabled)for(int i=0;i<panels.size();++i)if(panels[i].name==Unbound::InputCustomizationPanel::id())
+            toolbarDoors->add({panels[i].name,"Keyboard & Speed Editor",
+                [this,i]{return panelShown(i);},
+                [this,i]{if(!quitting && !QApplication::activeModalWidget())togglePanelDoor(i);}});
         headers=new Unbound::WorkspaceHeaders(this);
         for (int i=0;i<panels.size();++i) headers->add({panels[i].name,panels[i].label,
             [this,i]() -> QWidget * { return panels[i].session->active() && panels[i].session->window() ? panels[i].session->window()->window() : nullptr; },
@@ -777,7 +781,7 @@ private:
         auto session = panels[i].session;
         if(!page() || !page()->isVisible())return;
         if(!session->active()){showPanel(i,!panelShown(i));save();return;}
-        if (expansionController->index() >= 0) restoreExpanded();
+        if (expansionController->index() >= 0 && !expansionController->retainsExpansionOnHide(i)) restoreExpanded();
         auto group = groupFor(i);
         const bool reveal = session->hiddenByUser() || (group && (group->windowHidden() || !group->selected(session))) ||
             (nativeWorkspace->contains(panels[i].name) && !nativeWorkspace->selected(panels[i].name));
@@ -879,7 +883,7 @@ private:
             p.center->setEnabled(p.session->floating());
         });
     }
-    void toggleExpanded(int i)
+    void toggleExpanded(int i,bool reveal=true)
     {
         if(workspaceHeader && panels[i].name=="unboundWorkspaceToolbar"){status->setText("Workspace Toolbar is pinned; use Show or Hide.");return;}
         action(QStringLiteral("expand-toggle"),panels[i].label);
@@ -896,6 +900,7 @@ private:
         Unbound::PanelExpansionController::Target target;
         target.index=i; target.name=panel.name; target.session=panel.session; target.group=groupFor(i);
         target.floatingScreen=panel.layoutIndependent;
+        target.reveal=reveal;
         target.workspace=panel.session->grouped()?panel.session->window()->window():
             (footer->primarySurface?footer->primarySurface():nullptr);
         if(!target.workspace)target.workspace=page()->window();
@@ -1021,6 +1026,8 @@ private:
             p.session->restoreInterfaceState(p.saved);
             p.session->setPinned(p.name=="unboundWorkspaceToolbar" ? p.saved["toolbar_float_pinned"].toBool(true) : p.saved["pinned"].toBool());
             if (p.saved["hidden"].toBool()) p.session->setHiddenByUser(true);
+            if(p.layoutIndependent && p.saved["expanded"].toBool() && expansionController->index()!=i)
+                toggleExpanded(i,false);
             if (background->isChecked()) QTimer::singleShot(0, this, [this] {
                 if (!quitting && background->isChecked()) applyBackgroundVisibility(true);
             });

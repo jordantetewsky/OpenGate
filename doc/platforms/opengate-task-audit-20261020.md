@@ -1,3 +1,19 @@
+## November 11 UI repair source and fixture checkpoint
+
+The [repair checkpoint](opengate-input-customization-plan-20261111.md#ui-repair-checkpoint-after-planning-consolidation)
+implements expanded Close as retained hide/recall, saved normal-frame plus
+expansion state, the third toolbar toggle next to Program Monitor, the agreed
+gesture preview, an AppKit application-menu adapter, and Edit-scoped Command–Shift–K.
+The native entry failure was reproduced directly on installed `954a467` without
+editing the project. The saved native shortcut remains Command–Option–K; the
+additional Command–Shift–K does not replace its Fairlight assignment.
+
+All four focused/regression suites pass. The assembled fixture initially caught
+the recall path still restoring expansion; that path was corrected and retested.
+Native AppKit behavior is tested in an isolated process. These changes are not
+yet installed or live-accepted; no main merge or hardware mapping activation.
+The previously interrupted preview edit is now incorporated and fixture-tested.
+
 ## November 11 Jogwheel behavior planning consolidation
 
 The [customization plan](opengate-input-customization-plan-20261111.md#button-actions-jogwheel-mode-and-native-per-gesture)

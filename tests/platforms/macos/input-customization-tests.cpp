@@ -3,6 +3,7 @@
 #include "../../../src/core/panelsession.h"
 #include "../../core/input-customization/diagramchecks.h"
 #include "../../core/input-customization/hostingchecks.h"
+#include "../../core/input-customization/behaviorpreviewchecks.h"
 #include <QApplication>
 #include <QStandardItemModel>
 #include <QTemporaryDir>
@@ -98,6 +99,7 @@ int main(int argc,char **argv) {
         QApplication::sendEvent(tabs->currentWidget(),&outside);
         check(diagram->selectedKey().isEmpty() && !diagram->button("dial")->isChecked(),
               "clicking empty device-page background also clears selection");
+        OpenGateTest::speedEditorBehaviorPreviewChecks(tabs->currentWidget(),check);
         if(const auto path=qEnvironmentVariable("OPENGATE_INPUT_PREVIEW_SNAPSHOT");!path.isEmpty()) {
             auto device=tabs->currentWidget();device->resize(device->sizeHint().expandedTo(QSize(1200,1000)));
             check(device->grab().save(path),"device page render is captured");
