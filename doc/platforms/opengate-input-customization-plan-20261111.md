@@ -49,15 +49,44 @@ Shared command identity and native category registration must be established
 before adding displayed rows. Registering only an OpenGate PanelCommands entry
 does not make an operation appear in Resolve's native keyboard database.
 
-Each key has a complete native default and an optional custom override. A custom
-override specifies one of these behavior types:
+### Button actions, Jogwheel mode, and Native per gesture
 
-- **Gesture button:** single press, double press, hold, and hold plus dial in
-  either direction. The editor exposes the applicable assignments for that key.
-- **Mode selector:** selects dial behavior such as Shuttle, Jog or Scroll. This
-  changes persistent device interpretation rather than merely firing a shortcut.
+The current user-facing terms are **Button actions** and **Jogwheel mode**.
+These supersede the earlier Gesture button / Action button / Mode selector /
+Dial mode button wording in dated checkpoints. Jogwheel mode describes a
+persistent change in what turning the wheel controls, not only Shuttle behavior.
 
-Represent these as distinct behavior types. Resolve native mode selection,
+- **Button actions:** separate assignments for Single press, Double press, Hold,
+  Hold + dial left, and Hold + dial right. Single/double press mean the physical
+  button interactions Jordan also calls single click/double tap.
+- **Jogwheel mode:** pressing this button selects what the wheel controls;
+  releasing the button leaves that mode active until another mode is selected.
+  Only one persistent jogwheel mode is active. A button configured this way does
+  not also carry independent single/double/hold action assignments.
+
+**Native is an assignment choice for each applicable gesture**, not merely a
+whole-button behavior option. It means preserve Resolve's actual Speed Editor
+interaction for that gesture, including its held/release behavior and context.
+For example, overriding Hold + dial left must not silently replace the key's
+native single press, double press, hold, or rightward behavior. If a gesture has
+no native action, Native preserves that absence; do not invent an action. The
+ability to combine native and overridden gestures on the same physical key is
+still a dispatch acceptance gate, not a verified runtime capability.
+
+The editor must offer inspectable dropdowns for the behavior and applicable
+gesture options. Show the Jogwheel mode explanation only when that behavior is
+selected; hide it when no control is selected or when editing Button actions.
+Keep the existing native visual style. Any UI-only preview must explicitly say
+its selections do not save assignments or change hardware behavior.
+
+Suggested explanation for Jogwheel mode:
+
+> Jog, Shuttle, and Scroll change how the wheel navigates the timeline. A custom
+> Jogwheel mode can instead control zoom, move between edits or markers, or adjust
+> another directional value. Press the button to activate it; the mode stays
+> active after release until you select another mode.
+
+Represent the behavior types distinctly. Resolve native mode selection,
 momentary hold-plus-dial behavior, and ordinary command execution need explicit
 semantics. Press/release, mode LEDs, dial deltas and page context are part of the
 device contract where applicable. Do not add synthetic double-press waiting to
@@ -67,6 +96,81 @@ double press and ensure one physical gesture produces one intended action.
 Profile changes and resets during a held key or active dial gesture need an
 atomic transition with no stuck key, delayed command replay or leaked mode.
 Test this behavior before enabling hardware dispatch.
+
+### Separate the function from its activation
+
+Timeline Zoom is a function, not inherently a persistent mode. The same function
+can be used by separate button actions, by a temporary held interaction, or by a
+persistent Jogwheel mode:
+
+| Example assignment | Behavior |
+| --- | --- |
+| Single press -> Zoom In | One zoom-in action |
+| Double press -> Zoom Out | One zoom-out action |
+| Hold + dial left/right -> Zoom Out/In | Adjust zoom while held; release returns wheel control to the previously active mode |
+| Jogwheel mode -> Timeline Zoom | Turn to zoom after releasing the button, until another mode is selected |
+
+Do not create separate implementations of a function for held and persistent
+activation. One verified operation adapter supplies the target and directional
+adjustment; the shared interpreter owns activation and begin/update/end lifetime.
+Profile data must distinguish behavior, gesture, command/function identity,
+target, and any supported increment/sensitivity. Native inheritance is explicit
+and distinct from an unavailable command. Round-trip these through save, export,
+import and restart before enabling hardware overrides.
+
+### Directional pairs and adjustable values
+
+Jogwheel modes may drive either a decrease/increase command pair or a continuous
+parameter adjustment. The following are requested examples, subject to verifying
+Resolve's actual command/parameter access; listing them is not a support claim.
+
+| Function | Left/right turning | Target and units to establish |
+| --- | --- | --- |
+| Timeline or viewer zoom | Zoom out/in | Identify timeline versus viewer; use its supported zoom steps or value |
+| Edit navigation | Previous/next edit | Relevant timeline/context; movement threshold per edit |
+| Marker navigation | Previous/next marker | Relevant timeline or clip markers; threshold per marker |
+| Position X | Decrease/increase horizontal position | Selected image/clip transform; verify native position units and sign |
+| Position Y | Decrease/increase vertical position | Selected image/clip transform; verify which sign moves up/down |
+| Nudge selected clips | Earlier/later by frame increments | Selected timeline clips, frame rate, selection and track constraints |
+| Audio level | Volume down/up | Explicitly distinguish selected clip level from track level; supported dB increments |
+
+The target must be visible and unambiguous in the assignment. Do not silently
+substitute track volume for clip volume, image position for timeline placement,
+or playhead movement for nudging selected clips. Verify no-selection, multiple
+selection, locked/invalid targets, supported page/context and parameter bounds.
+Continuous adjustment is preferred where a verified native interface supports
+it; repeated discrete commands are a distinct supported path, not proof of a
+continuous parameter API. Both require sensible undo behavior and correct gesture
+completion/cancellation. These same functions may be used with hold + turn.
+
+### Preserve Jog's natural response
+
+Jordan specifically wants the direct, natural feel of **Jog**, not a custom
+Shuttle-style playback-speed control. Start by investigating reuse of native Jog
+movement and its processing; do not require an invented acceleration curve or a
+curve editor to enable each function.
+
+The [native trace](opengate-speed-editor-native-trace-20261111.md) identified
+signed dial movement and fractional-remainder accumulation into integral deltas
+in the held-Jog path. This is evidence of a useful mechanism, not proof that the
+full ordinary Jog response, acceleration, snapping or downstream processing can
+already be redirected. Establish where that response is produced and measure
+native behavior before claiming equivalent feel for custom modes.
+
+Each function still needs an appropriate sensitivity or increment. One frame's
+worth of movement must not automatically become one marker, edit, zoom step or
+decibel. Movement per action/value unit is a sensitivity choice; it does not by
+itself require a nonlinear acceleration curve. For discrete operations, preserve
+fractional motion between reports and issue steps at an appropriate threshold.
+Avoid reporting a successful continuous adjustment when only discrete commands
+are available. More elaborate response tuning is conditional on measured need.
+
+Acceptance covers small precise turns, fast turns, immediate direction reversal,
+stop response, latency, repeat rate, target bounds and undo. Prevent an unbounded
+command queue from continuing after the wheel stops. Reset residual motion at
+defined mode/focus/target/connection boundaries so it cannot leak into the next
+operation. Verify USB and Bluetooth and test native Jog alongside each custom
+function. Do not claim identical feel from source inspection alone.
 
 ## Profiles and native reset
 
@@ -79,6 +183,9 @@ that established menu pattern.
 
 **Reset this key to native** removes the key’s complete override, including its
 behavior type and gesture/mode assignments. Other custom keys remain unchanged.
+**Reset this gesture to native** removes only that gesture's override, preserving
+the other assignments on the same button. Prove mixed native/custom gestures do
+not both dispatch, swallow required lifecycle events or alter native timing.
 Selecting Native Speed Editor restores the full native device behavior. Native
 defaults can be page- and state-dependent; do not flatten them into a list of
 keyboard shortcuts or silently emulate them with approximate macros.
@@ -297,10 +404,12 @@ but live remapping stays disabled until its prerequisites pass.
 6. **Enable selective remapping and verified native commands.** The interpreter
    resolves saved mappings; a separate Resolve adapter invokes native commands
    and preserves fallback. Verify action gestures, temporary hold/dial and
-   persistent exclusive modes, commands without shortcuts, per-key native reset,
-   and full native-profile return. Add native device commands to both catalogs
+   persistent exclusive modes, commands without shortcuts, per-gesture and per-key
+   native reset, and full native-profile return. Validate directional functions,
+   explicit targets/units, Jog response and undo with the same operation adapters
+   for held and persistent activation. Add native device commands to both catalogs
    only after their identities and invocation lifecycles are established.
-7. **Accept the assembled flow before integration.** Exercise both entry points,
+7. **Accept the assembled flow before integration.** Exercise all three entry points,
    focused inspection, timeline use with monitor, save/export/restart/import,
    native return and rollback together. Retain separate source, fixture, install
    and live-acceptance evidence. Main merge remains conditional on Jordan's UI
@@ -327,6 +436,12 @@ interpretation, native invocation and monitor rendering retain their own jobs.
   first. Keyboard preset and workspace selections are unchanged by these actions.
 - Change one key, reset it to native, and verify other custom mappings persist.
   Compare reset behavior against actual native input on the same Resolve page.
+- Override and reset one gesture while keeping the same key's other gestures
+  Native; verify both native/custom ownership and profile round trips. Inspect
+  each dropdown and confirm mode help is conditional on Jogwheel mode selection.
+- Use the same directional function through hold + turn and persistent Jogwheel
+  mode; verify release restoration, exclusive mode state, explicit target/units,
+  parameter bounds, undo, reversal and no queued action tail after stopping.
 - Verify single/double/hold/hold-plus-dial, mode transitions, release handling,
   reconnects, profile switching during input, unavailable commands, and commands
   without shortcuts. Check USB and Bluetooth, duplicate events and latency.

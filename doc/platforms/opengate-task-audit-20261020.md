@@ -1,3 +1,20 @@
+## November 11 Jogwheel behavior planning consolidation
+
+The [customization plan](opengate-input-customization-plan-20261111.md#button-actions-jogwheel-mode-and-native-per-gesture)
+now records Button actions versus persistent Jogwheel mode; Native at each
+gesture; conditional mode help and inspectable dropdowns; temporary hold + turn
+versus persistent activation of the same function; zoom, edit/marker navigation,
+X/Y position, selected-clip frame nudges and audio level; explicit targets/units;
+and reuse of Jog's natural response with appropriate sensitivity before inventing
+curves. Profile round trips, mixed native/custom gestures, operation lifecycles,
+undo and motion/queue handling remain acceptance gates.
+
+This consolidation is documentation-only. The interrupted dropdown-preview edit
+in `src/core/speededitorcustomization.h` remains uncommitted and unvalidated; it
+predates the final terminology and per-gesture Native clarification. It is not
+part of this documentation commit or the installed build. No new hardware
+capability, installation, live acceptance or main merge is claimed.
+
 ## November 11 entry-point correction and input-focus contract
 
 Follow-up: Jordan proposes a third, remembered show/hide toggle beside the
