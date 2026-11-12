@@ -172,29 +172,102 @@ ownership prevents mixed native/custom handling, that is a design blocker to
 resolve before claiming per-key native reset. Recreating similar macros is not
 an acceptable substitute for that requirement.
 
+## Focused customization and the optional device monitor
+
+November 11 clarification: pressing a physical control while customizing must
+identify that control without performing its timeline action. Merely having the
+customization window visible must not capture input after focus returns to the
+timeline. Preserve the real keyboard editor's key recognition and assignment
+behavior, including normal typing in its search and preset fields. Verify that
+hosting the editor preserves native shortcut isolation; do not install a broad
+keyboard handler that consumes text entry or duplicates native recognition.
+
+With the Speed Editor tab active and the customization window focused, device
+press/release and dial input belong to an inspection context. A press selects the
+corresponding control and displays its physical state; release clears its held
+indication. Hold-plus-dial can identify the combination to edit without running
+the mapped command. Inspection must suppress both native and custom timeline
+actions, including delayed gesture callbacks. This requires a verified event
+ownership boundary; an observer alone cannot provide suppression. Do not claim
+this mode works until native input can be isolated and safely resumed.
+
+With the timeline focused, normal native or enabled custom actions execute once.
+The optional Speed Editor monitor observes those same events and their dispatch
+results, animating the pressed control and showing the active dial mode and the
+command being performed. Opening the monitor must not enable inspection capture.
+It is a learning aid modeled on ShuttleGlide's gesture monitor; inspect and reuse
+applicable existing behavior before implementing its Qt view. Unsupported native
+command identification must be shown as unknown, never inferred as executed from
+a button press alone. Distinguish an attempted dispatch from confirmed execution
+where the native adapter cannot report completion.
+
+Both views subscribe to one authoritative device-state owner through a
+lifetime-safe interface. Do not use a borrowed raw pointer as a lifetime policy
+or let either view read the device independently. Keep these concepts separate:
+
+- Editor selection: which control/gesture is being edited; clicking it again or
+  the background clears selection without synthesizing a hardware release.
+- Physical state: pressed/released controls, held combinations and dial motion.
+- Operational state: the exclusive active dial mode and command activity. A mode
+  can remain active after its selector is released, including on unlit buttons.
+
+The monitor is an optional Qt panel with lazy construction and visible-only
+animation/subscriptions. Hiding it stops presentation work without changing input
+processing or losing the active mode. Reopening reads the current shared state.
+Focus changes, closing/hiding the editor, tab changes, disconnect and teardown
+must cancel pending inspection gestures without replaying them into the timeline.
+Define and test handover while a key is held: native/custom handlers must receive
+balanced lifecycles, never an orphan release, stuck hold or late press.
+
 ## Implementation sequence and module boundaries
 
-1. **Record and inspect:** freeze the visual/behavior contract above, coordinate
-   with the color agent, inspect native dialog lifetime, command models and the
-   existing preset persistence boundaries. Make no speculative preset writes.
-2. **Native editor hosting:** a focused adapter borrows/restores the real editor
-   while preserving its complete appearance and behavior. Test modal/modeless
-   ownership, native Save/Close, unsaved state, keyboard handling, tab hide/reopen,
-   resize and teardown. The exact borrowing technique is not selected yet; no
-   new editor UI substitutes for a failed native hosting experiment.
-3. **Shared persistence boundary:** perform the bounded extraction only if needed,
-   then inject an independent device-profile instance. Preserve the built-in
-   native profile, versioning, atomic saving and corruption recovery.
-4. **Speed Editor view:** use the accurate physical device layout in the keyboard
-   diagram’s position and native-consistent command/profile controls. The view
-   edits the shared device model; it does not own a second store or dispatcher.
-5. **Behavior and dispatch:** one device interpreter implements gesture/mode
-   selection; a separate Resolve adapter owns native command invocation and
-   native fallback. Platform device APIs stay in platform adapters. The panel
-   coordinator only wires these components into existing sessions and menus.
-6. **Assembled acceptance:** verify the actual experience below before integration
-   or installation claims. ShuttleGlide integrations follow through these same
-   interfaces after its relevant controls and existing owners are inspected.
+This is the current forward order; the dated checkpoints below remain historical
+evidence. Read-only native-path investigation may proceed alongside persistence,
+but live remapping stays disabled until its prerequisites pass.
+
+1. **Finish installed UI acceptance and entry repair.** Jordan reports the two
+   entry points are not delivered. Keep this open despite routing fixture passes.
+   Demonstrate the actual native Keyboard Customization menu/assigned shortcut
+   and flat Panels entry opening the same retained editor, with native fallback
+   only where explicitly unsupported. Verify labels, bounds, focus, scaling,
+   selection clearing and persistence in both UI modes. Preserve native styling.
+2. **Complete independent device-profile persistence.** Reuse the existing atomic
+   persistence mechanisms through one device-profile owner; extract shared policy
+   only if needed. Prove save/load, create/duplicate/rename/delete, import/export,
+   restart, draft handling, version/error recovery and immutable Native Speed
+   Editor before activating any live mapping. Profiles remain independent of
+   keyboard and workspace presets.
+3. **Establish device state and exclusive event ownership.** A platform adapter
+   receives verified native device events; one shared state/interpreter owns
+   physical state, gestures and exclusive dial modes. A focused routing policy
+   chooses inspection versus normal native/custom handling. Verify native
+   pass-through, focus transitions, balanced releases, disconnect/reconnect and
+   no duplicate dispatch. No firmware writes or device reprogramming.
+4. **Add physical-input selection in the focused editor.** The device tab projects
+   shared state into selection/held feedback; it owns neither a second device
+   reader nor command execution. Verify physical presses and hold-plus-dial select
+   assignments without timeline actions. Separately verify the native keyboard
+   editor still recognizes typing/key assignments without leaking timeline
+   shortcuts. Returning focus to the timeline resumes normal input.
+5. **Add the optional observation monitor.** A separate Qt presentation module
+   subscribes to shared state and dispatch observations, with visible-only
+   animations and mode/command feedback. Start with verified native behavior;
+   use the same interface for later custom dispatch. It must not consume input,
+   execute commands, or change profile selection.
+6. **Enable selective remapping and verified native commands.** The interpreter
+   resolves saved mappings; a separate Resolve adapter invokes native commands
+   and preserves fallback. Verify action gestures, temporary hold/dial and
+   persistent exclusive modes, commands without shortcuts, per-key native reset,
+   and full native-profile return. Add native device commands to both catalogs
+   only after their identities and invocation lifecycles are established.
+7. **Accept the assembled flow before integration.** Exercise both entry points,
+   focused inspection, timeline use with monitor, save/export/restart/import,
+   native return and rollback together. Retain separate source, fixture, install
+   and live-acceptance evidence. Main merge remains conditional on Jordan's UI
+   acceptance; do not treat this plan as acceptance or hardware support.
+
+Panel coordinators wire these boundaries; persistence, event routing, device
+interpretation, native invocation and monitor rendering retain their own jobs.
 
 ## Acceptance checks
 

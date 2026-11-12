@@ -1,3 +1,19 @@
+## November 11 entry-point correction and input-focus contract
+
+Jordan reports that the promised two-entry experience is not delivered. The
+source/fixture evidence below does not establish that live flow; entry parity is
+open and needs reproduction and repair before it can be reported working.
+
+The updated [implementation order](opengate-input-customization-plan-20261111.md#implementation-sequence-and-module-boundaries)
+puts installed UI/entry acceptance first, independent profile round trips next,
+then verified shared device state and event ownership, focused-editor inspection,
+an optional observation monitor, and finally selective remapping. Physical input
+in the focused editor must select/show controls without timeline actions. With
+timeline focus, the monitor observes normal execution through that same state
+owner and shows mode/command feedback. Selection, physical hold and persistent
+dial mode are distinct. These are requirements, not features claimed installed.
+This update changes documentation only; the installed runtime remains unchanged.
+
 ## November 11 input-panel corrections installed
 
 Jordan explicitly authorized installation of the UI corrections. Clean source
@@ -17,8 +33,9 @@ not claimed. Read-only comparison after reopening found only `Workspace.json`
 different; palette and all other captured files matched. No project/color edit
 was performed by the installer.
 
-Both native Keyboard Customization menu/assigned-shortcut entry and Panels are
-implemented and fixture-tested. Actual native entry, labels, pointer anchoring,
+Native Keyboard Customization menu/assigned-shortcut routing and Panels have
+source and fixture coverage, but Jordan subsequently reports the two-entry flow
+is not delivered; it remains unresolved. Actual native entry, labels, pointer anchoring,
 selection clearing, current-monitor expansion and restart persistence remain
 live acceptance checks. Jordan requested main integration only if the UI passes;
 no merge has occurred. The fixes are pushed on their isolated feature branch.
