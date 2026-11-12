@@ -8,6 +8,10 @@ namespace Unbound {
 class TimelineToolbarViewport {
 public:
     ~TimelineToolbarViewport(){restore();}
+    void abandonForQuit() {
+        QObject::disconnect(fitConnection); fitConnection={};
+        position.abandonForQuit(); overflow.forget();
+    }
     void attach(QWidget *timeline) {
         if(position.active() || !timeline || timeline->objectName()!="frameConformTimelines")return;
         auto toolbar=timeline->findChild<QWidget *>("frameEditToolbarTop");
@@ -19,7 +23,7 @@ public:
         auto area=qobject_cast<QScrollArea *>(overflow.wrap(toolbar,slot,true));layout->addWidget(area);
         QPointer<QWidget> alive=slot;QPointer<QScrollArea> viewport=area;
         auto fit=[alive,viewport,height]{if(alive&&viewport){auto bar=viewport->horizontalScrollBar();alive->setFixedHeight(height+(bar->maximum()>bar->minimum()?bar->sizeHint().height():0));}};
-        QObject::connect(area->horizontalScrollBar(),&QScrollBar::rangeChanged,slot,fit);fit();
+        fitConnection=QObject::connect(area->horizontalScrollBar(),&QScrollBar::rangeChanged,slot,fit);fit();
         toolbar->show();slot->show();
         logEvent("timeline.toolbar.overflow.attached",{{"body_wrapped",false}});
     }
@@ -29,6 +33,6 @@ public:
         auto slot=position.surface();overflow.releaseInto(position.contentParking());
         delete slot->layout();return position.restore();
     }
-private:NativePanelPosition position;PanelOverflow overflow;
+private:NativePanelPosition position;PanelOverflow overflow;QMetaObject::Connection fitConnection;
 };
 }

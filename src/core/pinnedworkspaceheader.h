@@ -77,6 +77,11 @@ public:
     }
     bool release(){return lease.release();}
     void shutdown(){if(stopped)return;stopped=true;timer.stop();qApp->removeEventFilter(this);lease.release();}
+    void abandonForQuit() {
+        stopped=true; timer.stop(); qApp->removeEventFilter(this); lease.abandonForQuit();
+        changed={}; geometryChanged={}; failed={}; prepareNativeToolbar={};
+        observedPage=nullptr; observedToolbar=nullptr;
+    }
 protected:
     bool eventFilter(QObject *object,QEvent *event) override {
         if(stopped)return false;

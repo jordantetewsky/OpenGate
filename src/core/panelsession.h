@@ -30,6 +30,8 @@
 #include "cinemaviewer.h"
 #include "uiworktiming.h"
 #include "sourceplayerpresentation.h"
+#include "paneltabselection.h"
+#include "panelfloatingminimum.h"
 
 namespace Unbound {
 // Managed native-content session. Each instance owns one host and preserves one slot.
@@ -38,14 +40,33 @@ class ManagedPanelSession : public QObject
 public:
     explicit ManagedPanelSession(QObject *owner = nullptr) : QObject(owner)
     {
+        tabSelection.changed=[this]{if(arrangementChanged)arrangementChanged();};
         arrangeTimer.setSingleShot(true);
         arrangeTimer.setInterval(180);
         connect(&arrangeTimer, &QTimer::timeout, this, [this] {
+            applyPanelFloatingMinimum(scaleSurface(),host);
             if (constrain && window()) keepOnDisplay(window()->window());
             if (arrangementChanged) arrangementChanged();
         });
     }
     ~ManagedPanelSession() override { changed = {}; arrangementChanged = {}; dock(); }
+    void abandonForQuit() {
+        if(quitAbandoned)return;
+        quitAbandoned=true; ++generation; arrangeTimer.stop(); recoveryQueued=false;
+        changed={}; arrangementChanged={}; expandedClosed={}; attachRequested={};
+        releaseGroup={}; releaseOriginalPosition={}; beforeLayoutTransfer={};
+        disconnect(parentDestroyed); parentDestroyed={};
+        for(auto widget:{host.data(),content.data(),originalPage.data(),groupContainer.data(),expandedHost.data()})
+            if(widget)widget->removeEventFilter(this);
+        // Both undock paths install this session's wrapper on its private host.
+        // A queued host-context drop may outlive the session during app teardown.
+        if(host)static_cast<WorkspaceFloatingHost *>(host.data())->attachRequested={};
+        tabSelection.release();tabSelection.changed={};
+        metricScale.abandonForQuit(); timelineToolbar.abandonForQuit();
+        widthAllowance.abandonForQuit(); groupWidth.abandonForQuit(); vacatedContents.abandonForQuit();
+        overflow.forget();
+        // Do not clear()/dock(): live native content keeps its present Qt parent.
+    }
     // active() is retained for compatibility: it means original content is leased.
     bool active() const { return !host.isNull(); }
     PanelPlacement placement() const {
@@ -129,6 +150,7 @@ public:
     }
     void detachFromGroup(bool deferHostShow = false)
     {
+        if(quitAbandoned)return;
         endGroupedExpansion();
         if (!grouped()) return;
         if (!host) return;
@@ -174,17 +196,30 @@ public:
     void setPinned(bool value) { if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setPinned(value); }
     void setSnapping(bool enabled) { snapping = enabled; if (host) static_cast<WorkspaceFloatingHost *>(host.data())->setSnapping(enabled); }
     double interfaceScale() const { return metricFactor; }
+    bool supportsContentScale() const { return active() && scaleSurface(); }
     bool setInterfaceScale(double value) {
+        if(auto surface=content ? content.data() : originalParent.data()) {
+            const auto minimum=surface->property("openGateMinimumContentScale");
+            if(minimum.isValid() && value<minimum.toDouble())return false;
+        }
         if (!qIsFinite(value) || value<0.7 || value>3.0) return false;
-        metricFactor=value; refreshMetricScale();
+        const auto previous=metricFactor;metricFactor=value;
+        if(!refreshMetricScale()){metricFactor=previous;refreshMetricScale();return false;}
         if (arrangementChanged) arrangementChanged();
         return true;
+    }
+    QJsonObject interfaceState() const {
+        auto saved=tabSelection.snapshot();saved["interface_scale"]=metricFactor;return saved;
+    }
+    bool restoreInterfaceState(const QJsonObject &saved) {
+        tabSelection.restore(saved);
+        return setInterfaceScale(saved["interface_scale"].toDouble(1.0));
     }
     bool hiddenByUser() const { return userHidden; }
     QPoint overflowOffset() const { return overflow.offset(); }
     void restoreOverflowOffset(QPoint position) { overflow.restoreOffset(position); }
     void setConstrained(bool enabled) { constrain = enabled; if (enabled && window()) keepOnDisplay(window()->window()); }
-    void bringOnScreen() { if (window()) keepOnDisplay(window()->window()); if (arrangementChanged) arrangementChanged(); }
+    void bringOnScreen() { applyPanelFloatingMinimum(scaleSurface(),host);if (window()) keepOnDisplay(window()->window()); if (arrangementChanged) arrangementChanged(); }
     void centerOnCurrentDisplay()
     {
         if (!window()) return;
@@ -192,6 +227,7 @@ public:
         auto top = window()->window(); top->showNormal();
         auto screen = QGuiApplication::screenAt(QCursor::pos()); if (!screen) screen = QGuiApplication::primaryScreen();
         if (!screen) return;
+        applyPanelFloatingMinimum(scaleSurface(),host,screen->availableGeometry());
         QRect frame(QPoint(), top->frameGeometry().size().boundedTo(screen->availableGeometry().size()));
         frame.moveCenter(screen->availableGeometry().center());
         const auto decoration = top->frameGeometry().size() - top->size();
@@ -200,7 +236,7 @@ public:
         logEvent(QStringLiteral("panel.center"), {{"host", widgetState(top)}});
         if (arrangementChanged) arrangementChanged();
     }
-    void setFloatingGeometry(const QRect &r) { if (grouped()) { if (r.isValid()) detachedGeometry = r; } else if (host && r.isValid()) { host->setGeometry(r); if (constrain) keepOnDisplay(host); } }
+    void setFloatingGeometry(const QRect &r) { if (grouped()) { if (r.isValid()) detachedGeometry = r; } else if (host && r.isValid()) { applyPanelFloatingMinimum(scaleSurface(),host,r);host->setGeometry(r); if (constrain) keepOnDisplay(host); } }
     void setHiddenByUser(bool hide, bool activate = true)
     {
         userHidden = hide;
@@ -366,7 +402,8 @@ public:
         // direct presentation parent, as before 50f7498. Other overflow paths,
         // native minima, ownership/recovery and command behavior are unchanged.
         // This is not evidence that native footage loading has been repaired.
-        const bool scrollContent=scrollInspector || scrollToolbar || scrollMediaPool;
+        const bool scrollContent=scrollInspector || scrollToolbar || scrollMediaPool ||
+            widget->property("openGateReachableOverflow").toBool();
         box->addWidget(scrollContent ? overflow.wrap(widget,host,scrollToolbar) : widget);
         relaxedWidth = widget->objectName() == QLatin1String("widgetEditInspector") ||
             widget->objectName() == QLatin1String("frameEditPageMediaPool");
@@ -405,6 +442,7 @@ public:
 
     QString dock()
     {
+        if(quitAbandoned)return {};
         if (releaseOriginalPosition) {
             const auto release=releaseOriginalPosition; const auto error=release();
             if (!error.isEmpty()) return error;
@@ -528,6 +566,7 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *event) override
     {
+        if(quitAbandoned)return false;
         if (event->type() == QEvent::Close && (object == expandedHost ||
             (object == host && host->property("unboundExpanded").toBool()))) {
             // Temporary expansion returns to its previous placement, including
@@ -649,17 +688,27 @@ private:
         placeholderLayout = nullptr;
         userHidden = false;
         arrangeTimer.stop();
+        tabSelection.release();
         recoveryQueued = false; pendingDock = false;
     }
     QPointer<QWidget> host, content, placeholder, originalParent, originalPage;
     PanelWidthAllowance widthAllowance, groupWidth;
-    void refreshMetricScale() {
-        if (!active() || qFuzzyCompare(metricFactor,1.0)) { metricScale.restore(); return; }
-        auto target=content ? content.data() : expandedHost ? expandedHost.data() : window();
-        metricScale.attach(target,metricFactor);
+    QWidget *scaleSurface() const {
+        return content ? content.data() : transferredSurface ? transferredSurface.data() :
+               expandedHost ? expandedHost.data() : window();
+    }
+    bool refreshMetricScale() {
+        if (!active()) {metricScale.restore();return true;}
+        auto surface=scaleSurface();tabSelection.attach(surface);
+        const auto minimum=surface->property("openGateMinimumContentScale");
+        if(minimum.isValid())metricFactor=qMax(metricFactor,qBound(.7,minimum.toDouble(),3.0));
+        if(qFuzzyCompare(metricFactor,1.0))metricScale.restore();
+        else if(!metricScale.attach(surface,metricFactor))return false;
+        applyPanelFloatingMinimum(surface,host);return true;
     }
     PanelMetricScale metricScale;
     double metricFactor=1.0;
+    PanelTabSelection tabSelection;
     PanelOverflow overflow;
     TimelineToolbarViewport timelineToolbar;
     VacatedContents vacatedContents;
@@ -671,6 +720,7 @@ private:
     QPointer<QLayout> placeholderLayout;
     bool transferredLayout = false;
     QPointer<QWidget> transferredSurface;
+    bool quitAbandoned=false;
     bool userHidden = false;
     bool constrain = true;
     bool snapping = true;

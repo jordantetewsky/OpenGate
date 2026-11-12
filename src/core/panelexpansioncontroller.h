@@ -21,6 +21,7 @@ public:
         QPointer<QWidget> workspace;
         PanelGroup *group=nullptr;
         QJsonObject saved,native;
+        bool floatingScreen=false,reveal=true;
         std::function<bool()> pending;
         std::function<void()> undock,cancelPending,restored;
         std::function<void(QJsonObject)> restoreSaved;
@@ -37,14 +38,16 @@ public:
         // A standalone primary surface already fills its own workspace. Its
         // layout expands/reclaims content when bands are hidden or shown; never
         // resize that window into its own child rectangle (recursive shrinking).
+        const bool standalone=target.floatingScreen && wasFloating && !wasGrouped;
         if(target.workspace==window)return true;
         const auto margins=window->windowHandle()?window->windowHandle()->frameMargins():QMargins();
         QRect bounds;
-        if(contentBounds) {
+        if(contentBounds && !standalone) {
             if(!target.workspace){if(report)report(QStringLiteral("The original workspace is no longer available."));return false;}
             bounds=contentBounds(target.workspace);
         } else {
-            // Legacy standalone controller fixtures do not supply a workspace.
+            // An existing independent float expands on its own screen. Native
+            // and grouped panels continue using their workspace content bounds.
             auto screen=window->screen();if(!screen)screen=QApplication::primaryScreen();
             if(screen)bounds=screen->availableGeometry();
         }
@@ -52,13 +55,41 @@ public:
         if(bounds.isEmpty()){report(QStringLiteral("The workspace content area is unavailable for this panel."));return false;}
         if(window->geometry()!=bounds) {
             window->setGeometry(bounds);
-            logEvent("panel.expand.bounds",{{"panel",target.name},{"x",bounds.x()},{"y",bounds.y()},{"width",bounds.width()},{"height",bounds.height()},{"scope",contentBounds?"workspace-viewport":"legacy-screen"}});
+            logEvent("panel.expand.bounds",{{"panel",target.name},{"x",bounds.x()},{"y",bounds.y()},{"width",bounds.width()},{"height",bounds.height()},{"scope",standalone?"floating-screen":contentBounds?"workspace-viewport":"legacy-screen"}});
         }
         return true;
     }
     int index() const { return current; }
+    bool retainsExpansionOnHide(int index) const {
+        return current==index && target.floatingScreen && wasFloating && !wasGrouped;
+    }
+    void close(int index) {
+        if(current!=index)return;
+        if(retainsExpansionOnHide(index)) {
+            target.session->setHiddenByUser(true);
+            // Hidden independent panels retain their preference in the existing
+            // snapshot, not ownership of the shared temporary-expansion slot.
+            restore(true);
+        } else restore();
+    }
+    void abandonForQuit() {
+        ++version; current=-1; target={}; originalGroup=nullptr; originalGroupState={};
+        constraints.abandonForQuit(); priority.abandonForQuit();
+    }
     void sessionInactive(int index) { if (current==index) {constraints.restore();priority.restore();current=-1;} }
-    QJsonObject panelSnapshot(int index,const QJsonObject &value) const { return current==index ? target.saved : value; }
+    QJsonObject panelSnapshot(int index,const QJsonObject &value) const {
+        if(current!=index)return value;
+        auto original=target.saved;
+        // Expansion preserves placement, not changes the user makes to the
+        // panel's content presentation while it is expanded.
+        const auto presentation=target.session->interfaceState();
+        for(auto it=presentation.begin();it!=presentation.end();++it)original[it.key()]=it.value();
+        if(retainsExpansionOnHide(index)) {
+            original["expanded"]=true;
+            original["hidden"]=target.session->hiddenByUser();
+        }
+        return original;
+    }
     QJsonObject groupSnapshot(PanelGroup *group) const
     { return current>=0 && group==originalGroup ? originalGroupState : group->snapshot(); }
     QJsonObject nativeSnapshot(const QJsonObject &value) const
@@ -66,6 +97,7 @@ public:
     void begin(Target value,QWidget *page)
     {
         target=std::move(value);
+        if(target.floatingScreen)target.saved["expanded"]=false;
         originalOffset=target.session->overflowOffset();
         wasFloating=target.session->active(); wasGrouped=target.session->grouped();
         originalGroup=target.group;
@@ -86,15 +118,21 @@ public:
                 }
                 constraints.acquire(target.name,window);
                 if(!refreshGeometry()){restore();return;}
-                target.session->setHiddenByUser(false); priority.foreground(window); update(target.index);
+                const bool hidden=!target.reveal && target.session->hiddenByUser();
+                priority.foreground(window,!hidden);
+                target.session->setHiddenByUser(hidden,!hidden);update(target.index);
                 if(presentationChanged)presentationChanged();
                 logEvent("panel.expand",{{"panel",target.name},{"originally_floating",wasFloating}});
             });
         update(target.index);
     }
-    void restore()
+    void restore(bool retainIndependentExpansion=false)
     {
         if (current<0) return;
+        if(retainsExpansionOnHide(current)) {
+            target.saved["hidden"]=target.session->hiddenByUser();
+            target.saved["expanded"]=retainIndependentExpansion;
+        }
         const int index=current; constraints.restore();priority.restore(); ++version; current=-1;
         target.cancelPending(); QString error;
         bool groupRebuilt=false;

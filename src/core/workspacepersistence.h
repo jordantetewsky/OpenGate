@@ -55,7 +55,8 @@ public:
                 else value.remove("native_hidden");
             }
             if (session->active() && !session->grouped()) value["maximized"]=session->windowMaximized();
-            value["interface_scale"]=session->interfaceScale();
+            const auto interface=session->interfaceState();
+            for(auto it=interface.begin();it!=interface.end();++it)value[it.key()]=it.value();
             if (panel.name=="unboundWorkspaceToolbar" && session->active() && !session->grouped())
                 value["toolbar_float_pinned"]=session->pinned();
             value=source.expansion->panelSnapshot(i,value);

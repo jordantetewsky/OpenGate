@@ -27,7 +27,9 @@ struct WorkspaceSnapshot {
                              bool hidden,bool pinned)
     {
         if (active) {
+            const auto expanded=previous.value("expanded");
             previous=WorkspaceSettings::displayRectangle(geometry,previous);
+            if(!expanded.isUndefined())previous["expanded"]=expanded;
             previous["hidden"]=hidden; previous["pinned"]=pinned;
         }
         previous["floating"]=desired;

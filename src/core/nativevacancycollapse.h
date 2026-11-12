@@ -15,6 +15,7 @@ namespace Unbound {
 class NativeVacancyCollapse {
 public:
     ~NativeVacancyCollapse() { restore(); }
+    void abandonForQuit() { collapsed.clear(); }
     void update(QWidget *page,const QList<QWidget *> &vacancies) {
         QSet<QWidget *> candidates,vacated,empty;
         for (auto slot:vacancies) {

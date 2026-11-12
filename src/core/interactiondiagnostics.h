@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include "textediting.h"
 #include <QAbstractSpinBox>
 #include <QAbstractButton>
 #include <QAction>
@@ -23,17 +24,6 @@
 
 
 namespace Unbound {
-inline bool textEditor(QWidget *widget)
-{
-    for (auto parent = widget; parent; parent = parent->parentWidget()) {
-        if (qobject_cast<QLineEdit *>(parent) || qobject_cast<QTextEdit *>(parent) ||
-            qobject_cast<QPlainTextEdit *>(parent) || qobject_cast<QAbstractSpinBox *>(parent)) return true;
-        auto combo = qobject_cast<QComboBox *>(parent);
-        if (combo && combo->isEditable()) return true;
-        if (parent->isWindow()) break;
-    }
-    return false;
-}
 
 class InteractionDiagnostics : public QObject
 {

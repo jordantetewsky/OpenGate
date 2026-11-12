@@ -25,6 +25,7 @@ public:
     NativeGroupSlot(const NativeGroupSlot &)=delete;
     NativeGroupSlot &operator=(const NativeGroupSlot &)=delete;
     ~NativeGroupSlot() { release(); }
+    void abandonForQuit() { slot=nullptr; surface=nullptr; owner=nullptr; ownedLayout=nullptr; }
     bool active() const { return slot && surface && ownedLayout; }
     QWidget *marker() const { return slot; }
     QString mount(QWidget *marker,QWidget *embedded,QWidget *nativeOwner) {

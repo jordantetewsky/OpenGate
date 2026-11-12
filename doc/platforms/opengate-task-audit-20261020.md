@@ -1,3 +1,18 @@
+## November 11 keyboard-only main integration
+
+Jordan explicitly authorized main integration of the keyboard/Speed Editor UI and
+requested a detailed handoff. The keyboard-only port preserves main's scale owner,
+adds selected-tab/minimum/expansion persistence through existing state, and brings
+the required non-restoring panel quit dependency. No clip-color implementation or
+unrelated Timeline renderer/input work is included. The text-editing guard moved
+unchanged from diagnostics into a shared helper; its old definition was removed.
+All five listed Mac fixtures pass, including native/floating quit. Main-derived
+universal build/live installation and Windows runtime remain unverified. Current
+live cee2ef8 remains installed; Jordan reports the native menu entry still fails
+while the other entries and UI fixes work. No device remapping/profile writes or
+release publication is claimed. Follow the [handoff](opengate-keyboard-speed-editor-handoff-20261111.md)
+and [plan](opengate-input-customization-plan-20261111.md).
+
 ## Persistence extraction review — 2026-10-25
 
 Active worktree: `workspace-persistence-owner`, branch

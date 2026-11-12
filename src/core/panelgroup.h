@@ -32,6 +32,18 @@ public:
         connect(&timer, &QTimer::timeout, this, [this] { if (host) report("group.arrangement"); });
     }
     ~PanelGroup() override { changed = {}; dissolve(); }
+    void abandonForQuit() {
+        timer.stop(); changed={}; sectionDetached={}; attachRequested={};
+        if(page)page->removeEventFilter(this);
+        if(host){host->removeEventFilter(this);host->attachRequested={};}
+        for(auto header:headers)if(header)header->abandonForQuit();
+        for(auto member:members)if(member) {
+            if(member->window())member->window()->removeEventFilter(this);
+            member->abandonForQuit();
+        }
+        members.clear(); leaves.clear(); headers.clear(); visibilityState.clear();
+        host=nullptr; root=nullptr; page=nullptr;
+    }
     bool active() const { return host; }
     QWidget *window() const { return host; }
     bool windowHidden() const { return host && host->property("unboundGroupDoorHidden").toBool(); }

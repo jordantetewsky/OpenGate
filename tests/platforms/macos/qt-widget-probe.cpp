@@ -48,6 +48,9 @@ extern "C" __attribute__((visibility("default"))) void unboundInspectWidgets()
     QTimer::singleShot(30000, qApp, [] { captureWidgets(3); });
     QTimer::singleShot(2000, qApp, [] {
         if (qApp->findChild<QObject *>(QStringLiteral("unboundControlService"))) return;
+#ifdef OPENGATE_INPUT_CUSTOMIZATION_PREVIEW
+        qputenv("OPENGATE_EXPERIMENTAL_INPUT_CUSTOMIZATION", "1");
+#endif
         auto diagnostics = new Unbound::WindowDiagnostics(qApp);
         qApp->installEventFilter(diagnostics);
         new Unbound::ControlService(qApp);

@@ -20,6 +20,11 @@ public:
         connect(&discover,&QTimer::timeout,this,[this] { if (root) scan(root); });
     }
     ~PanelMetricScale() override { restore(); }
+    void abandonForQuit() {
+        discover.stop();
+        for(const auto &entry:widgets)if(entry.widget)entry.widget->removeEventFilter(this);
+        widgets.clear(); layouts.clear(); known.clear(); knownLayouts.clear(); root=nullptr;
+    }
     double factor() const { return amount; }
     bool attach(QWidget *surface,double scale) {
         if (!surface || !qIsFinite(scale) || scale<0.7 || scale>3.0) return false;

@@ -10,13 +10,14 @@ class PanelExpansion : public QObject
 public:
     PanelExpansion() { qApp->installEventFilter(this); }
     ~PanelExpansion() override { restore(); if (qApp) qApp->removeEventFilter(this); }
-    void foreground(QWidget *host)
+    void abandonForQuit() { current=nullptr; if(qApp)qApp->removeEventFilter(this); }
+    void foreground(QWidget *host,bool activate=true)
     {
         restore(); current = host;
         if (!current) return;
         current->setProperty("unboundExpanded", true);
         setNativeExpansionPriority(current, true);
-        current->raise(); current->activateWindow();
+        if(activate){current->raise(); current->activateWindow();}
     }
     void restore()
     {

@@ -28,6 +28,9 @@ public:
     NativePanelPosition(const NativePanelPosition &)=delete;
     NativePanelPosition &operator=(const NativePanelPosition &)=delete;
     ~NativePanelPosition() { restore(); }
+    // Application exit leaves widgets with their current Qt owners. Restoring
+    // their slots here could create native windows after renderer shutdown.
+    void abandonForQuit() { clear(); }
     bool active() const { return marker && original && parent; }
     QWidget *surface() const { return marker; }
     static bool supported(QWidget *panel,QWidget *page) {

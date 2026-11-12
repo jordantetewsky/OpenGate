@@ -19,6 +19,12 @@ public:
         connect(&settle,&QTimer::timeout,this,[this] { apply(); });
     }
     ~NativeWorkspaceSizing() override { restore(); }
+    void abandonForQuit() {
+        settle.stop(); collapse.abandonForQuit();
+        if(page)page->removeEventFilter(this);
+        page=nullptr; main=nullptr; originalLayout=nullptr; managedPanels.clear();
+        captured=false; applied=false; automaticGeometry=false;
+    }
     std::function<bool()> blocked = [] { return false; };
     void prepare(QWidget *window,QWidget *nativePage) {
         if (window!=main || nativePage!=page) {
