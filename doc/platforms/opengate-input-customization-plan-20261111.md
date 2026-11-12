@@ -9,8 +9,15 @@ support for native device remapping.
 
 ## UI repair checkpoint after planning consolidation
 
-Source now includes the next repair pass; it is not yet installed or accepted
-live. Direct inspection of installed `954a467` reproduced the native macOS
+Clean source `6cfb407` is now installed and loaded in Resolve PID 76286 after
+Jordan quit for installation. Live UI acceptance remains pending. All 25 managed
+file hashes and the strict bundle signature verify. The closed-session comparison
+confirmed all 203 protected files unchanged before reopening, including custom
+colors. Transaction `37150516-6721-40CB-84B6-AAF82B37314F` retains the exact
+previous `954a467` installation; the installation/rollback rehearsal passed.
+The feature branch is pushed; nothing is merged to main or published as a release.
+
+Direct inspection of previously installed `954a467` reproduced the native macOS
 application-menu entry opening a separate modal keyboard dialog. The Qt menu
 lease did not cover that AppKit-owned route. A focused Mac target/action lease
 now forwards that menu item to the same retained panel, retaining native

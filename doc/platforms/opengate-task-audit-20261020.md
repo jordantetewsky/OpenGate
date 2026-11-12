@@ -1,3 +1,23 @@
+## November 11 UI repair installed checkpoint
+
+Jordan quit Resolve and authorized installation. Clean source `6cfb407` is now
+installed and loaded in PID 76286, session `71c5c7d9-4708-49b6-b061-b06ff970fe2a`.
+Universal runtime SHA-256:
+`cd25bbb174b84c06636b6fc1e1153ab46897036d7e61c5b1b84ce122120af1ed`.
+All 25 managed file hashes and strict signature verify. All 203 protected files
+were byte-identical across installation while Resolve remained closed; custom
+colors and settings were preserved. The installer/exact rollback rehearsal passed.
+Transaction `37150516-6721-40CB-84B6-AAF82B37314F` restores the prior `954a467`
+installation. Earlier rollback transactions remain available.
+
+Source and this checkpoint are on the isolated feature branch; no main merge or
+release publication. Runtime loading is verified; native menu/Command–Shift–K,
+Panels/toolbar parity, current-display maximize, expanded Close/recall and actual
+restart geometry still need Jordan's live acceptance. The UI automation service
+failed during shutdown; Jordan quit normally and no automated live acceptance is
+claimed. Device profile persistence, physical input inspection and hardware
+remapping remain later gates in the planning document, not installed capabilities.
+
 ## November 11 UI repair source and fixture checkpoint
 
 Final review found that retaining a hidden editor's active expansion transaction
