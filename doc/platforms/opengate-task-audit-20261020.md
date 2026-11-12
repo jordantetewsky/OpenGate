@@ -1,3 +1,28 @@
+## November 11 input-panel corrections installed
+
+Jordan explicitly authorized installation of the UI corrections. Clean source
+`954a467` is installed and loaded in Resolve PID 74126; runtime SHA-256
+`0b0315d2e547e5fd6efe15fe0b8d89c30d3f67a97d6551a775acb440b0888b68`.
+All 25 installed file hashes and strict signature verify. The input, caller,
+native-keyboard-entry and native-entry-flow fixtures pass. The initial broader
+expansion regression was corrected by enabling screen expansion only for the
+independent input editor. No color source files changed from installed `63abf9a`.
+
+The installer/exact rollback rehearsal passed. Transaction
+`6A5CDDC6-0AEE-47E8-8939-4009EBD5EE41` restores the preceding `048017e4…`
+runtime; the original `35ef8ec2…` rollback remains preserved separately.
+203 protected files were captured with Resolve closed. Resolve had already
+reopened before post-install verification, so closed-session equivalence is
+not claimed. Read-only comparison after reopening found only `Workspace.json`
+different; palette and all other captured files matched. No project/color edit
+was performed by the installer.
+
+Both native Keyboard Customization menu/assigned-shortcut entry and Panels are
+implemented and fixture-tested. Actual native entry, labels, pointer anchoring,
+selection clearing, current-monitor expansion and restart persistence remain
+live acceptance checks. Jordan requested main integration only if the UI passes;
+no merge has occurred. The fixes are pushed on their isolated feature branch.
+
 ## November 11 additive keyboard preview installed
 
 Jordan explicitly requested adding the keyboard branches while preserving the

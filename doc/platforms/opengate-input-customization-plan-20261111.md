@@ -402,3 +402,27 @@ applying screen bounds to every standalone floating panel changed their existing
 workspace behavior. Screen expansion is now an explicit Target policy enabled
 only for the layout-independent input panel. Ordinary native/workspace/group
 panels retain their existing content-viewport expansion behavior.
+
+### Profile persistence before live remapping
+
+Jordan explicitly set the next milestone order after the UI test: establish
+independent device-profile saving, loading and import/export before activating
+hardware remapping. Profile round trips must preserve stable control/command IDs,
+gesture assignments, dial-mode definitions and native-reset semantics. Validate
+versions and unavailable commands without silently replacing valid profiles;
+use atomic writes and a tested recoverable prior version. Keep the pinned Native
+Speed Editor profile immutable and keyboard presets independent.
+
+Live remapping remains disabled until the native event ownership boundary is
+verified: one physical gesture must produce one intended action, without both
+OpenGate and Resolve executing it. Establish native pass-through, temporary
+hold/dial versus persistent exclusive mode behavior, release/cancel handling,
+disconnect/reconnect, and return to native operation before enabling overrides.
+This is host-side input/command adaptation; firmware updates, firmware writes,
+and persistent device reprogramming are outside this feature. The current UI
+build performs no device remapping or firmware writes.
+
+Corrections installed at clean source `954a467`, with all four fixture suites,
+universal build, signature and install/rollback rehearsal passing. Resolve loaded
+that build after installation. Real UI acceptance is still pending; main merge
+is conditional on that acceptance, not on compilation or fixtures alone.
