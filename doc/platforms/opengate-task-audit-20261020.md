@@ -1,5 +1,13 @@
 ## November 11 entry-point correction and input-focus contract
 
+Follow-up: Jordan proposes a third, remembered show/hide toggle beside the
+program viewer and reports expanded Close restores the panel instead of hiding
+it. Source inspection confirms the expanded Close event calls restoreExpanded
+before ordinary hide. The plan records immediate retained hide, expanded recall,
+preservation of the normal frame for tilde restore, and synchronized visibility
+across all entry points. Viewer placement is proposed; the close fix and third
+entry are not implemented or installed by this documentation update.
+
 Jordan reports that the promised two-entry experience is not delivered. The
 source/fixture evidence below does not establish that live flow; entry parity is
 open and needs reproduction and repair before it can be reported working.

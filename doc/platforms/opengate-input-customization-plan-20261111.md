@@ -174,6 +174,44 @@ an acceptable substitute for that requirement.
 
 ## Focused customization and the optional device monitor
 
+### Entry points and retained visibility
+
+Jordan proposes a third entry beside the program/timeline viewer: a compact
+on/off button for the same Keyboard & Speed Editor Customization panel. Its exact
+placement needs inspection of the existing viewer controls before implementation;
+do not cover native controls or invent a second panel instance. This is the
+customization toggle, distinct from the optional activity monitor's visibility.
+The native Keyboard Customization menu/assigned shortcut and flat Panels entry
+remain the other two entry routes; their reported live parity issue stays open.
+
+The viewer button's checked state reflects actual panel visibility, including
+changes made through X, the editor's Close control and other entry points. Off
+hides the retained panel; on recalls it and its selected tab, geometry, scale,
+editing state and expanded/normal presentation. Route all entry points through
+the existing session/visibility owner and persistence path, not a button-owned
+boolean or another settings writer. Preserve native Save/unsaved-change handling.
+
+**Closing while expanded must hide immediately.** It must not require a second
+close after shrinking to the prior frame. Reopening should retain expansion;
+tilde restores the exact pre-expansion normal frame, subject to available-screen
+constraints. Preserve both the normal frame and expanded state rather than save
+the screen-sized rectangle as the normal frame. Include restart restoration in
+the acceptance checks; it is not established by same-session hide/reopen.
+
+Source diagnosis of Jordan's November 11 report: ManagedPanelSession's Close
+filter handles an expanded host before ordinary retained hide and invokes
+expandedClosed; PanelControls currently wires that callback to restoreExpanded.
+This explains the observed restore-instead-of-close path. Scope the correction
+to the independent customization editor while preserving existing native/group
+temporary-expansion contracts. No correction is implemented by this document.
+
+Acceptance sequence: open through each entry -> resize/select tab/change scale
+-> expand -> X-hide -> viewer toggle recall -> confirm expansion/tab/scale ->
+tilde restore exact normal frame -> toggle off/on -> restart and recall. Also
+exercise the native editor's Close/Save flow and both Native/OpenGate UI modes.
+
+### Input focus and shared observations
+
 November 11 clarification: pressing a physical control while customizing must
 identify that control without performing its timeline action. Merely having the
 customization window visible must not capture input after focus returns to the
@@ -230,7 +268,9 @@ but live remapping stays disabled until its prerequisites pass.
    Demonstrate the actual native Keyboard Customization menu/assigned shortcut
    and flat Panels entry opening the same retained editor, with native fallback
    only where explicitly unsupported. Verify labels, bounds, focus, scaling,
-   selection clearing and persistence in both UI modes. Preserve native styling.
+   selection clearing and persistence in both UI modes. Correct expanded Close
+   to retained hide and add the proposed viewer toggle using that same owner;
+   prove all three entry routes and synchronized visibility. Preserve native styling.
 2. **Complete independent device-profile persistence.** Reuse the existing atomic
    persistence mechanisms through one device-profile owner; extract shared policy
    only if needed. Prove save/load, create/duplicate/rename/delete, import/export,
